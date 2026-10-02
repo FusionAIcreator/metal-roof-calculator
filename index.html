@@ -119,6 +119,13 @@ select.inp{appearance:auto}
 .list .gh{grid-column:1/-1;border-top:0;padding:16px 0 4px;font:600 12px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .list dd.gh{display:none}
 #rCost:empty{display:none}
+#rItems{padding:18px 18px 16px;gap:12px}
+#rItems dt.len{font:600 18px/1.2 var(--f-mono);font-variant-numeric:tabular-nums}
+#rItems dt.tot,#rItems dd.tot{font-weight:700;color:var(--accent)}
+#rItems details{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:10px}
+#rItems summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+#rItems .fh{margin:6px 0 0;font-weight:600;font-size:15px}
+#rItems .fh .code{font-size:14px}
 .costbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 18px 16px}
 .cost{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-top:12px;border-top:1px solid var(--line)}
 .cost span{color:var(--muted);font-size:15px}
@@ -273,6 +280,7 @@ select.inp{appearance:auto}
     <p class="callout" id="rWarn"></p>
     <div class="tiles" id="rTiles"></div>
     <div id="rCut"></div>
+    <div class="card list" id="rItems" hidden></div>
     <div class="card list"><dl id="rList"></dl></div>
     <div id="rCost"></div>
     <p class="hint" id="rNote"></p>
@@ -602,9 +610,10 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
     if(g.layout){ secStatus(g.layout); drawLayout(g.layout,st.mat==='metal');
       const bad=g.layout.secs.filter(x=>!x.ok).length;
       $('layRefTxt').textContent=bad?'The outline needs fixing on the Layout tab.':'Outline: '+st.sections.map(x=>(x.name||'Section')+', '+x.edges.length+' edges').join('; ')+'.'; }
-    if(!(g.area>0)){ setMain('rOut','0',''); $('rLbl').textContent=st.src==='report'?'Enter the report numbers or import the report.':st.src==='layout'?'Finish the roof outline.':'Enter the roof size.'; rows($('rList'),[]); tiles([]); return; }
+    if(!(g.area>0)){ setMain('rOut','0',''); $('rLbl').textContent=st.src==='report'?'Enter the report numbers or import the report.':st.src==='layout'?'Finish the roof outline.':'Enter the roof size.'; rows($('rList'),[]); tiles([]); renderItems(null); return; }
 
     if(st.mat==='shingle'){
+      renderItems(null);
       setMain('rOut',Math.ceil(sqW*3),'bundles'); $('rLbl').textContent='Shingles, 3 bundles per square';
       const nails=Math.ceil(sqW*67)*n('rN');
       tiles([['Roof area',f(g.area)+' ft²',f(g.area/100,1)+' sq','fg'],['Squares with waste',f(sqW,1),'','teal']]);
@@ -625,11 +634,12 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
     const [covIn,kind]=$('mPanel').value.split('|'); const cov=+covIn, covFt=cov/12, ss=kind==='ss';
     const trimLen=Math.max(1,n('cTrim')); let trimPcs=0;
     const pcs=lf=>{if(!(lf>0))return null;const k=Math.ceil(lf*1.05/trimLen);trimPcs+=k;return k+' pcs';};
-    let totalLF, panels, clips, screwBags=0;
+    let totalLF, panels, clips, screwBags=0, items=null;
     if(g.layout){
       const R=g.layout; panels=R.panels; totalLF=R.lf; clips=ss?R.clips:0;
       setMain('rOut',panels,'panels');
       $('rLbl').textContent=(ss?'Standing seam, ':'')+cov+'" coverage, cut to length, see layout';
+      items=engineItems(R);
     } else if(g.gable){
       const perSide=Math.ceil(g.gable.L/covFt);
       const lenIn=Math.ceil(g.gable.slope*12+n('mOver'));
@@ -643,16 +653,26 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
       c.append(el('span',null,'Cut list: '+(perSide*2)+' panels at '+ftin(lenFt)+' ('+lenIn+'")'+(extraLF?'. Porch/dormer area adds about '+f(extraLF)+' ft of panel.':'.')));
       cut.append(c);
       clips=ss?perSide*2*(Math.ceil(lenFt/2)+1):0;
+      const rip=Math.round((g.gable.L-(perSide-1)*covFt)*48)/4, side=code=>({code,dir:code==='A'?'north':'south',name:'',pieces:Array.from({length:perSide},(_,i)=>({code:code+(i+1),inch:lenIn,rip:i===perSide-1&&rip<cov-.01?rip:0}))});
+      items={byLen:[[lenIn,perSide*2]],faces:[side('A'),side('B')],extra:extraLF?'Porch and dormer area adds about '+Math.ceil(extraLF/lenFt)+' more panels at '+ftin(lenFt)+'. Measure those on site.':''};
+    } else if(st.src==='footprint'){
+      const R=hipLayout(covFt,n('mOver')/12), extraLF=n('rX')>0?n('rX')*w/covFt:0;
+      panels=R.panels; totalLF=R.lf+extraLF; clips=ss?R.clips+Math.ceil(extraLF/2):0;
+      setMain('rOut',panels,'panels');
+      $('rLbl').textContent=(ss?'Standing seam, ':'')+cov+'" coverage, cut to length';
+      $('rNote').textContent='The cut list assumes a plain hip roof on a rectangle. For wings, porches or valleys, trace the outline on the Layout tab.';
+      items=engineItems(R); if(extraLF) items.extra='Porch and dormer area adds about '+f(extraLF)+' ft of panel, included in the total. Measure those pieces on site.';
     } else {
       totalLF=g.area*w/covFt;
       panels=Math.ceil(g.eave/covFt);
       setMain('rOut',f(Math.ceil(totalLF/10)*10),'ft of panel');
       $('rLbl').textContent=(ss?'Standing seam, ':'')+cov+'" coverage, waste included';
-      $('rNote').textContent='Hip and cut-up roofs have a different panel length on every facet. Use this for pricing, and send the report to your supplier for the cut list.';
+      $('rNote').textContent='Hip and cut-up roofs have a different panel length on every facet. Use this total for pricing.';
+      items={msg:'A report gives totals, not the roof\u2019s shape, so it can\u2019t list each piece. Trace the outline from the report\u2019s length diagram to get every piece and its length.'};
       clips=ss?Math.ceil(totalLF/2)+panels:0;
     }
     tiles([['Roof area',f(g.area)+' ft²',f(g.area/100,1)+' sq','fg'],['Squares with waste',f(sqW,1),'','teal'],
-      g.gable||g.layout?['Total panel',f(totalLF)+' ft',g.layout?'cut list, no waste':'','amber']:['Panels along eaves','~'+panels,'lengths vary','amber']]);
+      g.gable||g.layout||st.src==='footprint'?['Total panel',f(totalLF)+' ft',g.layout||!g.gable?'cut list, no waste':'','amber']:['Panels along eaves','~'+panels,'lengths vary','amber']]);
     const list=[
       ['#Trim and flashing'],
       ['Eave trim',pcs(g.eave),f(g.eave)+' ft'],
@@ -676,6 +696,7 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
     }
     list.push(['#Deck protection'],under, ice);
     rows($('rList'),list);
+    renderItems(items);
     const money=x=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     const cP=totalLF*n('prPanel'), cT=trimPcs*trimLen*n('prTrim'), cS=screwBags*n('prScrew'), tot=cP+cT+cS;
     if(tot>0){
@@ -793,7 +814,34 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
   $('exSec').onclick=()=>{const b=$('exSec');
     if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Tap again to replace your outline';setTimeout(()=>{delete b.dataset.arm;b.textContent='Load example';},3000);return;}
     delete b.dataset.arm; b.textContent='Load example'; st.sections=EXAMPLE(); drawSecs(); calc();};
-  let layKey='', layR=null;
+  let layKey='', layR=null, hipKey='', hipR=null, lastItems=null;
+  function hipLayout(cov,over){
+    const L=n('rL'),W=n('rW'),key=[L,W,n('rP'),cov,over].join('|');
+    if(key!==hipKey){hipKey=key; hipR=buildRoof([{name:'Roof',pitch:n('rP'),edges:[{d:'E',len:L,t:'eave'},{d:'S',len:W,t:'eave'},{d:'W',len:L,t:'eave'},{d:'N',len:W,t:'eave'}]}],cov,over);}
+    return hipR;
+  }
+  const engineItems=R=>({byLen:byLength(R),faces:R.faces.filter(fc=>fc.panels.length).map(fc=>({code:fc.code,dir:fc.dir,name:R.secs.length>1?R.secs[fc.sec].name:'',pieces:fc.panels.map(p=>({code:p.code,inch:p.inch,rip:p.rip}))}))});
+  function renderItems(it){
+    lastItems=it&&it.byLen?it:null;
+    const h=$('rItems'); h.innerHTML=''; h.hidden=!it; if(!it) return;
+    h.append(el('h2',null,'Panel cut list'));
+    if(it.msg){ h.append(el('p','hint',it.msg)); const b=el('button','btn alt','Trace the roof outline'); b.onclick=()=>{st.src='layout';syncWaste();go('layout');}; h.append(b); return; }
+    const dl=el('dl'); let cnt=0,ins=0;
+    for(const [inch,c] of it.byLen){ dl.append(el('dt','len',ftIn(+inch)),el('dd',null,c+' pc'+(c>1?'s':''))); cnt+=c; ins+=inch*c; }
+    dl.append(el('dt','tot','Total'),el('dd','tot',cnt+' panels, '+f(ins/12)+' ft'));
+    h.append(dl);
+    if(it.extra) h.append(el('p','hint',it.extra));
+    if(it.faces&&it.faces.length){
+      const d=el('details'); d.append(el('summary',null,'Every piece, by roof face'));
+      for(const fc of it.faces){
+        const hd=el('p','fh'); hd.append(el('span','code',fc.code),(fc.name?fc.name+', ':'')+'faces '+fc.dir+', '+fc.pieces.length+' panel'+(fc.pieces.length>1?'s':''));
+        const ol=el('ol','cuts'); for(const p of fc.pieces){const li=el('li');li.append(el('b',null,p.code),el('span',null,ftIn(p.inch)));if(p.rip)li.append(el('small',null,'rip to '+p.rip+'"'));ol.append(li);}
+        d.append(hd,ol);
+      }
+      h.append(d);
+    }
+    h.append(el('p','hint','Lengths are to the long point and include the '+f(n('mOver'),2)+'" eave overhang. Hip and valley pieces get cut on an angle from there.'));
+  }
   function layout(){
     const cov=parseFloat($('mPanel').value)/12, over=n('mOver')/12, key=JSON.stringify([st.sections,cov,over]);
     if(key!==layKey){layKey=key; layR=buildRoof(st.sections,cov,over);}
@@ -890,11 +938,12 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
       if(k[i].classList.contains('gh')){lines.push('',k[i].textContent.toUpperCase());continue;}
       const dd=k[i+1],sub=dd.querySelector('small');lines.push(k[i].textContent+': '+(sub?dd.firstChild.textContent+' ('+sub.textContent+')':dd.textContent));}}
     const c=$('rCost').querySelector('.cost'); if(isRoof&&c) lines.push('',c.firstChild.textContent+': '+c.lastChild.textContent);
-    if(isRoof&&st.src==='layout'&&st.mat==='metal'&&layR&&layR.panels){
-      lines.push('','PANELS BY LENGTH ('+$('mPanel').selectedOptions[0].textContent+')');
-      for(const [inch,cnt] of byLength(layR)) lines.push(cnt+' @ '+ftIn(+inch));
-      lines.push('','CUT LIST BY FACE');
-      for(const fc of layR.faces) if(fc.panels.length) lines.push(fc.code+' (faces '+fc.dir+'): '+fc.panels.map(p=>p.code+' '+ftIn(p.inch)+(p.rip?' rip '+p.rip+'"':'')).join(', '));
+    if(isRoof&&st.mat==='metal'&&lastItems){
+      lines.push('','PANEL CUT LIST ('+$('mPanel').selectedOptions[0].textContent+')');
+      for(const [inch,cnt] of lastItems.byLen) lines.push(cnt+' @ '+ftIn(+inch));
+      if(lastItems.extra) lines.push(lastItems.extra);
+      if(lastItems.faces&&lastItems.faces.length){ lines.push('','EVERY PIECE, BY ROOF FACE');
+        for(const fc of lastItems.faces) lines.push(fc.code+' ('+(fc.name?fc.name+', ':'')+'faces '+fc.dir+'): '+fc.pieces.map(p=>p.code+' '+ftIn(p.inch)+(p.rip?' rip '+p.rip+'"':'')).join(', ')); }
     }
     const text=lines.join('\n');
     try{await navigator.clipboard.writeText(text);toast('Order list copied');}
