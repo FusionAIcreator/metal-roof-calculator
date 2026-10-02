@@ -6,161 +6,204 @@
 <title>Job calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
+/* Layout: phone app shell. One screen per bottom tab; on every screen the summary sits above the detail. */
 :root{
-  --bg:#E4E7E3; --surface:#F6F7F4; --ink:#1B2220; --muted:#5A6460; --line:#C7CDC8;
-  --accent:#2459A6; --good:#2C7148; --good-soft:#D8EBDF; --amber:#9A6412; --amber-soft:#F1E3C8;
-  --warn:#B42318; --haz1:#E0A02A; --haz2:#1B2220;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+  --bg:#0E1216; --surface:#161C22; --raised:#1E262E; --line:#2B3541; --fg:#E7ECF1; --muted:#93A0AE;
+  --accent:#6CB4EE; --on-accent:#08131D;            /* galvalume blue */
+  --amber:#F0B045; --teal:#45C2B1;
+  --good:#5CCB8F; --warn:#F3806F; --warn-bg:rgba(243,128,111,.12);
+  --pa:#22344A; --pb:#2C4460; --seam:#5D7A9E; --ridgec:#F3806F; --valc:#6CB4EE;
+  --bar:rgba(22,28,34,.92); --shadow:0 10px 30px rgba(0,0,0,.45);
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:Barlow,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --tabh:64px;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#131715; --surface:#1D2320; --ink:#EDF0EB; --muted:#A0AAA5; --line:#333B37;
-    --accent:#78AEEB; --good:#63C18A; --good-soft:#1C3325; --amber:#E3A843; --amber-soft:#3A2F1C;
-    --warn:#F2776B; --haz1:#E3A843; --haz2:#131715;
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    color-scheme:light;
+    --bg:#EDF0F3; --surface:#FFFFFF; --raised:#F3F6F9; --line:#D3DAE2; --fg:#111820; --muted:#566370;
+    --accent:#1C6CB0; --on-accent:#FFFFFF; --amber:#9A5A06; --teal:#0E7F71;
+    --good:#1F7A4C; --warn:#B4321F; --warn-bg:rgba(180,50,31,.08);
+    --pa:#DCE7F4; --pb:#C3D5EA; --seam:#7C93B8; --ridgec:#B4321F; --valc:#1C6CB0;
+    --bar:rgba(255,255,255,.94); --shadow:0 8px 24px rgba(16,24,32,.12);
   }
 }
-:root[data-theme="dark"]{
-  --bg:#131715; --surface:#1D2320; --ink:#EDF0EB; --muted:#A0AAA5; --line:#333B37;
-  --accent:#78AEEB; --good:#63C18A; --good-soft:#1C3325; --amber:#E3A843; --amber-soft:#3A2F1C;
-  --warn:#F2776B; --haz1:#E3A843; --haz2:#131715;
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#EDF0F3; --surface:#FFFFFF; --raised:#F3F6F9; --line:#D3DAE2; --fg:#111820; --muted:#566370;
+  --accent:#1C6CB0; --on-accent:#FFFFFF; --amber:#9A5A06; --teal:#0E7F71;
+  --good:#1F7A4C; --warn:#B4321F; --warn-bg:rgba(180,50,31,.08);
+  --pa:#DCE7F4; --pb:#C3D5EA; --seam:#7C93B8; --ridgec:#B4321F; --valc:#1C6CB0;
+  --bar:rgba(255,255,255,.94); --shadow:0 8px 24px rgba(16,24,32,.12);
 }
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 Barlow,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 17px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.wrap{max-width:480px;margin:0 auto;padding:18px 16px 40px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
-.top h1{margin:0;font:700 40px/0.95 "Barlow Condensed","Arial Narrow",sans-serif}
-.lede{margin:4px 0 16px;color:var(--muted)}
-.btn{border:0;border-radius:10px;padding:14px 12px;font-weight:600;font-size:17px;background:var(--ink);color:var(--surface)}
-.btn.alt{background:var(--surface);color:var(--ink);border:1.5px solid var(--ink)}
-.btn-sm{border:1.5px solid var(--line);background:none;border-radius:8px;padding:7px 12px;font-size:15px;font-weight:500}
-.field{display:block;margin-bottom:12px}
-.field>span{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
-.field input,.field select,.field textarea,.inp{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);font-size:17px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:none;padding:10px 6px;font-weight:600}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
-.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.hide,[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-.tabs{margin-bottom:14px}
-.unit{position:relative}
-.unit input{padding-right:40px}
-.unit::after{content:attr(data-u);position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
-.out{background:var(--ink);color:var(--surface);border-radius:12px;padding:16px;margin:8px 0 12px}
-.out .main{font:700 60px/0.95 "Barlow Condensed",sans-serif;margin:0}
-.out .main small{font-size:24px;font-weight:600;opacity:.75;margin-left:6px}
-.out .lbl{margin:2px 0 12px;opacity:.85;font-size:15px}
-.out dl{display:grid;grid-template-columns:1fr auto;gap:7px 12px;margin:0;border-top:1px solid rgba(128,128,128,.4);padding-top:10px}
-.out dt{opacity:.85}
-.out dd{margin:0;font:600 20px/1.2 "Barlow Condensed",sans-serif;text-align:right}
-.out dd small{font-family:Barlow,sans-serif;font-size:13px;font-weight:400;opacity:.75;margin-left:4px}
-.out .cut{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:rgba(128,128,128,.18);font:600 20px/1.25 "Barlow Condensed",sans-serif}
-.out .cut span{display:block;font:400 13px/1.3 Barlow,sans-serif;opacity:.8}
-.note{font-size:14px;color:var(--muted);margin:0 0 10px}
-.note.warn{color:var(--warn);font-weight:600}
-.note:empty{display:none}
-.pane[hidden],.hide,[hidden]{display:none!important}
-.mode{margin-bottom:14px}
-.grp{font:600 18px/1.1 "Barlow Condensed",sans-serif;margin:16px 0 8px}
-details{background:var(--surface);border-radius:10px;padding:12px 14px;margin:12px 0}
-details summary{cursor:pointer;font-weight:600}
-details[open] summary{margin-bottom:12px}
-.auto{font-size:13px;color:var(--muted);margin:-8px 0 12px}
+/* shell */
+.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:14px calc(var(--tabh) + 96px + env(safe-area-inset-bottom,0px))}
+.apphead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px}
+.apphead h1{margin:0;font:700 30px/1 var(--f-display);letter-spacing:.02em;text-wrap:balance}
+.ctx{margin:0;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:right}
+.screen{display:grid;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:16px;min-width:0}
+.card>h2,.sect{margin:0;font:600 13px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hint{margin:0;font-size:15px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.span2{grid-column:1/-1}
+
+/* controls */
+.field{display:grid;gap:6px;min-width:0}
+.field>span{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.inp{width:100%;min-height:52px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--raised);font-size:18px;font-variant-numeric:tabular-nums}
+.inp:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
 select.inp{appearance:auto}
-.imp{background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:14px;border:1.5px dashed var(--muted)}
-.imp p{margin:0 0 10px;font-size:15px}
-.imp .btn{width:100%;font-size:16px;padding:12px}
-.imp .st{margin:10px 0 0;font-size:14px;color:var(--muted)}
-.imp .st.err{color:var(--warn)}
-.imp .st.ok{color:var(--good)}
-.imp ul{margin:6px 0 0;padding-left:18px;font-size:14px}
-.stop{margin-top:8px}
-.copy{width:100%;margin:0 0 12px}
-.out .cost{margin:12px 0 0;padding-top:10px;border-top:1px solid rgba(128,128,128,.4);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.out .cost b{font:700 32px/1 "Barlow Condensed",sans-serif}
-.out .cost span{opacity:.85;font-size:15px}
+.unit{position:relative}
+.unit input{padding-right:44px}
+.unit::after{content:attr(data-u);position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;background:var(--raised);border:1px solid var(--line);border-radius:14px}
+.seg button{min-height:46px;border:0;border-radius:10px;background:none;color:var(--muted);font-weight:600;font-size:16px;padding:8px 6px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.btn{display:block;width:100%;min-height:56px;border:0;border-radius:14px;padding:14px;font-weight:600;font-size:18px;background:var(--accent);color:var(--on-accent);text-align:center}
+.btn.alt{background:none;color:var(--fg);border:1px solid var(--line)}
+.btn-sm{min-height:44px;border:1px solid var(--line);background:var(--raised);border-radius:10px;padding:8px 14px;font-size:15px;font-weight:600}
+.btn-sm.acc{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px}
 
+/* import */
+.imp{border-style:dashed}
+.imp p{margin:0;font-size:16px}
 .vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
-.filebtn{display:block;text-align:center;width:100%;font-size:16px;padding:12px;cursor:pointer}
+.filebtn{cursor:pointer}
 .filebtn.off{opacity:.45;pointer-events:none}
 #impFile:focus-visible + .filebtn{outline:3px solid var(--accent);outline-offset:2px}
+.imp .st{font-size:15px;color:var(--muted)}
+.imp .st:empty{display:none}
+.imp .st.err{color:var(--warn)}
+.imp .st.ok{color:var(--good)}
+.imp ul{margin:6px 0 0;padding-left:20px}
+
+/* results */
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 20px 18px}
+.hero .main{margin:0;font:700 76px/.9 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.hero .main small{font-size:28px;font-weight:600;color:var(--fg);margin-left:8px}
+.hero .lbl{margin:8px 0 0;font-size:16px;color:var(--muted)}
+.callout{margin:0;padding:12px 16px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-weight:600;font-size:15px}
+.callout:empty{display:none}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile:last-child:nth-child(odd){grid-column:1/-1}
+.tiles:empty{display:none}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:4px;align-content:start;min-width:0}
+.tile .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font:700 30px/1 var(--f-display);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile .s{font-size:13px;color:var(--muted)}
+.tile.t-amber .v{color:var(--amber)} .tile.t-teal .v{color:var(--teal)} .tile.t-fg .v{color:var(--fg)}
+.cut{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font:600 24px/1.2 var(--f-display)}
+.cut span{display:block;margin-top:4px;font:400 15px/1.4 var(--f-body);color:var(--muted)}
+.list{padding:6px 18px 10px}
+.list dl{display:grid;grid-template-columns:1fr auto;margin:0}
+.list dt,.list dd{padding:12px 0;border-top:1px solid var(--line);margin:0;min-width:0}
+.list dt{font-size:16px;padding-right:12px}
+.list dd{text-align:right;font:600 22px/1.2 var(--f-display);font-variant-numeric:tabular-nums}
+.list dd small{display:block;font:400 13px/1.3 var(--f-body);color:var(--muted)}
+.list .gh{grid-column:1/-1;border-top:0;padding:16px 0 4px;font:600 12px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.list dd.gh{display:none}
+#rCost:empty{display:none}
+.costbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 18px 16px}
+.cost{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-top:12px;border-top:1px solid var(--line)}
+.cost span{color:var(--muted);font-size:15px}
+.cost b{font:700 36px/1 var(--f-display);color:var(--good);font-variant-numeric:tabular-nums}
+.empty{text-align:left}
+.empty p{margin:0;color:var(--muted)}
+.copyout{width:100%;font:15px/1.4 var(--f-mono)}
+
+/* summary bar + tab bar */
+.sumbar{position:fixed;left:0;right:0;bottom:calc(var(--tabh) + env(safe-area-inset-bottom,0px));padding:0 12px 8px;pointer-events:none;z-index:4}
+.sumbar-in{pointer-events:auto;max-width:536px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--raised);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 16px;box-shadow:var(--shadow)}
+.sumbar b{font:700 28px/1 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.sumbar b small{font-size:17px;color:var(--fg);margin-left:5px}
+.sumbar span{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--bar);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:0 6px env(safe-area-inset-bottom,0px)}
+.tabs-in{max-width:560px;margin:0 auto;height:var(--tabh);display:grid;grid-template-columns:repeat(5,1fr)}
+.tabbar button{border:0;background:none;color:var(--muted);display:grid;justify-items:center;align-content:center;gap:3px;font-size:12px;font-weight:600;letter-spacing:.02em}
+.tabbar svg{width:44px;height:28px;padding:3px 10px;border-radius:14px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-pressed="true"]{color:var(--accent)}
+.tabbar button[aria-pressed="true"] svg{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.toast{position:fixed;left:50%;bottom:calc(var(--tabh) + 84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(16px);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* layout: outline editor */
-.lsec{background:var(--surface);border-radius:10px;padding:12px;margin-bottom:12px}
-.lsec-h{display:grid;grid-template-columns:1fr 96px;gap:8px}
-.erow{display:grid;grid-template-columns:22px 76px 1fr 1.2fr 34px;gap:6px;align-items:center;margin-bottom:6px}
-.erow .inp{padding:9px 6px;font-size:16px}
-.erow b{font-weight:500;color:var(--muted);font-size:13px;text-align:right}
-.erow .x{border:0;background:none;color:var(--muted);font-size:20px;padding:4px}
-.lsec-f{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:4px}
-.lsec-f .grow{flex:1 1 140px;font-size:14px;color:var(--muted)}
+.lsec{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px}
+.lsec-h{display:grid;grid-template-columns:1fr 104px;gap:10px}
+.erows{display:grid;gap:8px;counter-reset:edge}
+.erow{display:grid;grid-template-columns:20px 72px minmax(0,1fr) minmax(0,1.15fr) 36px;gap:6px;align-items:center;counter-increment:edge}
+.erow::before{content:counter(edge);font-size:13px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.erow .inp{min-height:48px;padding:10px 8px;font-size:16px}
+.erow .x{border:0;background:none;color:var(--muted);font-size:24px;line-height:1;min-height:44px}
+.lsec-f{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.lsec-f .grow{flex:1 1 150px;font-size:14px;color:var(--muted)}
 .lsec-f .grow.err{color:var(--warn);font-weight:600}
 .lsec-f .grow.ok{color:var(--good)}
-.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 /* layout: drawing and cut list */
-:root{--pa:#DCE6F5;--pb:#C4D4EC;--seam:#7C93B8;--ridgec:#B42318;--valc:#2459A6}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pa:#22324A;--pb:#2B3F5D;--seam:#5A7398;--ridgec:#F2776B;--valc:#78AEEB}}
-:root[data-theme="dark"]{--pa:#22324A;--pb:#2B3F5D;--seam:#5A7398;--ridgec:#F2776B;--valc:#78AEEB}
-#layOut h2{font:600 24px/1.1 "Barlow Condensed",sans-serif;margin:18px 0 6px}
-.viewer{background:var(--surface);border-radius:12px;overflow:auto;-webkit-overflow-scrolling:touch;max-height:78vh;border:1px solid var(--line)}
-#plan{display:block;width:calc(100% * var(--z,1));height:auto;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:600}
-#plan text{fill:var(--ink)}
-.zoom{display:flex;gap:8px;align-items:center;margin:8px 0 6px}
-.zoom .btn-sm{min-width:46px;font-size:18px;font-weight:600}
+#layOut{display:grid;gap:12px}
+#layOut h2{margin:8px 0 0;font:600 13px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.viewer{background:var(--surface);border-radius:16px;overflow:auto;-webkit-overflow-scrolling:touch;max-height:72vh;border:1px solid var(--line)}
+#plan{display:block;width:calc(100% * var(--z,1));height:auto;font-family:var(--f-display);font-weight:600}
+#plan text{fill:var(--fg)}
+.zoom{display:flex;gap:8px;align-items:center}
+.zoom .btn-sm{min-width:52px;font-size:18px}
 .zoom span{color:var(--muted);font-size:14px;margin-left:auto}
-.key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--muted);margin:6px 0 10px}
-.key i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
-.fsec{background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:10px}
-.fsec h3{margin:0 0 8px;font:600 19px/1.2 "Barlow Condensed",sans-serif}
-.fsec h3 small{color:var(--muted);font-weight:500;font-size:15px}
-.code{display:inline-block;min-width:30px;padding:1px 6px;margin-right:8px;border-radius:5px;background:var(--ink);color:var(--surface);text-align:center}
-.cuts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
-.cuts li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 6px;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:15px}
-.cuts b{font-family:"Barlow Condensed",sans-serif;color:var(--muted)}
-.cuts span{font:600 16px/1.2 "Barlow Condensed",sans-serif}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--muted)}
+.key i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.fsec{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:10px}
+.fsec h3{margin:0;font:600 20px/1.2 var(--f-display)}
+.fsec h3 small{color:var(--muted);font:500 14px var(--f-body);margin-left:4px}
+.code{display:inline-block;min-width:32px;padding:2px 7px;margin-right:8px;border-radius:7px;background:var(--accent);color:var(--on-accent);text-align:center}
+.cuts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.cuts li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:0 6px;background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.cuts b{font:500 13px var(--f-mono);color:var(--muted)}
+.cuts span{font:600 16px/1.2 var(--f-mono);font-variant-numeric:tabular-nums}
 .cuts small{flex-basis:100%;font-size:12px;color:var(--amber)}
-.notes{font-size:14px;color:var(--muted);padding-left:18px;margin:6px 0 12px}
+.notes{font-size:15px;color:var(--muted);padding-left:20px;margin:0}
 .notes li{margin-bottom:4px}
-
+.note{margin:0;font-size:14px;color:var(--muted)}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top"><h1>Job calculator</h1></div>
-  <p class="lede">Roofing and Hardie siding takeoffs. Round up and check against the plans and the manufacturer's specs.</p>
-  <div class="seg tabs" role="group" aria-label="Calculator">
-    <button data-tab="roof" aria-pressed="true">Roofing</button>
-    <button data-tab="siding" aria-pressed="false">Hardie siding</button>
-  </div>
+<div class="app">
+  <header class="apphead">
+    <h1>Job calculator</h1>
+    <p class="ctx" id="ctx"></p>
+  </header>
 
-  <div class="imp" id="imp">
-    <p><strong>Import a HOVER or EagleView report.</strong> Pick the PDF, or screenshots of the measurement summary. Claude reads it and fills in the numbers.</p>
-    <input type="file" id="impFile" class="vh" multiple accept="application/pdf,.pdf,image/png,image/jpeg,image/webp">
-    <label class="btn filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
-    <button class="btn-sm stop hide" id="impStop">Stop</button>
-    <div class="st" id="impSt" aria-live="polite">Getting import ready…</div>
-  </div>
-
-  <!-- ROOFING -->
-  <section class="pane" id="p-roof">
-    <div class="seg mode" role="group" aria-label="Material">
-      <button data-mat="metal" aria-pressed="true">Metal</button>
-      <button data-mat="shingle" aria-pressed="false">Shingles</button>
+  <!-- ROOF -->
+  <section class="screen" id="s-roof">
+    <div class="card imp" id="imp">
+      <p><strong>Import a HOVER or EagleView report.</strong> Pick the PDF, or screenshots of the measurement summary. Claude reads it and fills in the numbers.</p>
+      <input type="file" id="impFile" class="vh" multiple accept="application/pdf,.pdf,image/png,image/jpeg,image/webp">
+      <label class="btn alt filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
+      <button class="btn-sm hide" id="impStop">Stop</button>
+      <div class="st" id="impSt" aria-live="polite">Getting import ready…</div>
     </div>
-    <div id="metalIn">
-      <div class="two">
-        <label class="field"><span>Panel</span><select class="inp" id="mPanel">
+
+    <div class="card">
+      <h2>Material</h2>
+      <div class="seg" role="group" aria-label="Material">
+        <button data-mat="metal" aria-pressed="true">Metal</button>
+        <button data-mat="shingle" aria-pressed="false">Shingles</button>
+      </div>
+      <div id="metalIn" class="grid2">
+        <label class="field span2"><span>Panel</span><select class="inp" id="mPanel">
           <option value="35.25|ex" selected>Exposed fastener 35¼"</option>
           <option value="36|ex">R-panel / PBR (36")</option>
           <option value="24|ex">5V crimp (24")</option>
@@ -170,48 +213,36 @@ select.inp{appearance:auto}
         </select></label>
         <label class="field"><span>Overhang past eave</span><div class="unit" data-u="in"><input class="inp" id="mOver" type="number" min="0" inputmode="decimal" step="any" value="2"></div></label>
       </div>
-      <div class="three">
-        <label class="field"><span>Panel $/ft</span><div class="unit" data-u=""><input class="inp" id="prPanel" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
-        <label class="field"><span>Trim $/ft</span><div class="unit" data-u=""><input class="inp" id="prTrim" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
-        <label class="field"><span>Screws $/bag</span><div class="unit" data-u=""><input class="inp" id="prScrew" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
-      </div>
-      <p class="auto">Enter your supplier prices to get an estimated cost.</p>
     </div>
 
-    <div class="seg mode" role="group" aria-label="Measurements">
-      <button data-src="report" aria-pressed="false">From report</button>
-      <button data-src="footprint" aria-pressed="true">Footprint</button>
-      <button data-src="layout" aria-pressed="false">Layout</button>
-    </div>
-
-    <div id="layIn" hidden>
-      <p class="auto">Walk around the roof edge from any corner, entering each edge off the report's length diagram. Rake / gable edges: enter the rake length the report shows (along the slope). Wall: a lower roof's high side against the house.</p>
-      <div id="secs"></div>
-      <div class="btnrow"><button class="btn-sm" id="addSec">+ Section (porch, lower roof)</button><button class="btn-sm" id="exSec">Load example</button></div>
-    </div>
-
-    <div id="fpIn">
-      <div class="seg mode" role="group" aria-label="Roof style">
-        <button data-style="gable" aria-pressed="true">Gable</button>
-        <button data-style="hip" aria-pressed="false">Hip</button>
+    <div class="card">
+      <h2>Measurements</h2>
+      <div class="seg" role="group" aria-label="Measurements">
+        <button data-src="report" aria-pressed="false">Report</button>
+        <button data-src="footprint" aria-pressed="true">Footprint</button>
+        <button data-src="layout" aria-pressed="false">Layout</button>
       </div>
-      <div class="two">
-        <label class="field"><span>Length (along ridge)</span><div class="unit" data-u="ft"><input class="inp" id="rL" type="number" min="0" inputmode="decimal" step="any" value="40"></div></label>
-        <label class="field"><span>Width</span><div class="unit" data-u="ft"><input class="inp" id="rW" type="number" min="0" inputmode="decimal" step="any" value="30"></div></label>
-      </div>
-      <p class="auto">Measure to the drip edge so overhangs are included.</p>
-      <div class="two">
-        <label class="field"><span>Pitch</span><select class="inp pitch" id="rP"></select></label>
-        <label class="field"><span>Extra area (porch, dormers)</span><div class="unit" data-u="ft²"><input class="inp" id="rX" type="number" min="0" inputmode="decimal" step="any" value="0"></div></label>
-      </div>
-    </div>
 
-    <div id="repIn" hidden>
-      <div class="two">
+      <div id="fpIn" class="screen">
+        <div class="seg" role="group" aria-label="Roof style">
+          <button data-style="gable" aria-pressed="true">Gable</button>
+          <button data-style="hip" aria-pressed="false">Hip</button>
+        </div>
+        <div class="grid2">
+          <label class="field"><span>Length along ridge</span><div class="unit" data-u="ft"><input class="inp" id="rL" type="number" min="0" inputmode="decimal" step="any" value="40"></div></label>
+          <label class="field"><span>Width</span><div class="unit" data-u="ft"><input class="inp" id="rW" type="number" min="0" inputmode="decimal" step="any" value="30"></div></label>
+        </div>
+        <p class="hint">Measure to the drip edge so overhangs are included.</p>
+        <div class="grid2">
+          <label class="field"><span>Pitch</span><select class="inp pitch" id="rP"></select></label>
+          <label class="field"><span>Extra area</span><div class="unit" data-u="ft²"><input class="inp" id="rX" type="number" min="0" inputmode="decimal" step="any" value="0"></div></label>
+        </div>
+        <p class="hint">Extra area covers porches and dormers.</p>
+      </div>
+
+      <div id="repIn" class="grid2" hidden>
         <label class="field"><span>Total roof area</span><div class="unit" data-u="ft²"><input class="inp" id="qA" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
         <label class="field"><span>Main pitch</span><select class="inp pitch" id="qP"></select></label>
-      </div>
-      <div class="three">
         <label class="field"><span>Eaves</span><div class="unit" data-u="ft"><input class="inp" id="qE" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
         <label class="field"><span>Rakes</span><div class="unit" data-u="ft"><input class="inp" id="qR" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
         <label class="field"><span>Ridges</span><div class="unit" data-u="ft"><input class="inp" id="qRi" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
@@ -219,101 +250,156 @@ select.inp{appearance:auto}
         <label class="field"><span>Valleys</span><div class="unit" data-u="ft"><input class="inp" id="qV" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
         <label class="field"><span>Flashing</span><div class="unit" data-u="ft"><input class="inp" id="qF" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
       </div>
+
+      <div id="layRef" class="screen" hidden>
+        <p class="hint" id="layRefTxt">The roof outline is on the Layout tab.</p>
+        <button class="btn alt" data-go="layout">Edit the outline</button>
+      </div>
     </div>
 
-    <div class="two">
-      <label class="field"><span>Waste</span><div class="unit" data-u="%"><input class="inp" id="rWaste" type="number" min="0" inputmode="decimal" step="any" value="5"></div></label>
-      <label class="field" id="nailWrap"><span>Nails per shingle</span><select class="inp" id="rN"><option value="4">4 (standard)</option><option value="6">6 (high wind)</option></select></label>
+    <div class="card">
+      <div class="grid2">
+        <label class="field"><span>Waste allowance</span><div class="unit" data-u="%"><input class="inp" id="rWaste" type="number" min="0" inputmode="decimal" step="any" value="5"></div></label>
+        <label class="field" id="nailWrap"><span>Nails per shingle</span><select class="inp" id="rN"><option value="4">4 (standard)</option><option value="6">6 (high wind)</option></select></label>
+      </div>
     </div>
+  </section>
 
-    <p class="note warn" id="rWarn" aria-live="polite"></p>
-    <div class="out" aria-live="polite">
+  <!-- RESULTS -->
+  <section class="screen" id="s-results" hidden>
+    <div class="hero" aria-live="polite">
       <p class="main" id="rOut">0</p><p class="lbl" id="rLbl"></p>
-      <div id="rCut"></div>
-      <dl id="rList"></dl>
-      <div id="rCost"></div>
     </div>
-    <button class="btn alt copy" data-copy="p-roof">Copy order list</button>
-    <p class="note" id="rNote"></p>
+    <p class="callout" id="rWarn"></p>
+    <div class="tiles" id="rTiles"></div>
+    <div id="rCut"></div>
+    <div class="card list"><dl id="rList"></dl></div>
+    <div id="rCost"></div>
+    <p class="hint" id="rNote"></p>
+    <button class="btn copy" data-copy="roof">Copy order list</button>
+    <p class="hint">Round up, and check against the plans and the manufacturer's specs.</p>
+  </section>
 
+  <!-- LAYOUT -->
+  <section class="screen" id="s-layout" hidden>
+    <div class="card empty" id="layEmpty">
+      <h2>Panel layout</h2>
+      <p>Trace the roof outline from the report's length diagram. The calculator works out every face, hip and valley, then draws each panel with its cut length.</p>
+      <button class="btn" id="useLay">Trace the roof outline</button>
+    </div>
     <div id="layOut" hidden></div>
+    <div id="layIn" class="screen" hidden>
+      <h2 class="sect" style="margin-top:8px">Roof outline</h2>
+      <p class="hint">Walk around the roof edge from any corner, entering each edge off the length diagram. Rake: a gable edge, entered as the rake length the report shows (along the slope). Wall: a lower roof's high side against the house.</p>
+      <div id="secs" class="screen"></div>
+      <div class="btnrow"><button class="btn-sm" id="addSec">+ Section (porch, lower roof)</button><button class="btn-sm" id="exSec">Load example</button></div>
+    </div>
+  </section>
 
-    <details>
-      <summary>Product coverage</summary>
-      <p class="note">Set these to match what you buy.</p>
-      <div class="two">
+  <!-- SIDING -->
+  <section class="screen" id="s-siding" hidden>
+    <div class="card">
+      <h2>Measurements</h2>
+      <div class="seg" role="group" aria-label="Siding measurements">
+        <button data-ssrc="report" aria-pressed="false">Report</button>
+        <button data-ssrc="walls" aria-pressed="true">Walls</button>
+      </div>
+      <div id="sWallsIn" class="screen">
+        <div class="grid2">
+          <label class="field"><span>Total wall length</span><div class="unit" data-u="ft"><input class="inp" id="sL" type="number" min="0" inputmode="decimal" step="any" value="140"></div></label>
+          <label class="field"><span>Wall height</span><div class="unit" data-u="ft"><input class="inp" id="sH" type="number" min="0" inputmode="decimal" step="any" value="9"></div></label>
+        </div>
+        <p class="hint">Add up every wall you're siding. Height is to the soffit.</p>
+        <p class="sect">Gables</p>
+        <div class="grid3">
+          <label class="field"><span>Count</span><input class="inp" id="gN" type="number" inputmode="numeric" step="1" min="0" value="2"></label>
+          <label class="field"><span>Width</span><div class="unit" data-u="ft"><input class="inp" id="gW" type="number" min="0" inputmode="decimal" step="any" value="30"></div></label>
+          <label class="field"><span>Height</span><div class="unit" data-u="ft"><input class="inp" id="gH" type="number" min="0" inputmode="decimal" step="any" value="7.5"></div></label>
+        </div>
+        <p class="sect">Openings and corners</p>
+        <div class="grid2">
+          <label class="field"><span>Windows</span><input class="inp" id="oW" type="number" inputmode="numeric" step="1" min="0" value="10"></label>
+          <label class="field"><span>Avg window</span><div class="unit" data-u="ft²"><input class="inp" id="oWs" type="number" min="0" inputmode="decimal" step="any" value="15"></div></label>
+          <label class="field"><span>Doors</span><input class="inp" id="oD" type="number" inputmode="numeric" step="1" min="0" value="2"></label>
+          <label class="field"><span>Outside corners</span><input class="inp" id="sC" type="number" inputmode="numeric" step="1" min="0" value="4"></label>
+          <label class="field"><span>Garage doors</span><input class="inp" id="oG" type="number" inputmode="numeric" step="1" min="0" value="0"></label>
+          <label class="field"><span>Garage size</span><select class="inp" id="oGs"><option value="9x7">9×7</option><option value="16x7" selected>16×7</option></select></label>
+        </div>
+      </div>
+      <div id="sRepIn" class="screen" hidden>
+        <label class="field"><span>Siding area, openings taken out</span><div class="unit" data-u="ft²"><input class="inp" id="tA" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <div class="grid2">
+          <label class="field"><span>Outside corners</span><div class="unit" data-u="ft"><input class="inp" id="tOC" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
+          <label class="field"><span>Inside corners</span><div class="unit" data-u="ft"><input class="inp" id="tIC" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
+          <label class="field"><span>Opening trim</span><div class="unit" data-u="ft"><input class="inp" id="tOT" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Plank</h2>
+      <div class="grid2">
+        <label class="field"><span>HardiePlank width</span><select class="inp" id="pX">
+          <option value="4">5¼" (4" exp.)</option>
+          <option value="5">6¼" (5" exp.)</option>
+          <option value="6">7¼" (6" exp.)</option>
+          <option value="7" selected>8¼" (7" exp.)</option>
+          <option value="8">9¼" (8" exp.)</option>
+          <option value="10.75">12" (10¾" exp.)</option>
+        </select></label>
+        <label class="field"><span>Waste</span><div class="unit" data-u="%"><input class="inp" id="sWaste" type="number" min="0" inputmode="decimal" step="any" value="10"></div></label>
+      </div>
+    </div>
+    <div class="hero" id="sRes" aria-live="polite">
+      <p class="main" id="sOut">0<small>planks</small></p><p class="lbl">12 ft HardiePlank, waste included</p>
+    </div>
+    <div class="card list"><dl id="sList"></dl></div>
+    <button class="btn copy" data-copy="siding">Copy order list</button>
+    <p class="hint">Trim is 12 ft boards: 2 boards per outside corner run, 1 per inside corner run, plus opening trim with 10% extra. Nails assume blind nailing at every stud on 16" centers plus trim.</p>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="s-settings" hidden>
+    <div class="card mt">
+      <h2>Metal prices</h2>
+      <div class="grid3">
+        <label class="field"><span>Panel $/ft</span><input class="inp" id="prPanel" type="number" inputmode="decimal" step="any" min="0" value="0"></label>
+        <label class="field"><span>Trim $/ft</span><input class="inp" id="prTrim" type="number" inputmode="decimal" step="any" min="0" value="0"></label>
+        <label class="field"><span>Screws $/bag</span><input class="inp" id="prScrew" type="number" inputmode="decimal" step="any" min="0" value="0"></label>
+      </div>
+      <p class="hint">Enter your supplier prices to see an estimated material cost on Results.</p>
+    </div>
+    <div class="card">
+      <h2>Product coverage</h2>
+      <p class="hint">Set these to match what you buy.</p>
+      <div class="grid2">
         <label class="field sh"><span>Starter, ft per bundle</span><input class="inp" id="cStart" type="number" min="0" inputmode="decimal" step="any" value="110"></label>
         <label class="field sh"><span>Ridge cap, ft per bundle</span><input class="inp" id="cRidge" type="number" min="0" inputmode="decimal" step="any" value="25"></label>
         <label class="field mt"><span>Trim, usable ft per piece</span><input class="inp" id="cTrim" type="number" min="0" inputmode="decimal" step="any" value="10"></label>
         <label class="field mt"><span>Screws per square</span><input class="inp" id="cScrew" type="number" min="0" inputmode="numeric" step="1" value="80"></label>
-        <label class="field"><span>Underlayment, squares per roll</span><input class="inp" id="cUnder" type="number" min="0" inputmode="decimal" step="any" value="10"></label>
+        <label class="field"><span>Underlayment, sq per roll</span><input class="inp" id="cUnder" type="number" min="0" inputmode="decimal" step="any" value="10"></label>
         <label class="field"><span>Ice and water, ft per roll</span><input class="inp" id="cIce" type="number" min="0" inputmode="decimal" step="any" value="66"></label>
         <label class="field"><span>Ice and water rows at eaves</span><input class="inp" id="cIceRows" type="number" inputmode="numeric" step="1" min="0" value="1"></label>
         <label class="field sh"><span>Nails per box</span><input class="inp" id="cNails" type="number" min="0" inputmode="numeric" step="1" value="7200"></label>
       </div>
-    </details>
-  </section>
-
-  <!-- SIDING -->
-  <section class="pane" id="p-siding" hidden>
-    <div class="seg mode" role="group" aria-label="Measurements">
-      <button data-ssrc="report" aria-pressed="false">From report</button>
-      <button data-ssrc="walls" aria-pressed="true">Walls</button>
     </div>
-
-    <div id="sWallsIn">
-      <div class="two">
-        <label class="field"><span>Total wall length</span><div class="unit" data-u="ft"><input class="inp" id="sL" type="number" min="0" inputmode="decimal" step="any" value="140"></div></label>
-        <label class="field"><span>Wall height</span><div class="unit" data-u="ft"><input class="inp" id="sH" type="number" min="0" inputmode="decimal" step="any" value="9"></div></label>
-      </div>
-      <p class="auto">Add up every wall you're siding. Height is to the soffit.</p>
-      <div class="three">
-        <label class="field"><span>Gables</span><input class="inp" id="gN" type="number" inputmode="numeric" step="1" min="0" value="2"></label>
-        <label class="field"><span>Gable width</span><div class="unit" data-u="ft"><input class="inp" id="gW" type="number" min="0" inputmode="decimal" step="any" value="30"></div></label>
-        <label class="field"><span>Gable height</span><div class="unit" data-u="ft"><input class="inp" id="gH" type="number" min="0" inputmode="decimal" step="any" value="7.5"></div></label>
-      </div>
-      <p class="grp">Openings and corners</p>
-      <div class="three">
-        <label class="field"><span>Windows</span><input class="inp" id="oW" type="number" inputmode="numeric" step="1" min="0" value="10"></label>
-        <label class="field"><span>Doors</span><input class="inp" id="oD" type="number" inputmode="numeric" step="1" min="0" value="2"></label>
-        <label class="field"><span>Garage doors</span><input class="inp" id="oG" type="number" inputmode="numeric" step="1" min="0" value="0"></label>
-        <label class="field"><span>Avg window</span><div class="unit" data-u="ft²"><input class="inp" id="oWs" type="number" min="0" inputmode="decimal" step="any" value="15"></div></label>
-        <label class="field"><span>Garage size</span><select class="inp" id="oGs"><option value="9x7">9×7</option><option value="16x7" selected>16×7</option></select></label>
-        <label class="field"><span>Outside corners</span><input class="inp" id="sC" type="number" inputmode="numeric" step="1" min="0" value="4"></label>
-      </div>
-    </div>
-
-    <div id="sRepIn" hidden>
-      <label class="field"><span>Siding area (openings already taken out)</span><div class="unit" data-u="ft²"><input class="inp" id="tA" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
-      <div class="three">
-        <label class="field"><span>Outside corners</span><div class="unit" data-u="ft"><input class="inp" id="tOC" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Inside corners</span><div class="unit" data-u="ft"><input class="inp" id="tIC" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Opening trim</span><div class="unit" data-u="ft"><input class="inp" id="tOT" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
-      </div>
-    </div>
-
-    <p class="grp">Plank</p>
-    <div class="two">
-      <label class="field"><span>HardiePlank width</span><select class="inp" id="pX">
-        <option value="4">5¼" (4" exp.)</option>
-        <option value="5">6¼" (5" exp.)</option>
-        <option value="6">7¼" (6" exp.)</option>
-        <option value="7" selected>8¼" (7" exp.)</option>
-        <option value="8">9¼" (8" exp.)</option>
-        <option value="10.75">12" (10¾" exp.)</option>
-      </select></label>
-      <label class="field"><span>Waste</span><div class="unit" data-u="%"><input class="inp" id="sWaste" type="number" min="0" inputmode="decimal" step="any" value="10"></div></label>
-    </div>
-
-    <div class="out" aria-live="polite">
-      <p class="main" id="sOut">0<small>planks</small></p><p class="lbl">12 ft HardiePlank, waste included</p>
-      <dl id="sList"></dl>
-    </div>
-    <button class="btn alt copy" data-copy="p-siding">Copy order list</button>
-    <p class="note">Trim is 12 ft boards: 2 boards per outside corner run, 1 per inside corner run, plus opening trim with 10% extra. Nails assume blind nailing at every stud on 16" centers plus trim.</p>
   </section>
 </div>
 
+<div class="sumbar" id="sumBar" hidden>
+  <div class="sumbar-in">
+    <div><b id="sumV"></b><span id="sumL"></span></div>
+    <button class="btn-sm acc" id="sumGo">See results</button>
+  </div>
+</div>
+<nav class="tabbar" aria-label="Sections">
+  <div class="tabs-in">
+    <button data-tab="roof" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>Roof</button>
+    <button data-tab="results" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>Results</button>
+    <button data-tab="layout" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19 12 5l9 14z"/><path d="M8.3 19 12 12.6 15.7 19M12 5v14"/></svg>Layout</button>
+    <button data-tab="siding" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 8.5h16M4 13h16M4 17.5h16"/></svg>Siding</button>
+    <button data-tab="settings" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings</button>
+  </div>
+</nav>
 <div class="toast" id="toast" role="status"></div>
 <script>
 function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1800);}
@@ -466,7 +552,9 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
 
   function ftin(ft){let inch=Math.ceil(ft*12-1e-6);return Math.floor(inch/12)+"' "+(inch%12)+'"';}
-  function rows(host,list){host.innerHTML='';for(const [k,v,sub] of list){if(v==null)continue;host.append(el('dt',null,k));const d=el('dd',null,v);if(sub)d.append(el('small',null,sub));host.append(d);}}
+  // list items are [label, value, note]; ['#Heading'] starts a group, shown only if a row in it has a value
+  function rows(host,list){host.innerHTML='';let head=null;for(const [k,v,sub] of list){if(k[0]==='#'){head=k.slice(1);continue;}if(v==null)continue;if(head){host.append(el('dt','gh',head),el('dd','gh'));head=null;}host.append(el('dt',null,k));const d=el('dd',null,v);if(sub)d.append(el('small',null,sub));host.append(d);}}
+  function tiles(list){const h=$('rTiles');h.innerHTML='';for(const [k,v,sub,tone] of list){if(v==null)continue;const t=el('div','tile t-'+(tone||'fg'));t.append(el('span','k',k),el('span','v',v));if(sub)t.append(el('span','s',sub));h.append(t);}}
   function setMain(id,num,unit){const e=$(id);e.textContent=num;if(unit)e.append(el('small',null,unit));}
 
   // ---------- roof geometry, from either source ----------
@@ -511,20 +599,23 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
     $('rNote').textContent='';
     $('rWarn').textContent=g.area>0?slopeWarn(g.pitch,isSS):'';
     $('layOut').hidden=st.src!=='layout';
-    if(g.layout){ secStatus(g.layout); drawLayout(g.layout,st.mat==='metal'); }
-    if(!(g.area>0)){ setMain('rOut','0',''); $('rLbl').textContent=st.src==='report'?'Enter the report numbers or import the report.':st.src==='layout'?'Finish the roof outline.':'Enter the roof size.'; rows($('rList'),[]); return; }
+    if(g.layout){ secStatus(g.layout); drawLayout(g.layout,st.mat==='metal');
+      const bad=g.layout.secs.filter(x=>!x.ok).length;
+      $('layRefTxt').textContent=bad?'The outline needs fixing on the Layout tab.':'Outline: '+st.sections.map(x=>(x.name||'Section')+', '+x.edges.length+' edges').join('; ')+'.'; }
+    if(!(g.area>0)){ setMain('rOut','0',''); $('rLbl').textContent=st.src==='report'?'Enter the report numbers or import the report.':st.src==='layout'?'Finish the roof outline.':'Enter the roof size.'; rows($('rList'),[]); tiles([]); return; }
 
     if(st.mat==='shingle'){
       setMain('rOut',Math.ceil(sqW*3),'bundles'); $('rLbl').textContent='Shingles, 3 bundles per square';
       const nails=Math.ceil(sqW*67)*n('rN');
+      tiles([['Roof area',f(g.area)+' ft²',f(g.area/100,1)+' sq','fg'],['Squares with waste',f(sqW,1),'','teal']]);
       rows($('rList'),[
-        ['Roof area',f(g.area)+' ft²','('+f(g.area/100,1)+' sq)'],
-        ['Squares with waste',f(sqW,1)],
+        ['#Accessories'],
         ['Starter strip',Math.ceil((g.eave+g.rake)/Math.max(1,n('cStart')))+' bundles',f(g.eave+g.rake)+' ft'],
         ['Ridge cap',Math.ceil((g.ridge+g.hips)/Math.max(1,n('cRidge')))+' bundles',f(g.ridge+g.hips)+' ft'],
-        under, ice,
         ['Drip edge',Math.ceil((g.eave+g.rake)*1.05/10)+' pcs','10 ft'],
         ['Headwall flashing',g.wall?Math.ceil(g.wall*1.05/10)+' pcs':null,g.wall?f(g.wall)+' ft':''],
+        ['#Deck protection'], under, ice,
+        ['#Fasteners'],
         ['Coil nails',Math.max(1,Math.ceil(nails/Math.max(1,n('cNails'))))+' box'+(nails>n('cNails')?'es':''),'~'+f(nails)]
       ]);
       return;
@@ -560,10 +651,10 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
       $('rNote').textContent='Hip and cut-up roofs have a different panel length on every facet. Use this for pricing, and send the report to your supplier for the cut list.';
       clips=ss?Math.ceil(totalLF/2)+panels:0;
     }
+    tiles([['Roof area',f(g.area)+' ft²',f(g.area/100,1)+' sq','fg'],['Squares with waste',f(sqW,1),'','teal'],
+      g.gable||g.layout?['Total panel',f(totalLF)+' ft',g.layout?'cut list, no waste':'','amber']:['Panels along eaves','~'+panels,'lengths vary','amber']]);
     const list=[
-      ['Roof area',f(g.area)+' ft²','('+f(g.area/100,1)+' sq)'],
-      ['Squares with waste',f(sqW,1)],
-      g.gable||g.layout?['Total panel',f(totalLF)+' ft',g.layout?'cut list, no waste':'']:['Panels along eaves','~'+panels,'lengths vary'],
+      ['#Trim and flashing'],
       ['Eave trim',pcs(g.eave),f(g.eave)+' ft'],
       ['Rake / gable trim',pcs(g.rake),g.rake?f(g.rake)+' ft':''],
       ['Ridge cap',pcs(g.ridge),g.ridge?f(g.ridge)+' ft':''],
@@ -573,24 +664,25 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
     ];
     if(ss){
       const z=2*g.ridge+2*g.hips;
-      list.push(['Z-closure',pcs(z),z?f(z)+' ft':'']);
+      list.push(['Z-closure',pcs(z),z?f(z)+' ft':''],['#Clips and fasteners']);
       list.push(['Panel clips','~'+f(clips),'24" o.c.']);
       list.push(['Pancake screws','~'+f(clips),'1 per clip']);
     } else {
+      list.push(['#Closures and fasteners']);
       list.push(['Inside closures (eave)',Math.ceil(g.eave/covFt)+' pcs']);
       list.push(['Outside closures (ridge and hips)',(g.ridge+g.hips)?Math.ceil(2*(g.ridge+g.hips)/covFt)+' pcs':null]);
       const screws=Math.ceil(sqW*n('cScrew')); screwBags=Math.ceil(screws/250);
       list.push(['Panel screws',screwBags+' bags','~'+f(screws)+', 250/bag']);
     }
-    list.push(under, ice);
+    list.push(['#Deck protection'],under, ice);
     rows($('rList'),list);
     const money=x=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     const cP=totalLF*n('prPanel'), cT=trimPcs*trimLen*n('prTrim'), cS=screwBags*n('prScrew'), tot=cP+cT+cS;
     if(tot>0){
-      const cl=el('dl'); cl.style.marginTop='12px';
+      const cl=el('dl');
       rows(cl,[['Panels',money(cP),f(totalLF)+' ft'],['Trim',cT?money(cT):null,trimPcs+' pcs × '+f(trimLen)+' ft'],['Screws',cS?money(cS):null,screwBags+' bags']]);
       const box=el('div','cost'); box.append(el('span',null,'Est. material'+(ss?' (clips not priced)':'')),el('b',null,money(tot)));
-      $('rCost').append(cl,box);
+      const wrap=el('div','costbox list'); wrap.append(el('dt','gh','Estimated cost'),cl,box); $('rCost').append(wrap);
     }
   }
 
@@ -620,7 +712,17 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
   }
 
   // ---------- state + UI ----------
-  function calc(){roof();siding();save();}
+  function calc(){roof();siding();summary();save();}
+  function summary(){
+    const t=st.tab, side=t==='siding', show2=side||t==='roof'||t==='layout'||t==='settings';
+    $('sumBar').hidden=!show2;
+    const src=$(side?'sOut':'rOut'), v=$('sumV'); v.textContent=''; v.append(...[...src.childNodes].map(x=>x.cloneNode(true)));
+    $('sumL').textContent=side?'12 ft HardiePlank':$('rLbl').textContent;
+    $('sumGo').textContent=side?'See the list':'See results';
+    $('ctx').textContent=side?'Hardie siding':(st.mat==='metal'?'Metal':'Shingles')+' \u00b7 '+({report:'Report',footprint:'Footprint',layout:'Layout'}[st.src]||'');
+  }
+  const TABS=['roof','results','layout','siding','settings'];
+  function go(t){st.tab=t;show();window.scrollTo(0,0);}
   function save(){const vals={};document.querySelectorAll('input.inp,select.inp').forEach(i=>{if(i.id)vals[i.id]=i.value;});try{localStorage.setItem(LS,JSON.stringify({st,vals}));}catch(e){}}
   function load(){try{const s=JSON.parse(localStorage.getItem(LS)||'null');if(!s)return;Object.assign(st,s.st||{});for(const [k,v] of Object.entries(s.vals||{})){const i=$(k);if(i)i.value=v;}}catch(e){}}
   function wasteKey(){return st.src==='footprint'?st.style:st.src;}
@@ -630,19 +732,23 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
   function show(){
     const pr=(sel,key)=>document.querySelectorAll('['+sel+']').forEach(b=>b.setAttribute('aria-pressed',String(b.getAttribute(sel)===st[key])));
     pr('data-tab','tab');pr('data-mat','mat');pr('data-src','src');pr('data-style','style');pr('data-ssrc','ssrc');
-    $('p-roof').hidden=st.tab!=='roof'; $('p-siding').hidden=st.tab!=='siding';
+    if(!TABS.includes(st.tab)) st.tab='roof';
+    for(const t of TABS) $('s-'+t).hidden=st.tab!==t;
     $('metalIn').hidden=st.mat!=='metal'; $('nailWrap').classList.toggle('hide',st.mat!=='shingle');
     document.querySelectorAll('.sh').forEach(e=>e.classList.toggle('hide',st.mat!=='shingle'));
     document.querySelectorAll('.mt').forEach(e=>e.classList.toggle('hide',st.mat!=='metal'));
-    $('fpIn').hidden=st.src!=='footprint'; $('repIn').hidden=st.src!=='report'; $('layIn').hidden=st.src!=='layout';
+    $('fpIn').hidden=st.src!=='footprint'; $('repIn').hidden=st.src!=='report'; $('layIn').hidden=st.src!=='layout'; $('layEmpty').hidden=st.src==='layout'; $('layRef').hidden=st.src!=='layout';
     $('sWallsIn').hidden=st.ssrc!=='walls'; $('sRepIn').hidden=st.ssrc!=='report';
     calc();
   }
   const bind=(sel,key,after)=>document.querySelectorAll('['+sel+']').forEach(b=>b.onclick=()=>{st[key]=b.getAttribute(sel);if(after)after();show();});
-  bind('data-tab','tab'); bind('data-mat','mat',syncWaste); bind('data-src','src',syncWaste); bind('data-style','style',syncWaste); bind('data-ssrc','ssrc');
+  bind('data-tab','tab',()=>window.scrollTo(0,0)); bind('data-mat','mat',syncWaste); bind('data-src','src',syncWaste); bind('data-style','style',syncWaste); bind('data-ssrc','ssrc');
   $('rWaste').addEventListener('input',()=>{st.wasteEdited=n('rWaste')!==defWaste();});
   document.querySelectorAll('input.inp,select.inp').forEach(i=>i.addEventListener('input',calc));
   document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('focus',()=>i.select()));
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  $('sumGo').onclick=()=>{ if(st.tab==='siding') $('sRes').scrollIntoView({behavior:'smooth',block:'start'}); else go('results'); };
+  $('useLay').onclick=()=>{ st.src='layout'; syncWaste(); show(); };
 
   // ---------- layout: outline editor ----------
   const DEF_SEC=()=>({name:'Main roof',pitch:6,edges:[{d:'E',len:40,t:'eave'},{d:'S',len:30,t:'eave'},{d:'W',len:40,t:'eave'},{d:'N',len:30,t:'eave'}]});
@@ -656,7 +762,7 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
   function drawSecs(){
     const host=$('secs'); host.innerHTML='';
     st.sections.forEach((sec,si)=>{
-      const card=el('div','lsec'), head=el('div','lsec-h');
+      const card=el('div','lsec'), head=el('div','lsec-h'), er=el('div','erows');
       const nm=el('input','inp'); nm.value=sec.name||''; nm.oninput=()=>{sec.name=nm.value;later();};
       const ps=el('select','inp'); for(const p of PITCHES) opt(ps,p,p+'/12',+sec.pitch===p); ps.onchange=()=>{sec.pitch=+ps.value;calc();};
       head.append(fld('Section',nm),fld('Pitch',ps)); card.append(head);
@@ -664,13 +770,14 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
         two.append(fld('Starts, ft east of first corner',numIn(sec.x,v=>sec.x=v)),fld('ft south of first corner',numIn(sec.y,v=>sec.y=v)));
         card.append(two); }
       sec.edges.forEach((e,ei)=>{
-        const r=el('div','erow'); r.append(el('b',null,ei+1));
+        const r=el('div','erow');
         const d=el('select','inp'); d.setAttribute('aria-label','Edge '+(ei+1)+' direction'); for(const k of ['N','E','S','W']) opt(d,k,DIRL[k],e.d===k); d.onchange=()=>{e.d=d.value;calc();};
         const len=numIn(e.len,v=>e.len=v); len.setAttribute('aria-label','Edge '+(ei+1)+' length, ft'); len.placeholder='ft';
-        const t=el('select','inp'); t.setAttribute('aria-label','Edge '+(ei+1)+' type'); for(const [k,lb] of [['eave','Eave'],['rake','Rake / gable'],['wall','Wall']]) opt(t,k,lb,(e.t||'eave')===k); t.onchange=()=>{e.t=t.value;calc();};
+        const t=el('select','inp'); t.setAttribute('aria-label','Edge '+(ei+1)+' type'); for(const [k,lb] of [['eave','Eave'],['rake','Rake'],['wall','Wall']]) opt(t,k,lb,(e.t||'eave')===k); t.onchange=()=>{e.t=t.value;calc();};
         const x=el('button','x','\u00d7'); x.setAttribute('aria-label','Remove edge '+(ei+1)); x.onclick=()=>{sec.edges.splice(ei,1);drawSecs();calc();};
-        r.append(d,len,t,x); card.append(r);
+        r.append(d,len,t,x); er.append(r);
       });
+      card.append(er);
       const foot=el('div','lsec-f');
       const add=el('button','btn-sm','+ Edge'); add.onclick=()=>{const l=sec.edges[sec.edges.length-1];sec.edges.push({d:l?TURN[l.d]:'E',len:0,t:'eave'});drawSecs();const ins=$('secs').querySelectorAll('.lsec')[si].querySelectorAll('.erow input');ins[ins.length-1].focus();};
       foot.append(add, el('span','grow'));
@@ -770,15 +877,20 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
 
   // ---------- copy order list ----------
   document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
-    const pane=$(b.dataset.copy), out=pane.querySelector('.out'), lines=[];
-    const head=(pane.id==='p-roof'?(st.mat==='metal'?'METAL ROOF':'SHINGLE ROOF'):'HARDIE SIDING')+' ORDER';
-    lines.push(head);
-    const main=out.querySelector('.main'), lbl=out.querySelector('.lbl'), cut=out.querySelector('.cut');
-    lines.push(main.textContent.replace(/(\d)([a-z])/i,'$1 $2')+(lbl&&lbl.textContent?' ('+lbl.textContent+')':''));
-    if(cut) lines.push(cut.firstChild.textContent);
-    out.querySelectorAll('dl').forEach(dl=>{const k=[...dl.children];for(let i=0;i+1<k.length;i+=2){const dd=k[i+1];const sub=dd.querySelector('small');const v=sub?dd.firstChild.textContent+' ('+sub.textContent.replace(/^\(|\)$/g,'')+')':dd.textContent;lines.push(k[i].textContent+': '+v);}});
-    const c=out.querySelector('.cost'); if(c) lines.push(c.firstChild.textContent+': '+c.lastChild.textContent);
-    if(pane.id==='p-roof'&&st.src==='layout'&&st.mat==='metal'&&layR&&layR.panels){
+    const isRoof=b.dataset.copy==='roof', lines=[];
+    lines.push((isRoof?(st.mat==='metal'?'METAL ROOF':'SHINGLE ROOF'):'HARDIE SIDING')+' ORDER');
+    const lbl=isRoof?$('rLbl').textContent:'12 ft HardiePlank, waste included';
+    lines.push($(isRoof?'rOut':'sOut').textContent.replace(/(\d)([a-z])/i,'$1 $2')+(lbl?' ('+lbl+')':''));
+    if(isRoof){
+      const cut=$('rCut').querySelector('.cut'); if(cut) lines.push(cut.firstChild.textContent);
+      for(const t of $('rTiles').querySelectorAll('.tile')){const sb=t.querySelector('.s');lines.push(t.querySelector('.k').textContent+': '+t.querySelector('.v').textContent+(sb&&sb.textContent?' ('+sb.textContent+')':''));}
+    }
+    const dls=isRoof?[$('rList'),...$('rCost').querySelectorAll('dl')]:[$('sList')];
+    for(const dl of dls){const k=[...dl.children];for(let i=0;i+1<k.length;i+=2){
+      if(k[i].classList.contains('gh')){lines.push('',k[i].textContent.toUpperCase());continue;}
+      const dd=k[i+1],sub=dd.querySelector('small');lines.push(k[i].textContent+': '+(sub?dd.firstChild.textContent+' ('+sub.textContent+')':dd.textContent));}}
+    const c=$('rCost').querySelector('.cost'); if(isRoof&&c) lines.push('',c.firstChild.textContent+': '+c.lastChild.textContent);
+    if(isRoof&&st.src==='layout'&&st.mat==='metal'&&layR&&layR.panels){
       lines.push('','PANELS BY LENGTH ('+$('mPanel').selectedOptions[0].textContent+')');
       for(const [inch,cnt] of byLength(layR)) lines.push(cnt+' @ '+ftIn(+inch));
       lines.push('','CUT LIST BY FACE');
@@ -786,7 +898,7 @@ function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
     }
     const text=lines.join('\n');
     try{await navigator.clipboard.writeText(text);toast('Order list copied');}
-    catch(e){const t=document.createElement('textarea');t.value=text;t.className='inp';t.rows=8;t.readOnly=true;b.after(t);t.focus();t.select();toast('Select and copy the list');}
+    catch(e){let t=b.nextElementSibling; if(!t||!t.classList.contains('copyout')){t=el('textarea','inp copyout');t.rows=10;t.readOnly=true;b.after(t);} t.value=text;t.focus();t.select();toast('Select and copy the list');}
   });
 
   // ---------- import from HOVER / EagleView ----------

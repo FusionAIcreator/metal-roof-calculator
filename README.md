@@ -14,7 +14,7 @@ Phone-friendly takeoff calculator for metal roofing, shingles and Hardie siding.
 - Low-slope warnings for shingles and metal
 
 ## Panel layout
-Pick **Layout** and walk around the roof edge from any corner: direction, length off the report's length diagram, and whether it's an eave, rake / gable or wall. Add a section for a porch or lower roof. The calculator works out every face, hip, valley and ridge (one pitch per section), then draws the plan with each panel labeled with its code and cut length, plus a cut list by face and a count by length. The totals feed the rest of the order (trim, closures, ice and water), and the copied order list includes the cut list.
+Pick **Layout** under Measurements, then on the Layout tab walk around the roof edge from any corner: direction, length off the report's length diagram, and whether it's an eave, rake / gable or wall. Add a section for a porch or lower roof. The calculator works out every face, hip, valley and ridge (one pitch per section), then draws the plan with each panel labeled with its code and cut length, plus a cut list by face and a count by length. The totals feed the rest of the order (trim, closures, ice and water), and the copied order list includes the cut list.
 
 Lengths are to the long point and include the eave overhang. Report lengths are rounded to the foot, so a small gap in the outline is closed automatically and noted, and the longest runs should be checked on site.
 
