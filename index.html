@@ -3,247 +3,600 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1f2933">
-<title>Metal Roof Calculator</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M2 18 16 6l14 12v10H2z%22 fill=%22%23b45309%22/%3E%3C/svg%3E">
+<title>Job calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #f3f4f6; --card: #ffffff; --text: #111827; --muted: #6b7280;
-    --line: #e5e7eb; --accent: #b45309; --accent-ink: #ffffff; --input: #f9fafb;
+:root{
+  --bg:#E4E7E3; --surface:#F6F7F4; --ink:#1B2220; --muted:#5A6460; --line:#C7CDC8;
+  --accent:#2459A6; --good:#2C7148; --good-soft:#D8EBDF; --amber:#9A6412; --amber-soft:#F1E3C8;
+  --warn:#B42318; --haz1:#E0A02A; --haz2:#1B2220;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#131715; --surface:#1D2320; --ink:#EDF0EB; --muted:#A0AAA5; --line:#333B37;
+    --accent:#78AEEB; --good:#63C18A; --good-soft:#1C3325; --amber:#E3A843; --amber-soft:#3A2F1C;
+    --warn:#F2776B; --haz1:#E3A843; --haz2:#131715;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { color-scheme: dark;
-      --bg: #0f1418; --card: #1a2128; --text: #f3f4f6; --muted: #9ca3af;
-      --line: #2b343d; --accent: #f59e0b; --accent-ink: #111827; --input: #11171c;
-    }
-  }
-  :root[data-theme="dark"] { color-scheme: dark;
-    --bg: #0f1418; --card: #1a2128; --text: #f3f4f6; --muted: #9ca3af;
-    --line: #2b343d; --accent: #f59e0b; --accent-ink: #111827; --input: #11171c; }
-  [hidden] { display: none !important; }
-  * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
-  header { background: #1f2933; color: #fff; padding: 16px; }
-  header h1 { margin: 0; font-size: 20px; }
-  header p { margin: 2px 0 0; color: #cbd2d9; font-size: 14px; }
-  main { max-width: 980px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
-  @media (min-width: 860px) { main { grid-template-columns: 1fr 1fr; align-items: start; } }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
-  h2:not(:first-child) { margin-top: 20px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  label { display: block; font-size: 14px; font-weight: 600; }
-  label small { font-weight: 400; color: var(--muted); }
-  input, select {
-    width: 100%; margin-top: 4px; padding: 12px; font-size: 17px;
-    border: 1px solid var(--line); border-radius: 8px; background: var(--input); color: var(--text);
-  }
-  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 4px; }
-  .seg button { padding: 12px; font-size: 16px; border: 0; background: var(--input); color: var(--text); cursor: pointer; }
-  .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
-  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
-  .stat { background: var(--input); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  .stat b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
-  .stat span { font-size: 13px; color: var(--muted); }
-  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-  th, td { text-align: left; padding: 10px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
-  td.r, th.r { text-align: right; white-space: nowrap; }
-  td small { display: block; color: var(--muted); font-size: 13px; }
-  tfoot td { font-weight: 800; font-size: 18px; border-bottom: 0; }
-  .btn { width: 100%; margin-top: 14px; padding: 14px; font-size: 16px; font-weight: 700; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
-  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 600; margin-top: 8px; }
-  .note { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
-  .bar { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: #1f2933; color: #fff; font-weight: 700; }
-  .bar a { color: #fbbf24; text-decoration: none; }
-  @media (min-width: 860px) { .bar { display: none; } }
-  .err { color: #dc2626; font-weight: 600; }
+}
+:root[data-theme="dark"]{
+  --bg:#131715; --surface:#1D2320; --ink:#EDF0EB; --muted:#A0AAA5; --line:#333B37;
+  --accent:#78AEEB; --good:#63C18A; --good-soft:#1C3325; --amber:#E3A843; --amber-soft:#3A2F1C;
+  --warn:#F2776B; --haz1:#E3A843; --haz2:#131715;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 Barlow,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:480px;margin:0 auto;padding:18px 16px 110px}
+.cond{font-family:"Barlow Condensed","Arial Narrow",Barlow,sans-serif}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.top h1{margin:0;font:700 40px/0.95 "Barlow Condensed","Arial Narrow",sans-serif}
+.lede{margin:4px 0 16px;color:var(--muted)}
+h2{font:600 22px/1.1 "Barlow Condensed",sans-serif;margin:22px 0 8px}
+.panel{background:var(--surface);border-radius:10px;padding:14px}
+.muted{color:var(--muted)}
+.btn{border:0;border-radius:10px;padding:14px 12px;font-weight:600;font-size:17px;background:var(--ink);color:var(--surface)}
+.btn.alt{background:var(--surface);color:var(--ink);border:1.5px solid var(--ink)}
+.btn-sm{border:1.5px solid var(--line);background:none;border-radius:8px;padding:7px 12px;font-size:15px;font-weight:500}
+.link{background:none;border:0;padding:4px;color:var(--muted);text-decoration:underline;font-size:14px}
+.field{display:block;margin-bottom:12px}
+.field>span{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+.field input,.field select,.field textarea,.inp{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);font-size:17px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:none;border-radius:999px;padding:7px 13px;font-size:15px}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:none;padding:10px 6px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.dock-in{max-width:480px;margin:0 auto;display:grid;gap:10px}
+dialog{border:0;border-radius:14px;padding:0;width:min(440px,calc(100% - 24px));background:var(--surface);color:var(--ink);max-height:calc(100% - 40px)}
+dialog::backdrop{background:rgba(10,14,12,.55)}
+.dlg{padding:18px}
+.dlg h3{margin:0 0 14px;font:600 26px/1.1 "Barlow Condensed",sans-serif}
+.dlg-actions{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.box{flex:0 0 24px;width:24px;height:24px;border:2px solid var(--muted);border-radius:6px;display:grid;place-items:center}
+.box svg{width:16px;height:16px;opacity:0}
+[aria-checked="true"] .box,[aria-pressed="true"] > .box{background:var(--good);border-color:var(--good)}
+[aria-checked="true"] .box svg,[aria-pressed="true"] > .box svg{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.tabs{margin-bottom:14px}
+.fi{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.unit{position:relative}
+.unit input{padding-right:40px}
+.unit::after{content:attr(data-u);position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
+.out{background:var(--ink);color:var(--surface);border-radius:12px;padding:16px;margin:8px 0 12px}
+.out .main{font:700 60px/0.95 "Barlow Condensed",sans-serif;margin:0}
+.out .main small{font-size:24px;font-weight:600;opacity:.75;margin-left:6px}
+.out .lbl{margin:2px 0 12px;opacity:.85;font-size:15px}
+.out dl{display:grid;grid-template-columns:1fr auto;gap:7px 12px;margin:0;border-top:1px solid rgba(128,128,128,.4);padding-top:10px}
+.out dt{opacity:.85}
+.out dd{margin:0;font:600 20px/1.2 "Barlow Condensed",sans-serif;text-align:right}
+.out dd small{font-family:Barlow,sans-serif;font-size:13px;font-weight:400;opacity:.75;margin-left:4px}
+.out .cut{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:rgba(128,128,128,.18);font:600 20px/1.25 "Barlow Condensed",sans-serif}
+.out .cut span{display:block;font:400 13px/1.3 Barlow,sans-serif;opacity:.8}
+.note{font-size:14px;color:var(--muted);margin:0 0 10px}
+.pane[hidden],.hide,[hidden]{display:none!important}
+.mode{margin-bottom:14px}
+.wrap{padding-bottom:40px}
+.grp{font:600 18px/1.1 "Barlow Condensed",sans-serif;margin:16px 0 8px}
+details{background:var(--surface);border-radius:10px;padding:12px 14px;margin:12px 0}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:12px}
+.auto{font-size:13px;color:var(--muted);margin:-8px 0 12px}
+select.inp{appearance:auto}
+.imp{background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:14px;border:1.5px dashed var(--muted)}
+.imp p{margin:0 0 10px;font-size:15px}
+.imp .btn{width:100%;font-size:16px;padding:12px}
+.imp .st{margin:10px 0 0;font-size:14px;color:var(--muted)}
+.imp .st.err{color:var(--warn)}
+.imp .st.ok{color:var(--good)}
+.imp ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+.stop{margin-top:8px}
+.copy{width:100%;margin:0 0 12px}
+.out .cost{margin:12px 0 0;padding-top:10px;border-top:1px solid rgba(128,128,128,.4);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.out .cost b{font:700 32px/1 "Barlow Condensed",sans-serif}
+.out .cost span{opacity:.85;font-size:15px}
+
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.filebtn{display:block;text-align:center;width:100%;font-size:16px;padding:12px;cursor:pointer}
+.filebtn.off{opacity:.45;pointer-events:none}
+#impFile:focus-visible + .filebtn{outline:3px solid var(--accent);outline-offset:2px}
+
 </style>
 </head>
 <body>
-<header>
-  <h1>Metal Roof Calculator</h1>
-  <p>Enter measurements → get your order list.</p>
-</header>
+<div class="wrap">
+  <div class="top"><h1>Job calculator</h1></div>
+  <p class="lede">Roofing and Hardie siding takeoffs. Round up and check against the plans and the manufacturer's specs.</p>
+  <div class="seg tabs" role="group" aria-label="Calculator">
+    <button data-tab="roof" aria-pressed="true">Roofing</button>
+    <button data-tab="siding" aria-pressed="false">Hardie siding</button>
+  </div>
 
-<main>
-  <section class="card" id="inputs">
-    <h2>Roof</h2>
-    <label>Roof type
-      <div class="seg" id="roofType">
-        <button type="button" data-v="gable" class="on">Gable (2 sides)</button>
-        <button type="button" data-v="shed">Shed (1 side)</button>
+  <div class="imp" id="imp">
+    <p><strong>Import a HOVER or EagleView report.</strong> Pick the PDF, or screenshots of the measurement summary. Claude reads it and fills in the numbers.</p>
+    <input type="file" id="impFile" class="vh" multiple accept="application/pdf,.pdf,image/png,image/jpeg,image/webp">
+    <label class="btn filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
+    <button class="btn-sm stop hide" id="impStop">Stop</button>
+    <div class="st" id="impSt" aria-live="polite">Getting import ready…</div>
+  </div>
+
+  <!-- ROOFING -->
+  <section class="pane" id="p-roof">
+    <div class="seg mode" role="group" aria-label="Material">
+      <button data-mat="metal" aria-pressed="true">Metal</button>
+      <button data-mat="shingle" aria-pressed="false">Shingles</button>
+    </div>
+    <div id="metalIn">
+      <div class="two">
+        <label class="field"><span>Panel</span><select class="inp" id="mPanel">
+          <option value="35.25|ex" selected>Exposed fastener 35¼"</option>
+          <option value="36|ex">R-panel / PBR (36")</option>
+          <option value="24|ex">5V crimp (24")</option>
+          <option value="16|ss">Standing seam 16"</option>
+          <option value="12|ss">Standing seam 12"</option>
+          <option value="18|ss">Standing seam 18"</option>
+        </select></label>
+        <label class="field"><span>Overhang past eave</span><div class="unit" data-u="in"><input class="inp" id="mOver" type="number" inputmode="decimal" step="any" value="2"></div></label>
       </div>
-    </label>
-    <div class="grid" style="margin-top:12px">
-      <label>Length <small>ft · ridge</small><input id="length" type="number" inputmode="decimal" min="0" step="any" value="40"></label>
-      <label>Width <small id="widthHint">ft · span</small><input id="width" type="number" inputmode="decimal" min="0" step="any" value="30"></label>
-      <label>Pitch <small>/12</small>
-        <select id="pitch"></select>
-      </label>
-      <label>Overhang <small>in, per eave</small><input id="overhangIn" type="number" inputmode="decimal" min="0" step="any" value="0"></label>
+      <div class="three">
+        <label class="field"><span>Panel $/ft</span><div class="unit" data-u=""><input class="inp" id="prPanel" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
+        <label class="field"><span>Trim $/ft</span><div class="unit" data-u=""><input class="inp" id="prTrim" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
+        <label class="field"><span>Screws $/bag</span><div class="unit" data-u=""><input class="inp" id="prScrew" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
+      </div>
+      <p class="auto">Enter your supplier prices to get an estimated cost.</p>
     </div>
 
-    <h2>Panel</h2>
-    <div class="grid">
-      <label>Panel coverage <small>in</small><input id="panelWidthIn" type="number" inputmode="decimal" min="1" step="any" value="36"></label>
-      <label>Waste <small>%</small><input id="wastePct" type="number" inputmode="decimal" min="0" step="any" value="10"></label>
+    <div class="seg mode" role="group" aria-label="Measurements">
+      <button data-src="report" aria-pressed="false">From report</button>
+      <button data-src="footprint" aria-pressed="true">Footprint</button>
     </div>
 
-    <h2>Prices</h2>
-    <div class="grid">
-      <label>Panel <small>$/LF</small><input id="pricePanelLF" type="number" inputmode="decimal" min="0" step="any" value="3.50"></label>
-      <label>Trim &amp; ridge <small>$/LF</small><input id="priceTrimLF" type="number" inputmode="decimal" min="0" step="any" value="2.50"></label>
-      <label>Fasteners <small>$/box</small><input id="priceFastenerBox" type="number" inputmode="decimal" min="0" step="any" value="45"></label>
-      <label>Screws per box<input id="screwsPerBox" type="number" inputmode="numeric" min="1" step="1" value="250"></label>
+    <div id="fpIn">
+      <div class="seg mode" role="group" aria-label="Roof style">
+        <button data-style="gable" aria-pressed="true">Gable</button>
+        <button data-style="hip" aria-pressed="false">Hip</button>
+      </div>
+      <div class="two">
+        <label class="field"><span>Length (along ridge)</span><div class="unit" data-u="ft"><input class="inp" id="rL" type="number" inputmode="decimal" step="any" value="40"></div></label>
+        <label class="field"><span>Width</span><div class="unit" data-u="ft"><input class="inp" id="rW" type="number" inputmode="decimal" step="any" value="30"></div></label>
+      </div>
+      <p class="auto">Measure to the drip edge so overhangs are included.</p>
+      <div class="two">
+        <label class="field"><span>Pitch</span><select class="inp pitch" id="rP"></select></label>
+        <label class="field"><span>Extra area (porch, dormers)</span><div class="unit" data-u="ft²"><input class="inp" id="rX" type="number" inputmode="decimal" step="any" value="0"></div></label>
+      </div>
     </div>
 
-    <h2>Settings</h2>
-    <div class="grid">
-      <label>Screws per square<input id="screwsPerSquare" type="number" inputmode="numeric" min="0" step="1" value="80"></label>
-      <label>Trim stick length <small>ft</small><input id="trimStickFt" type="number" inputmode="decimal" min="1" step="any" value="10"></label>
+    <div id="repIn" hidden>
+      <div class="two">
+        <label class="field"><span>Total roof area</span><div class="unit" data-u="ft²"><input class="inp" id="qA" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <label class="field"><span>Main pitch</span><select class="inp pitch" id="qP"></select></label>
+      </div>
+      <div class="three">
+        <label class="field"><span>Eaves</span><div class="unit" data-u="ft"><input class="inp" id="qE" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <label class="field"><span>Rakes</span><div class="unit" data-u="ft"><input class="inp" id="qR" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <label class="field"><span>Ridges</span><div class="unit" data-u="ft"><input class="inp" id="qRi" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <label class="field"><span>Hips</span><div class="unit" data-u="ft"><input class="inp" id="qH" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <label class="field"><span>Valleys</span><div class="unit" data-u="ft"><input class="inp" id="qV" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+      </div>
     </div>
-    <button class="btn ghost" id="reset" type="button">Reset to defaults</button>
+
+    <div class="two">
+      <label class="field"><span>Waste</span><div class="unit" data-u="%"><input class="inp" id="rWaste" type="number" inputmode="decimal" step="any" value="5"></div></label>
+      <label class="field" id="nailWrap"><span>Nails per shingle</span><select class="inp" id="rN"><option value="4">4 (standard)</option><option value="6">6 (high wind)</option></select></label>
+    </div>
+
+    <div class="out" aria-live="polite">
+      <p class="main" id="rOut">0</p><p class="lbl" id="rLbl"></p>
+      <div id="rCut"></div>
+      <dl id="rList"></dl>
+      <div id="rCost"></div>
+    </div>
+    <button class="btn alt copy" data-copy="p-roof">Copy order list</button>
+    <p class="note" id="rNote"></p>
+
+    <details>
+      <summary>Product coverage</summary>
+      <p class="note">Set these to match what you buy.</p>
+      <div class="two">
+        <label class="field sh"><span>Starter, ft per bundle</span><input class="inp" id="cStart" type="number" inputmode="decimal" step="any" value="110"></label>
+        <label class="field sh"><span>Ridge cap, ft per bundle</span><input class="inp" id="cRidge" type="number" inputmode="decimal" step="any" value="25"></label>
+        <label class="field mt"><span>Trim, usable ft per piece</span><input class="inp" id="cTrim" type="number" inputmode="decimal" step="any" value="10"></label>
+        <label class="field mt"><span>Screws per square</span><input class="inp" id="cScrew" type="number" inputmode="numeric" step="1" value="80"></label>
+        <label class="field"><span>Underlayment, squares per roll</span><input class="inp" id="cUnder" type="number" inputmode="decimal" step="any" value="10"></label>
+        <label class="field"><span>Ice and water, ft per roll</span><input class="inp" id="cIce" type="number" inputmode="decimal" step="any" value="66"></label>
+        <label class="field"><span>Ice and water rows at eaves</span><input class="inp" id="cIceRows" type="number" inputmode="numeric" step="1" min="0" value="1"></label>
+        <label class="field sh"><span>Nails per box</span><input class="inp" id="cNails" type="number" inputmode="numeric" step="1" value="7200"></label>
+      </div>
+    </details>
   </section>
 
-  <section class="card" id="results">
-    <h2>Summary</h2>
-    <div class="stats">
-      <div class="stat"><b id="sSquares">–</b><span>Squares</span></div>
-      <div class="stat"><b id="sPanels">–</b><span>Panels</span></div>
-      <div class="stat"><b id="sPanelLen">–</b><span>Panel length</span></div>
-      <div class="stat"><b id="sTotal">–</b><span>Est. material cost</span></div>
+  <!-- SIDING -->
+  <section class="pane" id="p-siding" hidden>
+    <div class="seg mode" role="group" aria-label="Measurements">
+      <button data-ssrc="report" aria-pressed="false">From report</button>
+      <button data-ssrc="walls" aria-pressed="true">Walls</button>
     </div>
 
-    <h2>Order list</h2>
-    <table>
-      <thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Cost</th></tr></thead>
-      <tbody id="list"></tbody>
-      <tfoot><tr><td>Total</td><td></td><td class="r" id="total">–</td></tr></tfoot>
-    </table>
-    <button class="btn" id="copy" type="button">Copy order list</button>
-    <textarea id="copyText" rows="7" hidden readonly style="width:100%;margin-top:10px;font:14px/1.4 ui-monospace,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--input);color:var(--text)"></textarea>
-    <p class="note" id="notes"></p>
+    <div id="sWallsIn">
+      <div class="two">
+        <label class="field"><span>Total wall length</span><div class="unit" data-u="ft"><input class="inp" id="sL" type="number" inputmode="decimal" step="any" value="140"></div></label>
+        <label class="field"><span>Wall height</span><div class="unit" data-u="ft"><input class="inp" id="sH" type="number" inputmode="decimal" step="any" value="9"></div></label>
+      </div>
+      <p class="auto">Add up every wall you're siding. Height is to the soffit.</p>
+      <div class="three">
+        <label class="field"><span>Gables</span><input class="inp" id="gN" type="number" inputmode="numeric" step="1" min="0" value="2"></label>
+        <label class="field"><span>Gable width</span><div class="unit" data-u="ft"><input class="inp" id="gW" type="number" inputmode="decimal" step="any" value="30"></div></label>
+        <label class="field"><span>Gable height</span><div class="unit" data-u="ft"><input class="inp" id="gH" type="number" inputmode="decimal" step="any" value="7.5"></div></label>
+      </div>
+      <p class="grp">Openings and corners</p>
+      <div class="three">
+        <label class="field"><span>Windows</span><input class="inp" id="oW" type="number" inputmode="numeric" step="1" min="0" value="10"></label>
+        <label class="field"><span>Doors</span><input class="inp" id="oD" type="number" inputmode="numeric" step="1" min="0" value="2"></label>
+        <label class="field"><span>Garage doors</span><input class="inp" id="oG" type="number" inputmode="numeric" step="1" min="0" value="0"></label>
+        <label class="field"><span>Avg window</span><div class="unit" data-u="ft²"><input class="inp" id="oWs" type="number" inputmode="decimal" step="any" value="15"></div></label>
+        <label class="field"><span>Garage size</span><select class="inp" id="oGs"><option value="9x7">9×7</option><option value="16x7" selected>16×7</option></select></label>
+        <label class="field"><span>Outside corners</span><input class="inp" id="sC" type="number" inputmode="numeric" step="1" min="0" value="4"></label>
+      </div>
+    </div>
+
+    <div id="sRepIn" hidden>
+      <label class="field"><span>Siding area (openings already taken out)</span><div class="unit" data-u="ft²"><input class="inp" id="tA" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+      <div class="three">
+        <label class="field"><span>Outside corners</span><div class="unit" data-u="ft"><input class="inp" id="tOC" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <label class="field"><span>Inside corners</span><div class="unit" data-u="ft"><input class="inp" id="tIC" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <label class="field"><span>Opening trim</span><div class="unit" data-u="ft"><input class="inp" id="tOT" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
+      </div>
+    </div>
+
+    <p class="grp">Plank</p>
+    <div class="two">
+      <label class="field"><span>HardiePlank width</span><select class="inp" id="pX">
+        <option value="4">5¼" (4" exp.)</option>
+        <option value="5">6¼" (5" exp.)</option>
+        <option value="6">7¼" (6" exp.)</option>
+        <option value="7" selected>8¼" (7" exp.)</option>
+        <option value="8">9¼" (8" exp.)</option>
+        <option value="10.75">12" (10¾" exp.)</option>
+      </select></label>
+      <label class="field"><span>Waste</span><div class="unit" data-u="%"><input class="inp" id="sWaste" type="number" inputmode="decimal" step="any" value="10"></div></label>
+    </div>
+
+    <div class="out" aria-live="polite">
+      <p class="main" id="sOut">0<small>planks</small></p><p class="lbl">12 ft HardiePlank, waste included</p>
+      <dl id="sList"></dl>
+    </div>
+    <button class="btn alt copy" data-copy="p-siding">Copy order list</button>
+    <p class="note">Trim is 12 ft boards: 2 boards per outside corner run, 1 per inside corner run, plus opening trim with 10% extra. Nails assume blind nailing at every stud on 16" centers plus trim.</p>
   </section>
-</main>
+</div>
 
-<div class="bar"><span id="barText">–</span><a href="#results">Order list ↓</a></div>
-
-<script src="calc.js"></script>
+<div class="toast" id="toast" role="status"></div>
 <script>
-(function () {
-  const $ = (id) => document.getElementById(id);
-  const NUM_FIELDS = ['length','width','pitch','overhangIn','panelWidthIn','wastePct','pricePanelLF','priceTrimLF','priceFastenerBox','screwsPerBox','screwsPerSquare','trimStickFt'];
-  const KEY = 'metal-roof-calc-v1';
-  let roofType = 'gable';
-  let orderText = '';
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1800);}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function pday(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d,12);}
+function today(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),12);}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function weekStart(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate(),12);const dow=(x.getDay()+6)%7;return addDays(x,-dow);}
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+const CHECK_SVG='<svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+document.addEventListener('click',e=>{const b=e.target.closest('[data-close]');if(b)b.closest('dialog').close();});
 
-  // Pitch dropdown 0/12 .. 12/12 in half steps
-  const pitchSel = $('pitch');
-  for (let p = 0; p <= 12; p += 0.5) {
-    const o = document.createElement('option');
-    o.value = p; o.textContent = p + '/12';
-    if (p === 4) o.selected = true;
-    pitchSel.appendChild(o);
-  }
+(function(){
+  const $=id=>document.getElementById(id);
+  const n=id=>{const v=parseFloat($(id).value);return isFinite(v)?v:0;};
+  const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
+  const LS='jobcalc-v3';
+  const st={tab:'roof', mat:'metal', src:'footprint', style:'gable', ssrc:'walls'};
+  const WASTE={metal:{gable:5,hip:12,report:10},shingle:{gable:10,hip:15,report:12}};
 
-  const defaults = {};
-  NUM_FIELDS.forEach((f) => (defaults[f] = $(f).value));
+  document.querySelectorAll('select.pitch').forEach(s=>{for(let p=1;p<=18;p++){const o=document.createElement('option');o.value=p;o.textContent=p+'/12';if(p===6)o.selected=true;s.append(o);}});
 
-  // Restore saved inputs (best-effort)
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (saved) {
-      NUM_FIELDS.forEach((f) => { if (saved[f] != null) $(f).value = saved[f]; });
-      if (saved.roofType) roofType = saved.roofType;
+  function ftin(ft){let inch=Math.ceil(ft*12-1e-6);return Math.floor(inch/12)+"' "+(inch%12)+'"';}
+  function rows(host,list){host.innerHTML='';for(const [k,v,sub] of list){if(v==null)continue;host.append(el('dt',null,k));const d=el('dd',null,v);if(sub)d.append(el('small',null,sub));host.append(d);}}
+  function setMain(id,num,unit){const e=$(id);e.textContent=num;if(unit)e.append(el('small',null,unit));}
+
+  // ---------- roof geometry, from either source ----------
+  function roofGeo(){
+    if(st.src==='report'){
+      return {area:n('qA'),pitch:n('qP'),eave:n('qE'),rake:n('qR'),ridge:n('qRi'),hips:n('qH'),valleys:n('qV'),gable:null};
     }
-  } catch (e) {}
-
-  const money = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const num = (n, d = 0) => n.toLocaleString('en-US', { maximumFractionDigits: d });
-
-  function setRoofType(v) {
-    roofType = v;
-    document.querySelectorAll('#roofType button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
-    $('widthHint').textContent = v === 'shed' ? 'ft · low to high' : 'ft · span';
+    const L=n('rL'),W=n('rW'),p=n('rP'),pf=Math.sqrt(1+(p/12)**2),run=W/2,rise=run*p/12;
+    const area=L*W*pf+n('rX');
+    if(st.style==='gable') return {area,pitch:p,eave:2*L,rake:4*run*pf,ridge:L,hips:0,valleys:0,gable:{L,slope:run*pf}};
+    const hip=Math.sqrt(2*run*run+rise*rise);
+    return {area,pitch:p,eave:2*(L+W),rake:0,ridge:Math.max(0,L-W),hips:4*hip,valleys:0,gable:null};
   }
 
-  function render() {
-    const inp = { roofType };
-    NUM_FIELDS.forEach((f) => (inp[f] = parseFloat($(f).value) || 0));
-    try { localStorage.setItem(KEY, JSON.stringify({ ...inp })); } catch (e) {}
+  function roof(){
+    const g=roofGeo(), w=1+n('rWaste')/100;
+    const sqW=g.area*w/100;
+    const isSS=st.mat==='metal'&&$('mPanel').value.endsWith('|ss');
+    const under=['Underlayment'+(isSS?' (high-temp synthetic)':''),Math.ceil(g.area*1.1/100/Math.max(.1,n('cUnder')))+' rolls'];
+    const iceLF=g.eave*Math.max(0,Math.round(n('cIceRows')))+g.valleys;
+    const ice=['Ice and water shield',Math.ceil(iceLF/Math.max(1,n('cIce')))+' rolls',f(iceLF)+' ft'];
+    const cut=$('rCut'); cut.innerHTML=''; $('rCost').innerHTML='';
+    $('rNote').textContent='';
+    if(!(g.area>0)){ setMain('rOut','0',''); $('rLbl').textContent=st.src==='report'?'Enter the report numbers or import the report.':'Enter the roof size.'; rows($('rList'),[]); return; }
 
-    if (inp.length <= 0 || inp.width <= 0 || inp.panelWidthIn <= 0 || inp.screwsPerBox <= 0) {
-      $('list').innerHTML = '<tr><td colspan="3" class="err">Enter length, width and panel coverage.</td></tr>';
-      ['sSquares','sPanels','sPanelLen','sTotal','total'].forEach((id) => ($(id).textContent = '–'));
-      orderText = '';
+    if(st.mat==='shingle'){
+      setMain('rOut',Math.ceil(sqW*3),'bundles'); $('rLbl').textContent='Shingles, 3 bundles per square';
+      const nails=Math.ceil(sqW*67)*n('rN');
+      rows($('rList'),[
+        ['Roof area',f(g.area)+' ft²','('+f(g.area/100,1)+' sq)'],
+        ['Squares with waste',f(sqW,1)],
+        ['Starter strip',Math.ceil((g.eave+g.rake)/Math.max(1,n('cStart')))+' bundles',f(g.eave+g.rake)+' ft'],
+        ['Ridge cap',Math.ceil((g.ridge+g.hips)/Math.max(1,n('cRidge')))+' bundles',f(g.ridge+g.hips)+' ft'],
+        under, ice,
+        ['Drip edge',Math.ceil((g.eave+g.rake)*1.05/10)+' pcs','10 ft'],
+        ['Coil nails',Math.max(1,Math.ceil(nails/Math.max(1,n('cNails'))))+' box'+(nails>n('cNails')?'es':''),'~'+f(nails)]
+      ]);
       return;
     }
 
-    const r = RoofCalc.calculate(inp);
-    const len = RoofCalc.ftIn(r.panelLenIn);
-
-    $('sSquares').textContent = num(r.squares, 2);
-    $('sPanels').textContent = r.panels;
-    $('sPanelLen').textContent = len;
-    $('sTotal').textContent = money(r.total);
-    $('total').textContent = money(r.total);
-    $('barText').textContent = `${r.panels} panels · ${money(r.total)}`;
-
-    const rows = [
-      ['Metal panels', `${r.panels} @ ${len}`, `${num(r.panelLF, 1)} LF total · ${r.panelsPerSide}/side + waste`, r.panelCost],
-      ['Fasteners', `${r.fastenerBoxes} box${r.fastenerBoxes === 1 ? '' : 'es'}`, `${num(r.screws)} screws`, r.fastenerCost],
+    // metal
+    const [covIn,kind]=$('mPanel').value.split('|'); const cov=+covIn, covFt=cov/12, ss=kind==='ss';
+    const trimLen=Math.max(1,n('cTrim')); let trimPcs=0;
+    const pcs=lf=>{if(!(lf>0))return null;const k=Math.ceil(lf*1.05/trimLen);trimPcs+=k;return k+' pcs';};
+    let totalLF, panels, clips, screwBags=0;
+    if(g.gable){
+      const perSide=Math.ceil(g.gable.L/covFt);
+      const lenIn=Math.ceil(g.gable.slope*12+n('mOver'));
+      const lenFt=lenIn/12;
+      const extraLF=n('rX')>0?n('rX')*w/covFt:0;
+      panels=perSide*2+Math.ceil(n('rW')>0&&n('rX')>0?extraLF/lenFt:0);
+      totalLF=perSide*2*lenFt+extraLF;
+      setMain('rOut',panels,'panels');
+      $('rLbl').textContent=(ss?'Standing seam, ':'')+cov+'" coverage, cut to length';
+      const c=el('div','cut',perSide+' per side × 2 @ '+ftin(lenFt));
+      c.append(el('span',null,'Cut list: '+(perSide*2)+' panels at '+ftin(lenFt)+' ('+lenIn+'")'+(extraLF?'. Porch/dormer area adds about '+f(extraLF)+' ft of panel.':'.')));
+      cut.append(c);
+      clips=ss?perSide*2*(Math.ceil(lenFt/2)+1):0;
+    } else {
+      totalLF=g.area*w/covFt;
+      panels=Math.ceil(g.eave/covFt);
+      setMain('rOut',f(Math.ceil(totalLF/10)*10),'ft of panel');
+      $('rLbl').textContent=(ss?'Standing seam, ':'')+cov+'" coverage, waste included';
+      $('rNote').textContent='Hip and cut-up roofs have a different panel length on every facet. Use this for pricing, and send the report to your supplier for the cut list.';
+      clips=ss?Math.ceil(totalLF/2)+panels:0;
+    }
+    const list=[
+      ['Roof area',f(g.area)+' ft²','('+f(g.area/100,1)+' sq)'],
+      ['Squares with waste',f(sqW,1)],
+      g.gable?['Total panel',f(totalLF)+' ft']:['Panels along eaves','~'+panels,'lengths vary'],
+      ['Eave trim',pcs(g.eave),f(g.eave)+' ft'],
+      ['Rake / gable trim',pcs(g.rake),g.rake?f(g.rake)+' ft':''],
+      ['Ridge cap',pcs(g.ridge),g.ridge?f(g.ridge)+' ft':''],
+      ['Hip cap',pcs(g.hips),g.hips?f(g.hips)+' ft':''],
+      ['Valley flashing',pcs(g.valleys),g.valleys?f(g.valleys)+' ft':'']
     ];
-    if (r.ridgeLF > 0) rows.push(['Ridge cap', `${num(r.ridgeOrder, 1)} LF`, `${r.ridgePieces} × ${r.stick}' pcs`, r.ridgeCost]);
-    const trimDetail = [`eave ${num(r.eaveLF, 1)}'`, `rake ${num(r.rakeLF, 1)}'`];
-    if (r.highSideLF) trimDetail.push(`high side ${num(r.highSideLF, 1)}'`);
-    rows.push(['Trim', `${num(r.trimOrder, 1)} LF`, `${r.trimPieces} × ${r.stick}' pcs · ${trimDetail.join(', ')}`, r.trimCost]);
-
-    $('list').innerHTML = rows.map(([name, qty, detail, cost]) =>
-      `<tr><td>${name}<small>${detail}</small></td><td class="r">${qty}</td><td class="r">${money(cost)}</td></tr>`).join('');
-
-    $('notes').textContent =
-      `${num(r.squares, 2)} squares (${num(r.areaSqFt)} sq ft, no waste). Slope length ${num(r.slopeFt, 2)}' at ${inp.pitch}/12. ` +
-      `Waste ${inp.wastePct}% added to panels, screws and trim. Ridge/trim cost rounded up to full sticks.`;
-
-    orderText = [
-      `METAL ROOF ORDER — ${inp.length}' x ${inp.width}' ${roofType}, ${inp.pitch}/12`,
-      `Panels: ${r.panels} @ ${len} (${inp.panelWidthIn}" coverage) = ${num(r.panelLF, 1)} LF`,
-      `Fasteners: ${r.fastenerBoxes} boxes (${num(r.screws)} screws)`,
-      r.ridgeLF > 0 ? `Ridge cap: ${r.ridgePieces} x ${r.stick}' (${num(r.ridgeOrder, 1)} LF)` : null,
-      `Trim: ${r.trimPieces} x ${r.stick}' (${num(r.trimOrder, 1)} LF)`,
-      `Squares: ${num(r.squares, 2)}`,
-      `Est. material: ${money(r.total)}`,
-    ].filter(Boolean).join('\n');
+    if(ss){
+      const z=2*g.ridge+2*g.hips;
+      list.push(['Z-closure',pcs(z),z?f(z)+' ft':'']);
+      list.push(['Panel clips','~'+f(clips),'24" o.c.']);
+      list.push(['Pancake screws','~'+f(clips),'1 per clip']);
+    } else {
+      list.push(['Inside closures (eave)',Math.ceil(g.eave/covFt)+' pcs']);
+      list.push(['Outside closures (ridge and hips)',(g.ridge+g.hips)?Math.ceil(2*(g.ridge+g.hips)/covFt)+' pcs':null]);
+      const screws=Math.ceil(sqW*n('cScrew')); screwBags=Math.ceil(screws/250);
+      list.push(['Panel screws',screwBags+' bags','~'+f(screws)+', 250/bag']);
+    }
+    list.push(under, ice);
+    rows($('rList'),list);
+    const money=x=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const cP=totalLF*n('prPanel'), cT=trimPcs*trimLen*n('prTrim'), cS=screwBags*n('prScrew'), tot=cP+cT+cS;
+    if(tot>0){
+      const cl=el('dl'); cl.style.marginTop='12px';
+      rows(cl,[['Panels',money(cP),f(totalLF)+' ft'],['Trim',cT?money(cT):null,trimPcs+' pcs × '+f(trimLen)+' ft'],['Screws',cS?money(cS):null,screwBags+' bags']]);
+      const box=el('div','cost'); box.append(el('span',null,'Est. material'+(ss?' (clips not priced)':'')),el('b',null,money(tot)));
+      $('rCost').append(cl,box);
+    }
   }
 
-  document.querySelectorAll('#roofType button').forEach((b) =>
-    b.addEventListener('click', () => { setRoofType(b.dataset.v); render(); }));
-  $('inputs').addEventListener('input', render);
+  function siding(){
+    let area,oc,ic,ot;
+    if(st.ssrc==='report'){ area=n('tA'); oc=n('tOC'); ic=n('tIC'); ot=n('tOT'); }
+    else {
+      const wall=n('sL')*n('sH'), gable=Math.max(0,Math.round(n('gN')))*n('gW')*n('gH')/2;
+      const nw=Math.max(0,Math.round(n('oW'))), nd=Math.max(0,Math.round(n('oD'))), ng=Math.max(0,Math.round(n('oG')));
+      const gd=$('oGs').value==='9x7'?{a:63,t:23}:{a:112,t:30};
+      area=Math.max(0,wall+gable-(nw*n('oWs')+nd*20+ng*gd.a));
+      oc=Math.max(0,Math.round(n('sC')))*n('sH'); ic=0;
+      ot=nw*4*Math.sqrt(Math.max(1,n('oWs')))+nd*17+ng*gd.t;
+    }
+    const exp=parseFloat($('pX').value), withW=area*(1+n('sWaste')/100);
+    const planks=Math.ceil(withW/exp);
+    setMain('sOut',planks,'planks');
+    const ocB=Math.ceil(oc*2/12), icB=Math.ceil(ic/12), otB=Math.ceil(ot*1.1/12);
+    rows($('sList'),[
+      ['Area to side',f(area)+' ft²','after openings'],
+      ['Squares with waste',f(withW/100,1)],
+      ['Outside corner trim',oc?ocB+' boards':null,oc?f(oc)+' ft':''],
+      ['Inside corner trim',ic?icB+' boards':null,ic?f(ic)+' ft':''],
+      ['Opening trim',ot?otB+' boards':null,ot?f(ot)+' ft':''],
+      ['Siding nails, about',f(Math.ceil((planks*9+(ocB+icB+otB)*12)/100)*100)]
+    ]);
+  }
 
-  $('reset').addEventListener('click', () => {
-    NUM_FIELDS.forEach((f) => ($(f).value = defaults[f]));
-    setRoofType('gable');
-    render();
+  // ---------- state + UI ----------
+  function calc(){roof();siding();save();}
+  function save(){const vals={};document.querySelectorAll('input.inp,select.inp').forEach(i=>{if(i.id)vals[i.id]=i.value;});try{localStorage.setItem(LS,JSON.stringify({st,vals}));}catch(e){}}
+  function load(){try{const s=JSON.parse(localStorage.getItem(LS)||'null');if(!s)return;Object.assign(st,s.st||{});for(const [k,v] of Object.entries(s.vals||{})){const i=$(k);if(i)i.value=v;}}catch(e){}}
+  function wasteKey(){return st.src==='report'?'report':st.style;}
+  function isDefaultWaste(){const v=n('rWaste');return Object.values(WASTE).some(m=>Object.values(m).includes(v));}
+  function syncWaste(){ if(isDefaultWaste()) $('rWaste').value=WASTE[st.mat][wasteKey()]; }
+  function show(){
+    const pr=(sel,key)=>document.querySelectorAll('['+sel+']').forEach(b=>b.setAttribute('aria-pressed',String(b.getAttribute(sel)===st[key])));
+    pr('data-tab','tab');pr('data-mat','mat');pr('data-src','src');pr('data-style','style');pr('data-ssrc','ssrc');
+    $('p-roof').hidden=st.tab!=='roof'; $('p-siding').hidden=st.tab!=='siding';
+    $('metalIn').hidden=st.mat!=='metal'; $('nailWrap').classList.toggle('hide',st.mat!=='shingle');
+    document.querySelectorAll('.sh').forEach(e=>e.classList.toggle('hide',st.mat!=='shingle'));
+    document.querySelectorAll('.mt').forEach(e=>e.classList.toggle('hide',st.mat!=='metal'));
+    $('fpIn').hidden=st.src!=='footprint'; $('repIn').hidden=st.src!=='report';
+    $('sWallsIn').hidden=st.ssrc!=='walls'; $('sRepIn').hidden=st.ssrc!=='report';
+    calc();
+  }
+  const bind=(sel,key,after)=>document.querySelectorAll('['+sel+']').forEach(b=>b.onclick=()=>{st[key]=b.getAttribute(sel);if(after)after();show();});
+  bind('data-tab','tab'); bind('data-mat','mat',syncWaste); bind('data-src','src',syncWaste); bind('data-style','style',syncWaste); bind('data-ssrc','ssrc');
+  document.querySelectorAll('input.inp,select.inp').forEach(i=>i.addEventListener('input',calc));
+  document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('focus',()=>i.select()));
+
+  // ---------- copy order list ----------
+  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
+    const pane=$(b.dataset.copy), out=pane.querySelector('.out'), lines=[];
+    const head=(pane.id==='p-roof'?(st.mat==='metal'?'METAL ROOF':'SHINGLE ROOF'):'HARDIE SIDING')+' ORDER';
+    lines.push(head);
+    const main=out.querySelector('.main'), lbl=out.querySelector('.lbl'), cut=out.querySelector('.cut');
+    lines.push(main.textContent.replace(/(\d)([a-z])/i,'$1 $2')+(lbl&&lbl.textContent?' ('+lbl.textContent+')':''));
+    if(cut) lines.push(cut.firstChild.textContent);
+    out.querySelectorAll('dl').forEach(dl=>{const k=[...dl.children];for(let i=0;i+1<k.length;i+=2){const dd=k[i+1];const sub=dd.querySelector('small');const v=sub?dd.firstChild.textContent+' ('+sub.textContent.replace(/^\(|\)$/g,'')+')':dd.textContent;lines.push(k[i].textContent+': '+v);}});
+    const c=out.querySelector('.cost'); if(c) lines.push(c.firstChild.textContent+': '+c.lastChild.textContent);
+    const text=lines.join('\n');
+    try{await navigator.clipboard.writeText(text);toast('Order list copied');}
+    catch(e){const t=document.createElement('textarea');t.value=text;t.className='inp';t.rows=8;t.readOnly=true;b.after(t);t.focus();t.select();toast('Select and copy the list');}
   });
 
-  $('copy').addEventListener('click', async () => {
-    if (!orderText) return;
-    const btn = $('copy');
-    try { await navigator.clipboard.writeText(orderText); btn.textContent = 'Copied ✓'; }
-    catch (e) { const t = $('copyText'); t.value = orderText; t.hidden = false; t.focus(); t.select(); btn.textContent = 'Select & copy below'; }
-    setTimeout(() => (btn.textContent = 'Copy order list'), 1500);
-  });
+  // ---------- import from HOVER / EagleView ----------
+  const PDF_LIB='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  const PDF_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  let sample=null, caps=null, ctl=null;
+  function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('script'));const t=setTimeout(()=>rej(new Error('timeout')),20000);s.addEventListener('load',()=>clearTimeout(t));document.head.append(s);});}
+  async function pdfjs(){
+    if(window.pdfjsLib) return window.pdfjsLib;
+    await loadScript(PDF_WORKER);           // runs the parser on the page (no separate worker needed)
+    await loadScript(PDF_LIB);
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDF_WORKER;
+    return window.pdfjsLib;
+  }
+  async function readPdf(file,maxImgs){
+    const lib=await pdfjs();
+    const doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,disableFontFace:true}).promise;
+    let text='';
+    const pages=Math.min(doc.numPages,40);
+    for(let i=1;i<=pages;i++){
+      const pg=await doc.getPage(i); const tc=await pg.getTextContent();
+      text+='\n--- Page '+i+' ---\n'+tc.items.map(t=>t.str+(t.hasEOL?'\n':' ')).join('');
+      if(text.length>120000) break;
+    }
+    if(text.replace(/\s|---|Page \d+/g,'').length>400) return {text,images:[]};
+    // scanned PDF: render the first pages as pictures instead
+    const imgs=[];
+    for(let i=1;i<=Math.min(doc.numPages,maxImgs);i++){
+      const pg=await doc.getPage(i); const v1=pg.getViewport({scale:1}); const vp=pg.getViewport({scale:1400/v1.width});
+      const c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height;
+      await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+      imgs.push(await new Promise(r=>c.toBlob(r,'image/jpeg',0.85)));
+    }
+    return {text:'',images:imgs};
+  }
+  const PROMPT=`You are reading a roofing and/or siding measurement report from HOVER or EagleView (a contractor's takeoff report). The report text and/or images are provided.
+Extract the measurements and reply with ONLY one JSON object in exactly this shape (numbers only, no units, null when the report does not give it):
+{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"suggested_waste_pct":n},"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
+Rules:
+- Convert feet-and-inches like 45' 6" to decimal feet (45.5). Convert squares to square feet if needed (1 square = 100 sq ft).
+- roof.total_area_sqft is the total roof area WITHOUT waste. pitch is the predominant pitch as the rise over 12 (6 for 6/12).
+- rakes are also called gables or rake edges. eaves are also called starter or drip edge at eaves.
+- If a waste table is shown, suggested_waste_pct is the report's suggested waste percent.
+- siding.siding_area_sqft is the total wall area to be sided (facades plus gables) with openings removed; if only a gross area and an openings area are given, subtract them. opening_trim_ft is the total perimeter of windows and doors if given.
+- Set the whole "roof" or "siding" object's fields to null if that part is not in the report. Do not guess numbers that are not in the report.`;
 
-  setRoofType(roofType);
-  render();
+  function setSt(msg,cls){const s=$('impSt');s.className='st'+(cls?' '+cls:'');s.textContent=msg;}
+  function errMsg(code){
+    switch(code){
+      case 'not_granted': return 'Import needs your OK to use Claude. Reload the page and allow it when it asks.';
+      case 'rate_limited': return 'Too many requests right now. Try again in a minute.';
+      case 'invalid_json': case 'empty_completion': case 'refused': return 'Couldn\u2019t find measurements in that. Try the full PDF, or a clear screenshot of the measurement summary page.';
+      case 'image_rejected': return 'That picture couldn\u2019t be read. Use a PNG or JPEG screenshot.';
+      case 'images_unavailable': return 'Pictures aren\u2019t supported here. Use the PDF report instead.';
+      case 'prompt_too_large': return 'That report is too big to read in one go. Try just the summary pages.';
+      case 'session_expired': return 'Your session expired. Reload the page and try again.';
+      case 'pdf': return 'Couldn\u2019t open that PDF here. Screenshot the measurement summary page and import that instead.';
+      case 'no_sample': return 'Import isn\u2019t available in this view. Open the page from your Claude account in Chrome, not from a saved copy.';
+      default: return 'Something went wrong reading the report. Try again.';
+    }
+  }
+  function errFull(e){const code=(e&&e.code)||'unknown';const m=e&&e.message?' '+String(e.message).slice(0,120):'';return errMsg(code)+' (Error: '+code+(code==='unknown'||code==='upstream_error'?m:'')+')';}
+  function put(id,v){ if(v==null||!isFinite(+v)||+v<=0) return false; $(id).value=Math.round(+v*10)/10; return true; }
+  function apply(d){
+    const done=[]; const r=d&&d.roof||{}, s=d&&d.siding||{};
+    let roofHit=false, sideHit=false;
+    const anyRoof=['total_area_sqft','eaves_ft','rakes_ft','ridges_ft','hips_ft','valleys_ft'].some(k=>+r[k]>0);
+    if(anyRoof){ roofHit=true; if(put('qA',r.total_area_sqft)) done.push('Roof area '+f(r.total_area_sqft)+' ft²'); else done.push('No total roof area on that page. Type it in from the report summary.'); }
+    if(r.pitch>0){ const p=Math.min(18,Math.max(1,Math.round(r.pitch))); $('qP').value=p; if(roofHit)done.push('pitch '+p+'/12'); }
+    const lens=[['qE','eaves_ft','eaves'],['qR','rakes_ft','rakes'],['qRi','ridges_ft','ridges'],['qH','hips_ft','hips'],['qV','valleys_ft','valleys']];
+    const got=[]; for(const [id,k,label] of lens){ if(roofHit){ if(!put(id,r[k])) $(id).value=''; else got.push(label+' '+f(r[k])); } }
+    if(got.length) done.push(got.join(', ')+' ft');
+    if(roofHit){ st.src='report'; if(r.suggested_waste_pct>0&&r.suggested_waste_pct<40){$('rWaste').value=r.suggested_waste_pct;done.push('waste '+r.suggested_waste_pct+'% (from report)');} else syncWaste(); }
+    if(put('tA',s.siding_area_sqft)){sideHit=true;done.push('Siding area '+f(s.siding_area_sqft)+' ft²');
+      for(const [id,k] of [['tOC','outside_corners_ft'],['tIC','inside_corners_ft'],['tOT','opening_trim_ft']]){ if(!put(id,s[k])) $(id).value=''; }
+      st.ssrc='report'; }
+    if(!roofHit&&!sideHit) throw {code:'invalid_json'};
+    if(roofHit&&!sideHit) st.tab='roof'; else if(sideHit&&!roofHit) st.tab='siding';
+    show();
+    const s2=$('impSt'); s2.className='st ok'; s2.textContent='Filled in from '+(d.source&&d.source!=='other'?d.source:'the report')+'. Double-check against the report:';
+    const ul=el('ul'); for(const x of done) ul.append(el('li',null,x)); if(d.notes) ul.append(el('li',null,String(d.notes).slice(0,200))); s2.append(ul);
+  }
+  async function runImport(files){
+    if(!files.length) return;
+    if(!sample){ setSt(errMsg('no_sample'),'err'); return; }
+    setSt('Got '+files.map(x=>x.name||'file').join(', ')+'. Working on it…');
+    ctl=new AbortController(); $('impStop').classList.remove('hide'); $('impBtn').classList.add('off');
+    try{
+      const maxImgs=caps&&caps.images?caps.images.maxCount:0;
+      let text='', images=[];
+      for(const file of files){
+        if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
+          setSt('Opening '+file.name+'…');
+          let r; try{ r=await readPdf(file,Math.max(0,maxImgs-images.length)); }catch(e){ throw {code:'pdf'}; }
+          text+=r.text; images=images.concat(r.images);
+        } else if(/^image\//.test(file.type)) images.push(file);
+      }
+      if(!text&&!images.length){ setSt('Pick a PDF report or a screenshot (PNG or JPEG).','err'); return; }
+      if(images.length&&!maxImgs) throw {code:'images_unavailable'};
+      images=images.slice(0,maxImgs);
+      setSt('Reading the measurements… this can take up to a minute.');
+      const input=PROMPT+(text?'\n\nREPORT TEXT:\n'+text.slice(0,120000):'\n\nThe report is in the attached image'+(images.length>1?'s':'')+'.');
+      const opts={signal:ctl.signal}; if(images.length) opts.images=images;
+      const data=await sample.json(input,opts);
+      apply(data);
+    }catch(e){
+      if(e&&e.code==='cancelled'){ setSt('Stopped.'); }
+      else setSt(errFull(e),'err');
+    }finally{
+      $('impStop').classList.add('hide'); $('impBtn').classList.remove('off'); $('impFile').value='';
+    }
+  }
+  $('impFile').onchange=()=>runImport([...$('impFile').files]);
+  $('impStop').onclick=()=>{ if(ctl) ctl.abort(); };
+  async function initImport(){
+    try{
+      if(!window.claude||typeof window.claude.use!=='function'){ $('imp').hidden=true; return; }
+      sample=await window.claude.use('sample');
+      if(!sample){ setSt(errMsg('no_sample'),'err'); return; }
+      caps=await sample.limits().catch(()=>null);
+      if(caps&&caps.images){ $('impFile').accept='application/pdf,.pdf,'+caps.images.mediaTypes.join(','); setSt(''); }
+      else { $('impFile').accept='application/pdf,.pdf'; $('impBtn').textContent='Choose the PDF report'; setSt('Screenshots aren\u2019t supported here, but the PDF works.'); }
+    }catch(e){ setSt(errFull(e),'err'); }
+  }
+  load(); show(); initImport();
 })();
+
 </script>
 </body>
 </html>

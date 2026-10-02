@@ -1,26 +1,25 @@
-# Metal Roof Calculator
+# Job Calculator
 
-Simple, phone-friendly calculator for exposed-fastener metal roofs. Enter roof size, pitch and panel coverage, get back exactly what to order plus an estimated material cost.
+Phone-friendly takeoff calculator for metal roofing, shingles and Hardie siding.
 
 **Live:** https://fusionaicreator.github.io/metal-roof-calculator/
 
-## What it figures
-- Squares (actual roof surface, no waste)
-- Panel count and cut length (rounded up to the next inch), total panel LF
-- Screws and fastener boxes
-- Ridge cap and trim (eave + rake, or high-side for shed roofs) in LF and 10' sticks
-- Adjustable waste factor (default 10%) applied to panels, screws and trim
-- Itemized cost + "Copy order list" for texting your supplier
+## Roofing
+- Metal (exposed fastener, R-panel, 5V, standing seam) or shingles
+- Gable or hip from footprint, or enter numbers straight from a HOVER / EagleView report
+- Panel count and cut list, total panel LF, squares with adjustable waste
+- Eave, rake, ridge, hip and valley trim in pieces; closures, screws or clips
+- Underlayment and ice and water shield
+- Metal pricing: panel $/ft, trim $/ft, screws $/bag, with an estimated material total
 
-## Assumptions
-- **Gable:** Length = ridge/eave length, Width = building span (eave to eave). Each side's panel = (span ÷ 2) × pitch factor + overhang.
-- **Shed:** Width = low eave to high side.
-- Fasteners default to 80 screws/square, 250/box (both editable).
-- Ridge and trim share one $/LF price; cost is rounded up to full sticks.
+## Siding
+- HardiePlank count by exposure, corner and opening trim boards, nails
+
+## Copy order list
+Each tab has a button that copies a plain-text order to send to your supplier.
+
+## Report import
+Importing a HOVER / EagleView PDF or screenshot uses Claude, so it only works in the Claude-hosted version of the page. On GitHub Pages the import box is hidden and everything else works.
 
 ## Run locally
-No build step. From this folder:
-```
-python3 -m http.server 8000
-```
-Then open http://localhost:8000. Run the math tests with `node test.js`.
+No build step: `python3 -m http.server 8000`, then open http://localhost:8000.
