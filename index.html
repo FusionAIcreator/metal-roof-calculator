@@ -3,172 +3,253 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090C10">
 <title>Job calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,500..800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-/* Layout: three screens per job (pick, measure, results). One question per card, one big button to move on. */
+/* Layout: app shell. Header with the Roof/Siding switch and live totals; one tab of content; a floating tab bar.
+   Every tab leads with its answer, details follow. */
 :root{
   color-scheme:dark;
-  --bg:#0E1216; --surface:#161C22; --raised:#1E262E; --line:#2B3541; --fg:#E7ECF1; --muted:#93A0AE;
-  --accent:#6CB4EE; --on-accent:#08131D; --amber:#F0B045; --teal:#45C2B1;
-  --good:#5CCB8F; --warn:#F3806F; --warn-bg:rgba(243,128,111,.12);
-  --pa:#22344A; --pb:#2C4460; --seam:#5D7A9E; --ridgec:#F3806F; --valc:#6CB4EE; --hole:#0E1216;
-  --bar:rgba(14,18,22,.94);
-  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
-  --f-body:Barlow,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --bg:#090C10; --glow:rgba(120,190,245,.10);
+  --surface:#11161C; --surface2:#171E26; --raised:#1D2530; --sheen:rgba(255,255,255,.028);
+  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
+  --fg:#EEF2F6; --muted:#8C98A5; --faint:#5F6B78;
+  --accent:#78BEF5; --accent-ink:#061420; --accent-soft:rgba(120,190,245,.14);
+  --amber:#F2B24C; --teal:#4FCFB9; --good:#5FD39A; --warn:#FF8A75; --warn-soft:rgba(255,138,117,.12);
+  --pa:#1F3349; --pb:#29425F; --seam:#4F6E93; --ridgec:#FF8A75; --hole:#090C10;
+  --thumbc:#2B3644; --glass:rgba(17,22,28,.78); --shadow:0 18px 40px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+  --f-display:Archivo,"Arial Narrow",sans-serif;
+  --f-body:Figtree,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:light){
   :root:not([data-theme="dark"]){
     color-scheme:light;
-    --bg:#EDF0F3; --surface:#FFFFFF; --raised:#F3F6F9; --line:#D3DAE2; --fg:#111820; --muted:#566370;
-    --accent:#1C6CB0; --on-accent:#FFFFFF; --amber:#9A5A06; --teal:#0E7F71;
-    --good:#1F7A4C; --warn:#B4321F; --warn-bg:rgba(180,50,31,.08);
-    --pa:#DCE7F4; --pb:#C3D5EA; --seam:#7C93B8; --ridgec:#B4321F; --valc:#1C6CB0; --hole:#FFFFFF;
-    --bar:rgba(237,240,243,.95);
+    --bg:#F2F4F7; --glow:rgba(23,103,174,.07);
+    --surface:#FFFFFF; --surface2:#F8FAFC; --raised:#EFF3F7; --sheen:rgba(255,255,255,0);
+    --line:rgba(15,23,32,.08); --line2:rgba(15,23,32,.14);
+    --fg:#0E141B; --muted:#5B6875; --faint:#8D99A6;
+    --accent:#1767AE; --accent-ink:#FFFFFF; --accent-soft:rgba(23,103,174,.10);
+    --amber:#9A5A06; --teal:#0C7C6C; --good:#1C7A4B; --warn:#B4321F; --warn-soft:rgba(180,50,31,.08);
+    --pa:#DCE7F4; --pb:#C4D6EB; --seam:#7C93B8; --ridgec:#B4321F; --hole:#FFFFFF;
+    --thumbc:#FFFFFF; --glass:rgba(255,255,255,.82); --shadow:0 14px 34px rgba(16,24,32,.14),0 2px 6px rgba(16,24,32,.08);
   }
 }
 :root[data-theme="light"]{
-  color-scheme:light;
-  --bg:#EDF0F3; --surface:#FFFFFF; --raised:#F3F6F9; --line:#D3DAE2; --fg:#111820; --muted:#566370;
-  --accent:#1C6CB0; --on-accent:#FFFFFF; --amber:#9A5A06; --teal:#0E7F71;
-  --good:#1F7A4C; --warn:#B4321F; --warn-bg:rgba(180,50,31,.08);
-  --pa:#DCE7F4; --pb:#C3D5EA; --seam:#7C93B8; --ridgec:#B4321F; --valc:#1C6CB0; --hole:#FFFFFF;
-  --bar:rgba(237,240,243,.95);
+  color-scheme:light; --thumbc:#FFFFFF;
+  --bg:#F2F4F7; --glow:rgba(23,103,174,.07);
+  --surface:#FFFFFF; --surface2:#F8FAFC; --raised:#EFF3F7; --sheen:rgba(255,255,255,0);
+  --line:rgba(15,23,32,.08); --line2:rgba(15,23,32,.14);
+  --fg:#0E141B; --muted:#5B6875; --faint:#8D99A6;
+  --accent:#1767AE; --accent-ink:#FFFFFF; --accent-soft:rgba(23,103,174,.10);
+  --amber:#9A5A06; --teal:#0C7C6C; --good:#1C7A4B; --warn:#B4321F; --warn-soft:rgba(180,50,31,.08);
+  --pa:#DCE7F4; --pb:#C4D6EB; --seam:#7C93B8; --ridgec:#B4321F; --hole:#FFFFFF;
+  --glass:rgba(255,255,255,.82); --shadow:0 14px 34px rgba(16,24,32,.14),0 2px 6px rgba(16,24,32,.08);
 }
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--bg)}
-body{margin:0;background:var(--bg);color:var(--fg);font:400 18px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+body{margin:0;min-height:100vh;background:radial-gradient(120% 60% at 50% -10%,var(--glow),transparent 60%) no-repeat,var(--bg);color:var(--fg);font:400 17px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .hide,[hidden]{display:none!important}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.num{font-variant-numeric:tabular-nums}
 
-.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 calc(110px + env(safe-area-inset-bottom,0px))}
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;background:var(--bar);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;gap:8px;min-height:60px;margin-inline:-16px;padding-inline:8px 16px;border-bottom:1px solid var(--line);margin-bottom:16px}
-.topbar h1{margin:0;font:700 26px/1 var(--f-display);letter-spacing:.02em}
-.back{border:0;background:none;color:var(--accent);font-weight:600;font-size:17px;min-height:48px;padding:0 10px}
-.view{display:grid;gap:14px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:14px;min-width:0}
-.card>h2{margin:0;font:700 24px/1.1 var(--f-display);letter-spacing:.01em}
-.hint{margin:0;font-size:16px;color:var(--muted)}
+.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:8px calc(120px + env(safe-area-inset-bottom,0px))}
+
+/* header */
+.hd{display:grid;gap:14px;padding-block:10px 4px}
+.hd-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:.01em;color:var(--muted)}
+.brand svg{width:30px;height:30px;flex:none}
+.icons{display:flex;gap:8px}
+.ibtn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line2);background:var(--surface);display:grid;place-items:center;color:var(--fg);transition:transform .12s}
+.ibtn:active{transform:scale(.94)}
+.ibtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.title{margin:2px 0 0;font:800 38px/1 var(--f-display);font-stretch:85%;letter-spacing:-.01em;text-wrap:balance}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:baseline;gap:5px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:14px;color:var(--muted)}
+.chip b{font:700 16px/1 var(--f-display);font-stretch:90%;color:var(--fg);font-variant-numeric:tabular-nums}
+
+/* segmented controls */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:16px;background:var(--raised);border:1px solid var(--line)}
+.seg button{min-height:46px;border:0;border-radius:12px;background:none;color:var(--muted);font-weight:600;font-size:16px;padding:6px;transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--thumbc);color:var(--fg);box-shadow:0 1px 0 var(--line2) inset,0 4px 14px rgba(0,0,0,.18)}
+.seg.big button{min-height:52px;font-size:17px}
+.seg.big button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+
+/* content */
+.view{display:grid;gap:14px;margin-top:16px;animation:rise .24s ease-out}
+@keyframes rise{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:linear-gradient(180deg,var(--sheen),transparent 40%),var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;display:grid;gap:14px;min-width:0}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.card-h h2{margin:0;font:700 19px/1.2 var(--f-body)}
+.card-h span{font-size:14px;color:var(--muted)}
+.eyebrow{margin:0;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hint{margin:0;font-size:15px;color:var(--muted)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 
-.field{display:grid;gap:6px;min-width:0}
-.field>span{font-size:15px;font-weight:600;color:var(--muted)}
-.inp{width:100%;min-height:56px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--raised);font-size:20px;font-variant-numeric:tabular-nums}
-.inp:focus{border-color:var(--accent);outline:none}
+.field{display:grid;gap:7px;min-width:0}
+.field>span{font-size:14px;font-weight:600;color:var(--muted)}
+.inp{width:100%;min-height:54px;padding:12px 14px;border:1px solid var(--line2);border-radius:14px;background:var(--raised);font-size:19px;font-variant-numeric:tabular-nums;transition:border-color .15s,box-shadow .15s}
+.inp:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 4px var(--accent-soft)}
 select.inp{appearance:auto}
 .unit{position:relative}
 .unit .inp{padding-right:44px}
-.unit::after{content:attr(data-u);position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
-.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;background:var(--raised);border:1px solid var(--line);border-radius:14px}
-.seg button{min-height:52px;border:0;border-radius:10px;background:none;color:var(--muted);font-weight:600;font-size:18px;padding:6px}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
-.btn{display:block;width:100%;min-height:60px;border:0;border-radius:14px;padding:14px;font-weight:700;font-size:20px;background:var(--accent);color:var(--on-accent);text-align:center}
-.btn.alt{background:var(--raised);color:var(--fg);border:1px solid var(--line);font-weight:600}
-.btn-sm{min-height:48px;border:1px solid var(--line);background:var(--raised);border-radius:12px;padding:8px 14px;font-size:16px;font-weight:600}
-.row{display:flex;flex-wrap:wrap;gap:10px}
-.x{border:0;background:none;color:var(--muted);font-size:15px;font-weight:600;min-height:44px;padding:0 6px}
-.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--bar);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
-.actionbar .btn{max-width:528px;margin:0 auto}
+.unit::after{content:attr(data-u);position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
+.mini>span{font-size:12px}
+.mini .inp{min-height:48px;padding:8px 10px;font-size:17px}
 
-/* home */
-.pick{display:grid;gap:14px}
-.pick button{display:grid;gap:4px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 20px;min-height:120px}
-.pick b{font:700 40px/1 var(--f-display);color:var(--accent)}
-.pick span{color:var(--muted);font-size:17px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;border:0;border-radius:18px;padding:14px;font-weight:700;font-size:18px;background:var(--accent);color:var(--accent-ink);box-shadow:0 1px 0 rgba(255,255,255,.25) inset;transition:transform .12s}
+.btn:active{transform:scale(.985)}
+.btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn.ghost{background:var(--raised);color:var(--fg);border:1px solid var(--line2);box-shadow:none;font-weight:600}
+.pill{min-height:44px;border:1px solid var(--line2);background:var(--raised);border-radius:12px;padding:8px 14px;font-size:15px;font-weight:600}
+.link{border:0;background:none;color:var(--muted);font-size:15px;font-weight:600;min-height:44px;padding:0 4px}
+.link.danger{color:var(--warn)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:20px}
+.hero .big{margin:4px 0 0;white-space:nowrap;font:800 clamp(44px,13.5vw,64px)/.95 var(--f-display);font-stretch:80%;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hero .big small{font:600 18px var(--f-body);color:var(--muted);margin-left:6px;letter-spacing:0}
+.hero .sub2{margin:8px 0 0;font-size:15px;color:var(--muted)}
+.thumb{width:104px;height:88px;border-radius:16px;background:var(--raised);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden}
+.thumb svg{width:84%;height:84%}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:4px;min-width:0}
+.tile .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font:800 28px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile .s{font-size:12px;color:var(--muted)}
+.t-accent .v{color:var(--accent)} .t-amber .v{color:var(--amber)} .t-teal .v{color:var(--teal)}
+.callout{margin:0;display:flex;gap:10px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:var(--warn-soft);color:var(--warn);font-weight:600;font-size:15px}
+
+/* lists */
+.mlist{display:grid;margin:0;padding:0;list-style:none}
+.mlist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:13px 0;border-top:1px solid var(--line)}
+.mlist li:first-child{border-top:0;padding-top:2px}
+.mlist .n{font-weight:600}
+.mlist .d{grid-column:1;font-size:14px;color:var(--muted)}
+.mlist .q{grid-row:1/span 2;grid-column:2;text-align:right;font:800 24px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums}
+.mlist .q small{display:block;font:500 12px var(--f-body);color:var(--muted);margin-top:3px}
+.cost{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cost b{font:800 36px/1 var(--f-display);font-stretch:85%;color:var(--good)}
+.bars{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.bars li{display:grid;grid-template-columns:76px minmax(0,1fr) 58px;gap:12px;align-items:center}
+.bars .l{font:600 17px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.bars .track{height:10px;border-radius:6px;background:var(--raised);overflow:hidden}
+.bars .fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--teal)))}
+.bars .c{text-align:right;font:800 20px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums}
+.bars .c small{font:500 13px var(--f-body);color:var(--muted);margin-left:2px}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:12px;font-weight:700}
+.total b{font:800 22px/1 var(--f-display);font-stretch:85%;color:var(--accent)}
+details.fold{border-top:1px solid var(--line);padding-top:4px}
+details.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:50px;font-weight:600}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .2s}
+details.fold[open]>summary::after{transform:rotate(-135deg) translateY(-1px)}
+details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
+.cuts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.cuts li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:0 6px;background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.cuts b{font:500 13px var(--f-mono);color:var(--muted)}
+.cuts span{font:600 16px/1.2 var(--f-mono)}
+.cuts small{flex-basis:100%;font-size:12px;color:var(--amber)}
+.fh{margin:8px 0 0;font-weight:600;display:flex;align-items:center;gap:8px}
+.code{display:inline-grid;place-items:center;min-width:30px;height:26px;padding:0 7px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-size:14px;font-weight:700}
+.courses{display:grid;margin:0;padding:0;list-style:none}
+.courses li{display:grid;grid-template-columns:40px 1fr;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.courses i{font-style:normal;color:var(--muted);font-size:14px;font-weight:600}
+.courses span{font:500 15px/1.5 var(--f-mono)}
+
+/* editors */
+.sub{background:var(--surface2);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:12px}
+.sub-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sub-h b{font:700 18px/1.1 var(--f-body)}
+.erows{display:grid;gap:8px;counter-reset:edge}
+.erow{display:grid;grid-template-columns:18px 74px minmax(0,1fr) minmax(0,1fr) 30px;gap:6px;align-items:center;counter-increment:edge}
+.erow::before{content:counter(edge);font-size:13px;color:var(--faint);text-align:right;font-variant-numeric:tabular-nums}
+.erow .inp{min-height:48px;padding:8px;font-size:16px;border-radius:12px}
+.x{border:0;background:none;color:var(--muted);font-size:15px;font-weight:600;min-height:44px;padding:0 6px}
+.erow .x{font-size:22px;padding:0}
+.status{font-size:14px;color:var(--muted)}
+.status.err{color:var(--warn);font-weight:600}
+.status.ok{color:var(--good)}
+
+/* empty state */
+.empty{text-align:center;justify-items:center;padding:34px 22px}
+.empty svg{width:54px;height:54px;fill:none;stroke:var(--accent);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.empty h2{margin:0;font:700 20px var(--f-body)}
+.empty p{margin:0;color:var(--muted);max-width:32ch}
+
+/* drawings */
+.viewer{background:var(--surface2);border-radius:16px;overflow:auto;-webkit-overflow-scrolling:touch;max-height:66vh;border:1px solid var(--line)}
+.viewer svg{display:block;width:calc(100% * var(--z,1));height:auto;font-family:var(--f-display);font-weight:700;font-stretch:85%}
+.viewer svg text{fill:var(--fg)}
+.zoom{display:flex;gap:8px;align-items:center}
+.zoom .pill{min-width:48px;font-size:19px;padding:4px 12px}
+.zoom span{margin-left:auto;font-size:13px;color:var(--muted)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.key i{display:inline-block;width:16px;height:4px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.wallpick{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.wallpick button{flex:none;min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--raised);color:var(--muted);font-weight:600;font-size:15px}
+.wallpick button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 
 /* import */
 .imp{border-style:dashed}
 .vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
 .filebtn{cursor:pointer}
 .filebtn.off{opacity:.45;pointer-events:none}
-#impFile:focus-visible + .filebtn{outline:3px solid var(--accent);outline-offset:2px}
-.imp .st{font-size:16px;color:var(--muted)}
+#impFile:focus-visible + .filebtn{outline:2px solid var(--accent);outline-offset:3px}
+.imp .st{font-size:15px;color:var(--muted)}
 .imp .st:empty{display:none}
 .imp .st.err{color:var(--warn)}
 .imp .st.ok{color:var(--good)}
 .imp ul{margin:6px 0 0;padding-left:20px}
 
-/* outline and wall editors */
-.sub{background:var(--raised);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:12px}
-.sub-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.sub-h b{font:700 20px/1.1 var(--f-display)}
-.erows{display:grid;gap:8px;counter-reset:edge}
-.erow{display:grid;grid-template-columns:20px 74px minmax(0,1fr) minmax(0,1fr) 30px;gap:6px;align-items:center;counter-increment:edge}
-.erow::before{content:counter(edge);font-size:14px;color:var(--muted);text-align:right}
-.erow .inp{min-height:50px;padding:8px;font-size:17px}
-.erow .x{font-size:24px;padding:0}
-.status{font-size:15px;color:var(--muted)}
-.status.err{color:var(--warn);font-weight:600}
-.status.ok{color:var(--good)}
-.mini>span{font-size:13px}
-.mini .inp{min-height:50px;padding:8px 10px;font-size:18px}
+/* tab bar */
+.tabbar{position:fixed;z-index:10;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:536px;margin:0 auto;height:70px;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border-radius:26px;background:var(--glass);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line2);box-shadow:var(--shadow)}
+.tabbar button{border:0;background:none;border-radius:20px;color:var(--muted);display:grid;justify-items:center;align-content:center;gap:3px;font-size:12px;font-weight:600;transition:color .15s,background .2s}
+.tabbar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
 
-/* results */
-.callout{margin:0;padding:12px 16px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font-weight:600;font-size:16px}
-.big{margin:0;font:700 64px/.95 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.big small{font-size:28px;color:var(--fg);margin-left:6px}
-.list{display:grid;grid-template-columns:minmax(6em,1fr) auto;margin:0}
-.list dt,.list dd{margin:0;padding:12px 0;border-top:1px solid var(--line);min-width:0}
-.list dt{padding-right:12px}
-.list dt small{display:block;font-size:14px;color:var(--muted)}
-.list dd{text-align:right;font:700 24px/1.15 var(--f-display);font-variant-numeric:tabular-nums}
-.list .len{font:600 19px/1.3 var(--f-mono)}
-.list .tot{color:var(--accent);font-weight:700}
-.list dd.tot{font-size:21px}
-.cost{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:12px}
-.cost b{font:700 34px/1 var(--f-display);color:var(--good)}
-details.more{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 18px}
-details.more>summary{cursor:pointer;font-weight:600;min-height:52px;display:flex;align-items:center}
-details.more[open]{padding-bottom:18px}
-details.more .inner{display:grid;gap:14px}
-details.sub2{border-top:1px solid var(--line);padding-top:6px}
-details.sub2>summary{cursor:pointer;font-weight:600;min-height:48px;display:flex;align-items:center}
-.cuts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
-.cuts li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:0 6px;background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
-.cuts b{font:500 13px var(--f-mono);color:var(--muted)}
-.cuts span{font:600 16px/1.2 var(--f-mono)}
-.cuts small{flex-basis:100%;font-size:12px;color:var(--amber)}
-.fh{margin:6px 0 0;font-weight:600}
-.code{display:inline-block;min-width:30px;padding:1px 7px;margin-right:8px;border-radius:7px;background:var(--accent);color:var(--on-accent);text-align:center;font-size:15px}
-.courses{display:grid;gap:6px;font-size:16px}
-.courses div{display:grid;grid-template-columns:44px 1fr;gap:8px;border-top:1px solid var(--line);padding-top:6px}
-.courses i{font-style:normal;color:var(--muted);font-size:14px}
-.courses span{font-family:var(--f-mono);font-size:15px}
-.viewer{background:var(--raised);border-radius:12px;overflow:auto;-webkit-overflow-scrolling:touch;max-height:70vh;border:1px solid var(--line)}
-.viewer svg{display:block;width:calc(100% * var(--z,1));height:auto;font-family:var(--f-display);font-weight:600}
-.viewer svg text{fill:var(--fg)}
-.zoom{display:flex;gap:8px;align-items:center}
-.zoom .btn-sm{min-width:52px;font-size:20px}
-.zoom span{margin-left:auto;font-size:14px;color:var(--muted)}
-.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--muted)}
-.key i{display:inline-block;width:18px;height:4px;vertical-align:middle;margin-right:6px;border-radius:2px}
-.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(16px);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:6}
+/* settings sheet */
+.scrim{position:fixed;inset:0;z-index:20;background:rgba(4,7,10,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;max-height:86vh;overflow:auto;background:var(--surface);border:1px solid var(--line2);border-bottom:0;border-radius:26px 26px 0 0;padding:10px 18px calc(24px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;animation:up .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line2);margin:0 auto 4px}
+.sheet-h{display:flex;align-items:center;justify-content:space-between}
+.sheet-h h2{margin:0;font:800 26px/1 var(--f-display);font-stretch:85%}
+
+.toast{position:fixed;left:50%;bottom:calc(98px + env(safe-area-inset-bottom,0px));z-index:30;transform:translateX(-50%) translateY(14px);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.copyout{width:100%;min-height:200px;font:15px/1.4 var(--f-mono)}
+.copyout{width:100%;min-height:200px;font:14px/1.4 var(--f-mono)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app" id="app"></div>
-<div class="actionbar" id="bar" hidden><button class="btn" id="barBtn"></button></div>
+<nav class="tabbar" id="tabbar" aria-label="Sections">
+  <button data-tab="measure"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="m7 13 2 2M9.5 10.5l1.5 1.5M12 8l2 2M14.5 5.5l1.5 1.5"/></svg>Measure</button>
+  <button data-tab="materials"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3.5l8 4v9l-8 4-8-4z"/><path d="m4 7.5 8 4 8-4M12 11.5v9"/></svg>Materials</button>
+  <button data-tab="cuts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h11M4 18h7"/><circle cx="18.5" cy="16.5" r="2.5"/></svg>Cut list</button>
+  <button data-tab="layout"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19 12 5l9 14z"/><path d="M8.2 19 12 12.6 15.8 19M12 5v14"/></svg>Layout</button>
+</nav>
 <div class="toast" id="toast" role="status"></div>
 
 <!-- report import lives outside the views so the file input survives re-renders -->
 <div class="card imp" id="imp" hidden>
-  <p class="hint" style="color:var(--fg)"><strong>Import a HOVER or EagleView report.</strong> Pick the PDF or screenshots of the summary page. Claude reads it and fills in the totals below.</p>
+  <p class="hint" style="color:var(--fg)"><strong>Import a HOVER or EagleView report.</strong> Pick the PDF or screenshots of the summary page. Claude reads it and fills in the totals.</p>
   <input type="file" id="impFile" class="vh" multiple accept="application/pdf,.pdf,image/png,image/jpeg,image/webp">
-  <label class="btn alt filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
-  <button class="btn-sm hide" id="impStop">Stop</button>
+  <label class="btn ghost filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
+  <button class="pill hide" id="impStop">Stop</button>
   <div class="st" id="impSt" aria-live="polite">Getting import ready…</div>
 </div>
 <script>
-function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1800);}
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1900);}
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 
 // ---------- roof layout engine: outline -> faces -> panels ----------
@@ -375,7 +456,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
   const PANELS=[['35.25|ex','Exposed fastener 35¼"'],['36|ex','R-panel / PBR 36"'],['24|ex','5V crimp 24"'],['16|ss','Standing seam 16"'],['12|ss','Standing seam 12"'],['18|ss','Standing seam 18"']];
   const PLANKS=[[4,'5¼" plank, 4" exposure'],[5,'6¼" plank, 5" exposure'],[6,'7¼" plank, 6" exposure'],[7,'8¼" plank, 7" exposure'],[8,'9¼" plank, 8" exposure'],[10.75,'12" plank, 10¾" exposure']];
   const E=s=>s.split(' ').map(x=>{const m=x.match(/^([NESW])([\d.]+)([rw]?)$/);return {d:m[1],len:+m[2],t:m[3]==='r'?'rake':m[3]==='w'?'wall':'eave'};});
-  const DEF=()=>({view:'home',mat:'metal',panel:'35.25|ex',method:'simple',style:'gable',L:40,W:30,pitch:6,
+  const DEF=()=>({trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'simple',style:'gable',L:40,W:30,pitch:6,
     rep:{area:'',pitch:6,eave:'',rake:'',ridge:'',hip:'',valley:'',flash:''},
     sections:[{name:'Main roof',pitch:6,edges:E('E40 S30 W40 N30')}],
     over:2,waste:5,wasteEdited:false,nails:4,
@@ -389,110 +470,146 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
   function load(){
     try{
       const s=JSON.parse(localStorage.getItem(LS)||'null');
-      if(s&&typeof s==='object'){const d=DEF();st=Object.assign(d,s);for(const k of ['rep','price','cov','corners'])st[k]=Object.assign(DEF()[k],s[k]||{});return;}
-      const old=JSON.parse(localStorage.getItem('jobcalc-v3')||'null');            // keep a roof outline traced in the previous version
+      if(s&&typeof s==='object'){
+        st=Object.assign(DEF(),s); for(const k of ['rep','price','cov','corners'])st[k]=Object.assign(DEF()[k],s[k]||{});
+        if(s.view&&!s.trade){st.trade=/^side/.test(s.view)?'siding':'roof';st.tab=/Res$/.test(s.view)?'materials':'measure';}   // from the previous version
+        if(!['measure','materials','cuts','layout'].includes(st.tab))st.tab='measure';
+        return;
+      }
+      const old=JSON.parse(localStorage.getItem('jobcalc-v3')||'null');
       if(old&&old.st&&Array.isArray(old.st.sections)&&old.st.sections.length){st.sections=old.st.sections;if(old.st.src==='layout')st.method='trace';if(old.st.mat)st.mat=old.st.mat;}
     }catch(e){}
   }
 
-  // ---------- small building blocks ----------
-  let timer=null; const later=fn=>{clearTimeout(timer);timer=setTimeout(fn,300);};
-  function field(label,input,unit){const l=el('label','field');l.append(el('span',null,label));if(unit){const u=el('div','unit');u.dataset.u=unit;u.append(input);l.append(u);}else l.append(input);return l;}
+  // ---------- building blocks ----------
+  let timer=null; const later=fn=>{clearTimeout(timer);timer=setTimeout(fn,350);};
+  const ICON={
+    copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></svg>',
+    gear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>',
+    arrow:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    ruler:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="m7 13 2 2M9.5 10.5l1.5 1.5M12 8l2 2M14.5 5.5l1.5 1.5"/></svg>',
+    warn:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px"><path d="M12 4 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>',
+    logo:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M6 17 16 9l10 8" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20.5h12M10 24h12" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round"/></svg>'};
+  const svgEl=html=>{const t=document.createElement('template');t.innerHTML=html;return t.content.firstChild;};
+  function field(label,input,unit,cls){const l=el('label','field'+(cls?' '+cls:''));l.append(el('span',null,label));if(unit){const u=el('div','unit');u.dataset.u=unit;u.append(input);l.append(u);}else l.append(input);return l;}
   function numIn(get,set,after,aria){const i=el('input','inp');i.type='number';i.min='0';i.step='any';i.inputMode='decimal';const v=get();i.value=v==null?'':v;i.placeholder='0';if(aria)i.setAttribute('aria-label',aria);
     i.oninput=()=>{set(i.value===''?'':Math.max(0,parseFloat(i.value)||0));save();if(after)after();};i.onfocus=()=>i.select();return i;}
-  const num=(label,get,set,unit,after)=>field(label,numIn(get,set,after),unit);
+  const num=(label,get,set,unit,after,cls)=>field(label,numIn(get,set,after),unit,cls);
   function selIn(opts,get,set,after,aria){const s=el('select','inp');if(aria)s.setAttribute('aria-label',aria);for(const [v,t] of opts){const o=el('option',null,t);o.value=v;if(String(get())===String(v))o.selected=true;s.append(o);}s.onchange=()=>{set(s.value);save();if(after)after();};return s;}
   const pick=(label,opts,get,set,after)=>field(label,selIn(opts,get,set,after));
-  function txt(label,get,set){const i=el('input','inp');i.value=get()||'';i.oninput=()=>{set(i.value);save();};return field(label,i);}
-  function seg(label,opts,get,set){const g=el('div','seg');g.setAttribute('role','group');g.setAttribute('aria-label',label);
+  function txt(label,get,set,after){const i=el('input','inp');i.value=get()||'';i.oninput=()=>{set(i.value);save();if(after)after();};return field(label,i);}
+  function seg(label,opts,get,set,cls){const g=el('div','seg'+(cls?' '+cls:''));g.setAttribute('role','group');g.setAttribute('aria-label',label);
     for(const [v,t] of opts){const b=el('button',null,t);b.type='button';b.setAttribute('aria-pressed',String(get()===v));b.onclick=()=>{set(v);save();render();};g.append(b);}return g;}
-  function card(title,...kids){const c=el('section','card');if(title)c.append(el('h2',null,title));c.append(...kids.filter(Boolean));return c;}
+  function card(title,aside,...kids){const c=el('section','card');if(title){const h=el('div','card-h');h.append(el('h2',null,title));if(aside)h.append(el('span',null,aside));c.append(h);}c.append(...kids.filter(Boolean));return c;}
   function grid(cls,...kids){const g=el('div',cls);g.append(...kids.filter(Boolean));return g;}
-  function list(rows){const d=el('dl','list');for(const [k,v,note,cls] of rows){if(v==null)continue;const dt=el('dt',cls||null,k);if(note)dt.append(el('small',null,note));d.append(dt,el('dd',cls||null,v));}return d;}
-  function twoTap(btn,label,armed,fn){btn.onclick=()=>{if(!btn.dataset.arm){btn.dataset.arm='1';btn.textContent=armed;setTimeout(()=>{delete btn.dataset.arm;btn.textContent=label;},3000);return;}delete btn.dataset.arm;fn();};}
+  function btn(label,fn,cls,icon){const b=el('button','btn'+(cls?' '+cls:''));b.type='button';b.append(label);if(icon)b.append(svgEl(ICON[icon]));b.onclick=fn;return b;}
+  function twoTap(b,label,armed,fn){b.onclick=()=>{if(!b.dataset.arm){b.dataset.arm='1';b.textContent=armed;setTimeout(()=>{delete b.dataset.arm;b.textContent=label;},3000);return;}delete b.dataset.arm;fn();};}
+  function mlist(rows){const u=el('ul','mlist');for(const [k,v,note] of rows){if(v==null)continue;const li=el('li');li.append(el('span','n',k));if(note)li.append(el('span','d',note));li.append(el('span','q',v));u.append(li);}return u;}
+  function empty(title,text){const c=el('section','card empty');c.append(svgEl(ICON.ruler),el('h2',null,title),el('p',null,text),btn('Go to Measure',()=>go('measure'),'ghost'));return c;}
+  function callout(text){const p=el('p','callout');p.append(svgEl(ICON.warn),el('span',null,text));return p;}
+  function countUp(node,to,suffix){
+    const from=+node.dataset.v||0; node.dataset.v=to;
+    const fin=()=>{node.firstChild.textContent=f(to);};
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches||Math.abs(to-from)<1){fin();return;}
+    const t0=performance.now(), d=650;
+    const step=t=>{const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3);node.firstChild.textContent=f(from+(to-from)*e);if(k<1)requestAnimationFrame(step);};
+    requestAnimationFrame(step);
+  }
+  let shownArea={roof:0,siding:0};
 
-  // ---------- navigation ----------
+  // ---------- shell ----------
+  const TITLES={measure:'Measure',materials:'Materials',cuts:'Cut list',layout:'Layout'};
   function render(){
-    const app=$('app'); document.body.append($('imp')); $('imp').hidden=true; app.innerHTML='';
-    (VIEWS[st.view]||VIEWS.home)(app); save();
+    document.body.append($('imp')); $('imp').hidden=true;
+    const app=$('app'); app.innerHTML='';
+    const hd=el('header','hd'), row=el('div','hd-row'), brand=el('div','brand');
+    brand.append(svgEl(ICON.logo),el('span',null,'Job calculator'));
+    const icons=el('div','icons'), cp=el('button','ibtn'), gs=el('button','ibtn');
+    cp.append(svgEl(ICON.copy)); cp.setAttribute('aria-label','Copy the list'); cp.onclick=()=>copy(st.trade==='roof'?roofText():sideText());
+    gs.append(svgEl(ICON.gear)); gs.setAttribute('aria-label','Settings'); gs.onclick=openSheet;
+    icons.append(cp,gs); row.append(brand,icons);
+    hd.append(row,el('h1','title',TITLES[st.tab]),seg('Trade',[['roof','Roof'],['siding','Siding']],()=>st.trade,x=>{st.trade=x;},'big'),chips());
+    app.append(hd);
+    const v=el('div','view'); v.id='res'; app.append(v);
+    ({measure:st.trade==='roof'?roofMeasure:sideMeasure,materials:st.trade==='roof'?roofMaterials:sideMaterials,
+      cuts:st.trade==='roof'?roofCuts:sideCuts,layout:st.trade==='roof'?roofLayout:sideLayout})[st.tab](v);
+    document.querySelectorAll('#tabbar button').forEach(b=>{if(b.dataset.tab===st.tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+    save();
   }
-  function go(v){st.view=v;render();window.scrollTo(0,0);}
-  function topbar(app,title,back,label){const t=el('header','topbar');if(back){const b=el('button','back','‹ '+label);b.onclick=()=>go(back);t.append(b);}t.append(el('h1',null,title));app.append(t);}
-  function bar(label,fn){$('bar').hidden=!label;if(label){$('barBtn').textContent=label;$('barBtn').onclick=fn;}}
+  function go(t){st.tab=t;render();window.scrollTo(0,0);}
+  document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+  function chips(){
+    const c=el('div','chips'); c.id='chips'; const add=(v,u)=>{const s=el('span','chip');s.append(el('b',null,v),u);c.append(s);};
+    if(st.trade==='roof'){const r=roofCalc();if(r.err)return c;add(f(r.area),'sq ft');if(r.panels)add(f(r.panels),'panels');if(r.lf)add(f(r.lf),'ft of panel');if(r.bundles)add(f(r.bundles),'bundles');}
+    else{const r=sideCalc();if(r.err)return c;add(f(r.S.net),'sq ft');add(f(r.buy),'planks');add(f(r.S.walls.length),r.S.walls.length>1?'walls':'wall');}
+    return c;
+  }
+  const refresh=()=>{const o=$('chips');if(o)o.replaceWith(chips());};
 
-  // ---------- home ----------
-  function homeView(app){
-    topbar(app,'Job calculator');
-    const v=el('div','view'), p=el('div','pick');
-    for(const [view,t,s] of [['roof','Roof','Metal or shingles. Square feet, material list, panel cut list and layout.'],['siding','Siding','HardiePlank. Square feet, material list, plank cut list and wall layout.']]){
-      const b=el('button');b.type='button';b.append(el('b',null,t),el('span',null,s));b.onclick=()=>go(view);p.append(b);}
-    const reset=el('button','x','Start a new job');
-    twoTap(reset,'Start a new job','Tap again to clear every number',()=>{st=DEF();save();render();toast('Cleared');});
-    v.append(p,reset); app.append(v); bar(null);
+  // ---------- settings sheet ----------
+  function openSheet(){
+    const scrim=el('div','scrim'), sh=el('div','sheet'); sh.setAttribute('role','dialog'); sh.setAttribute('aria-modal','true'); sh.setAttribute('aria-label','Settings');
+    const close=()=>{scrim.remove();render();};
+    scrim.onclick=e=>{if(e.target===scrim)close();};
+    const h=el('div','sheet-h'), done=el('button','pill','Done'); done.onclick=close; h.append(el('h2',null,'Settings'),done);
+    sh.append(el('div','grab'),h);
+    const C=st.cov, up=()=>later(refresh);
+    if(st.trade==='roof'){
+      sh.append(el('p','eyebrow','Waste'),num('Waste',()=>st.waste,x=>{st.waste=x;st.wasteEdited=true;},'%',up));
+      if(st.mat==='metal'){
+        sh.append(el('p','eyebrow','Panels'),num('Overhang past the eave',()=>st.over,x=>st.over=x,'in',up),
+          el('p','eyebrow','Prices'),grid('grid2',num('Panel $/ft',()=>st.price.panel,x=>st.price.panel=x,null,up),num('Trim $/ft',()=>st.price.trim,x=>st.price.trim=x,null,up)),
+          grid('grid2',num('Screws $/bag',()=>st.price.screw,x=>st.price.screw=x,null,up)),
+          el('p','eyebrow','Product sizes'),grid('grid2',num('Trim piece',()=>C.trim,x=>C.trim=x,'ft',up),num('Screws per square',()=>C.screws,x=>C.screws=x,null,up)));
+      } else {
+        sh.append(el('p','eyebrow','Product sizes'),grid('grid2',num('Starter, ft per bundle',()=>C.start,x=>C.start=x,null,up),num('Ridge cap, ft per bundle',()=>C.ridge,x=>C.ridge=x,null,up)),
+          grid('grid2',pick('Nails per shingle',[[4,'4 (standard)'],[6,'6 (high wind)']],()=>st.nails,x=>st.nails=+x,up),num('Nails per box',()=>C.nailsBox,x=>C.nailsBox=x,null,up)));
+      }
+      sh.append(grid('grid2',num('Underlayment, sq per roll',()=>C.under,x=>C.under=x,null,up),num('Ice and water, ft per roll',()=>C.ice,x=>C.ice=x,null,up)),
+        grid('grid2',num('Ice and water rows at eaves',()=>C.iceRows,x=>C.iceRows=x,null,up)));
+    } else {
+      sh.append(el('p','eyebrow','Planks'),num('Extra for breakage',()=>st.extra,x=>st.extra=x,'%',up));
+    }
+    const reset=el('button','link danger','Start a new job');
+    twoTap(reset,'Start a new job','Tap again to clear every number',()=>{st=DEF();save();scrim.remove();render();window.scrollTo(0,0);toast('Cleared. Ready for a new job');});
+    sh.append(reset);
+    scrim.append(sh); document.body.append(scrim);
+    const esc=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',esc);if(scrim.isConnected)close();}}; document.addEventListener('keydown',esc);
+    done.focus();
   }
 
-  // ---------- roof: measurements ----------
+  // ---------- roof: measure ----------
   function defWaste(){return st.mat==='metal'?(st.method==='report'?10:5):(st.method==='simple'?(st.style==='hip'?15:10):12);}
   function autoWaste(){if(!st.wasteEdited)st.waste=defWaste();}
-  function roofView(app){
-    topbar(app,'Roof','home','Home');
-    const v=el('div','view');
-    const mat=card('1. Material',seg('Material',[['metal','Metal'],['shingle','Shingles']],()=>st.mat,x=>{st.mat=x;autoWaste();}));
-    if(st.mat==='metal') mat.append(pick('Panel',PANELS,()=>st.panel,x=>st.panel=x));
-    const m=card('2. Measurements',seg('How to measure',[['simple','Simple'],['trace','Trace'],['report','Report']],()=>st.method,x=>{st.method=x;autoWaste();}));
+  function roofMeasure(v){
+    const mat=card('Material',null,seg('Material',[['metal','Metal'],['shingle','Shingles']],()=>st.mat,x=>{st.mat=x;autoWaste();}));
+    if(st.mat==='metal') mat.append(pick('Panel',PANELS,()=>st.panel,x=>st.panel=x,refresh));
+    const m=card('Roof',null,seg('How to measure',[['simple','Simple'],['trace','Trace'],['report','Report']],()=>st.method,x=>{st.method=x;autoWaste();}));
     if(st.method==='simple'){
-      m.append(el('p','hint','A plain gable or hip roof on a rectangle.'),
+      m.append(el('p','hint','A plain gable or hip roof on a rectangle. Measure to the drip edge.'),
         seg('Roof style',[['gable','Gable'],['hip','Hip']],()=>st.style,x=>{st.style=x;autoWaste();}),
-        grid('grid2',num('Length along ridge',()=>st.L,x=>st.L=x,'ft'),num('Width',()=>st.W,x=>st.W=x,'ft')),
-        pick('Pitch',PITCH_OPTS,()=>st.pitch,x=>st.pitch=+x),
-        el('p','hint','Measure to the drip edge so overhangs are included.'));
+        grid('grid2',num('Length along ridge',()=>st.L,x=>st.L=x,'ft',()=>later(refresh)),num('Width',()=>st.W,x=>st.W=x,'ft',()=>later(refresh))),
+        pick('Pitch',PITCH_OPTS,()=>st.pitch,x=>st.pitch=+x,refresh));
     } else if(st.method==='trace'){
-      m.append(el('p','hint','Any roof with square corners. Start at any corner and go around the edge, entering each edge from the report’s length diagram. Rake: a gable edge, entered as the rake length on the report. Wall: a lower roof’s high side against the house.'));
+      m.append(el('p','hint','Any roof with square corners. Start at a corner and go around the edge, using the report’s length diagram. Rake: a gable edge, entered as the rake length on the report. Wall: a lower roof’s high side against the house.'));
       sections(m);
-      const add=el('button','btn-sm','+ Porch or lower roof');
+      const add=el('button','pill','+ Porch or lower roof');
       add.onclick=()=>{st.sections.push({name:'Section '+(st.sections.length+1),pitch:+st.sections[0]?.pitch||6,x:0,y:0,edges:[{d:'E',len:0,t:'eave'}]});save();render();};
-      const ex=el('button','btn-sm','Load example');
+      const ex=el('button','pill','Load example');
       twoTap(ex,'Load example','Tap again to replace the outline',()=>{st.sections=EXAMPLE();save();render();});
       m.append(grid('row',add,ex));
     } else {
       if(importReady){ $('imp').hidden=false; m.append($('imp')); }
-      const q=st.rep;
+      const q=st.rep, up=()=>later(refresh);
       m.append(grid('grid2',
-        num('Total roof area',()=>q.area,x=>q.area=x,'ft²'),pick('Pitch',PITCH_OPTS,()=>q.pitch,x=>q.pitch=+x),
-        num('Eaves',()=>q.eave,x=>q.eave=x,'ft'),num('Rakes',()=>q.rake,x=>q.rake=x,'ft'),
-        num('Ridges',()=>q.ridge,x=>q.ridge=x,'ft'),num('Hips',()=>q.hip,x=>q.hip=x,'ft'),
-        num('Valleys',()=>q.valley,x=>q.valley=x,'ft'),num('Flashing',()=>q.flash,x=>q.flash=x,'ft')),
-        el('p','hint','Report totals give square feet and the material list. For a panel cut list and layout, use Trace.'));
+        num('Total roof area',()=>q.area,x=>q.area=x,'ft²',up),pick('Pitch',PITCH_OPTS,()=>q.pitch,x=>q.pitch=+x,refresh),
+        num('Eaves',()=>q.eave,x=>q.eave=x,'ft',up),num('Rakes',()=>q.rake,x=>q.rake=x,'ft',up),
+        num('Ridges',()=>q.ridge,x=>q.ridge=x,'ft',up),num('Hips',()=>q.hip,x=>q.hip=x,'ft',up),
+        num('Valleys',()=>q.valley,x=>q.valley=x,'ft',up),num('Flashing',()=>q.flash,x=>q.flash=x,'ft',up)),
+        el('p','hint','Report totals give square feet and materials. For a panel cut list and layout, use Trace.'));
     }
-    v.append(mat,m); app.append(v); if(st.method==='trace') secStatus();
-    bar('Get my list →',()=>go('roofRes'));
-  }
-  const DIRS=[['N','↑ N'],['E','→ E'],['S','↓ S'],['W','← W']], TURN={E:'S',S:'W',W:'N',N:'E'};
-  function sections(host){
-    st.sections.forEach((sec,si)=>{
-      const box=el('div','sub'), h=el('div','sub-h');
-      h.append(el('b',null,sec.name||'Section '+(si+1)));
-      if(st.sections.length>1){const rm=el('button','x','Remove');rm.onclick=()=>{st.sections.splice(si,1);save();render();};h.append(rm);}
-      box.append(h,grid('grid2',txt('Name',()=>sec.name,x=>sec.name=x),pick('Pitch',PITCH_OPTS,()=>sec.pitch,x=>{sec.pitch=+x;later(secStatus);})));
-      if(si>0) box.append(grid('grid2',num('Starts, ft east of first corner',()=>sec.x,x=>sec.x=x,'ft',()=>later(secStatus)),num('ft south of first corner',()=>sec.y,x=>sec.y=x,'ft',()=>later(secStatus))));
-      const rows=el('div','erows');
-      sec.edges.forEach((e,ei)=>{
-        const r=el('div','erow'), n=ei+1, ch=()=>later(secStatus);
-        const x=el('button','x','×');x.setAttribute('aria-label','Remove edge '+n);x.onclick=()=>{sec.edges.splice(ei,1);save();render();};
-        r.append(selIn(DIRS,()=>e.d,v=>e.d=v,ch,'Edge '+n+' direction'),numIn(()=>e.len,v=>e.len=v,ch,'Edge '+n+' length in feet'),
-          selIn([['eave','Eave'],['rake','Rake'],['wall','Wall']],()=>e.t||'eave',v=>e.t=v,ch,'Edge '+n+' type'),x);
-        rows.append(r);
-      });
-      const add=el('button','btn-sm','+ Edge');
-      add.onclick=()=>{const l=sec.edges[sec.edges.length-1];sec.edges.push({d:l?TURN[l.d]:'E',len:0,t:'eave'});save();render();const ins=document.querySelectorAll('.sub')[si].querySelectorAll('.erow input');ins[ins.length-1].focus();};
-      const stt=el('span','status');stt.dataset.sec=si;
-      box.append(rows,grid('row',add,stt)); host.append(box);
-    });
-  }
-  function secStatus(){
-    const R=buildRoof(st.sections,1,0);
-    document.querySelectorAll('.status[data-sec]').forEach(s=>{const x=R.secs[+s.dataset.sec];if(!x)return;
-      s.className='status'+(x.ok?(x.note?'':' ok'):' err');s.textContent=x.ok?(x.note||'Outline closes ✓'):x.msg;});
+    v.append(mat,m,btn('See materials',()=>go('materials'),null,'arrow'));
+    if(st.method==='trace') secStatus();
   }
 
   // ---------- roof: results ----------
@@ -523,9 +640,9 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
     const under=['Underlayment',Math.ceil(g.area*1.1*(lowShingle?2:1)/100/Math.max(.1,+C.under||10))+' rolls',(ss?'High-temp synthetic. ':'')+(lowShingle?'2 layers for low slope. ':'')+f(C.under)+' squares per roll'];
     const iceLF=g.eave*Math.max(0,Math.round(+C.iceRows||0))+g.valleys;
     const ice=['Ice and water shield',Math.ceil(iceLF/Math.max(1,+C.ice||66))+' rolls',f(iceLF)+' ft at eaves and valleys'];
-    let cost=null, cut=null;
+    let cost=null, cut=null, sum={};
     if(!metal){
-      const nails=Math.ceil(sqW*67)*(+st.nails||4), box=Math.max(1,+C.nailsBox||7200);
+      const nails=Math.ceil(sqW*67)*(+st.nails||4), box=Math.max(1,+C.nailsBox||7200); sum={bundles:Math.ceil(sqW*3)};
       rows.push(['Shingles',Math.ceil(sqW*3)+' bundles','3 bundles per square, waste included'],
         ['Starter strip',Math.ceil((g.eave+g.rake)/Math.max(1,+C.start||110))+' bundles',f(g.eave+g.rake)+' ft of eaves and rakes'],
         ['Ridge cap',Math.ceil((g.ridge+g.hips)/Math.max(1,+C.ridge||25))+' bundles',f(g.ridge+g.hips)+' ft of ridges and hips'],
@@ -538,7 +655,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
       let panels, totalLF, clips=0, screwBags=0;
       if(R){panels=R.panels;totalLF=R.lf;clips=ss?R.clips:0;cut=engineItems(R);}
       else {totalLF=g.area*w/covFt;clips=ss?Math.ceil(totalLF/2)+Math.ceil(g.eave/covFt):0;}
-      const name=PANELS.find(p=>p[0]===st.panel)[1];
+      const name=PANELS.find(p=>p[0]===st.panel)[1]; sum={panels:R?panels:0,lf:totalLF};
       rows.push(R?['Panels',panels+' pcs',name+', '+f(totalLF)+' ft, cut to length (see cut list)']:['Panels',f(Math.ceil(totalLF/10)*10)+' ft',name+', waste included']);
       rows.push(pcs('Eave trim',g.eave),pcs('Rake trim',g.rake),pcs('Ridge cap',g.ridge),pcs('Hip cap',g.hips),pcs('Valley flashing',g.valleys),pcs('Headwall flashing',g.wall));
       if(ss){
@@ -554,73 +671,194 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
       const P=st.price, cP=totalLF*(+P.panel||0), cT=trimPcs*trimLen*(+P.trim||0), cS=screwBags*(+P.screw||0);
       if(cP+cT+cS>0) cost={total:cP+cT+cS,ss,lines:[['Panels',cP],['Trim',cT],['Screws',cS]].filter(x=>x[1]>0)};
     }
-    return {area:g.area,sqW,warn:slopeWarn(g.pitch,ss),rows:rows.filter(r=>r&&r[1]!=null),cut,R,cost,metal};
+    return {...sum,area:g.area,sqW,warn:slopeWarn(g.pitch,ss),rows:rows.filter(r=>r&&r[1]!=null),cut,R,cost,metal};
   }
   const money=x=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   function byLength(R){const m=new Map();for(const fc of R.faces)for(const p of fc.panels)m.set(p.inch,(m.get(p.inch)||0)+1);return [...m].sort((a,b)=>b[0]-a[0]);}
   const engineItems=R=>({byLen:byLength(R),faces:R.faces.filter(fc=>fc.panels.length).map(fc=>({code:fc.code,dir:fc.dir,name:R.secs.length>1?R.secs[fc.sec].name:'',pieces:fc.panels}))});
 
-  function roofResView(app){
-    topbar(app,'Roof results','roof','Edit');
-    const v=el('div','view'), res=el('div','view'); res.id='res';
-    const C=st.cov, up=()=>later(fillRoof), inner=el('div','inner');
-    inner.append(num('Waste',()=>st.waste,x=>{st.waste=x;st.wasteEdited=true;},'%',up));
-    if(st.mat==='metal'){
-      inner.append(num('Panel overhang past the eave',()=>st.over,x=>st.over=x,'in',up),
-        grid('grid2',num('Panel $ per ft',()=>st.price.panel,x=>st.price.panel=x,null,up),num('Trim $ per ft',()=>st.price.trim,x=>st.price.trim=x,null,up)),
-        grid('grid2',num('Screws $ per bag',()=>st.price.screw,x=>st.price.screw=x,null,up),num('Trim piece length',()=>C.trim,x=>C.trim=x,'ft',up)),
-        grid('grid2',num('Screws per square',()=>C.screws,x=>C.screws=x,null,up)));
-    } else {
-      inner.append(grid('grid2',num('Starter, ft per bundle',()=>C.start,x=>C.start=x,null,up),num('Ridge cap, ft per bundle',()=>C.ridge,x=>C.ridge=x,null,up)),
-        grid('grid2',pick('Nails per shingle',[[4,'4 (standard)'],[6,'6 (high wind)']],()=>st.nails,x=>st.nails=+x,up),num('Nails per box',()=>C.nailsBox,x=>C.nailsBox=x,null,up)));
-    }
-    inner.append(grid('grid2',num('Underlayment, squares per roll',()=>C.under,x=>C.under=x,null,up),num('Ice and water, ft per roll',()=>C.ice,x=>C.ice=x,null,up)),
-      grid('grid2',num('Ice and water rows at eaves',()=>C.iceRows,x=>C.iceRows=x,null,up)));
-    const more=el('details','more'); more.append(el('summary',null,st.mat==='metal'?'Waste, prices and product sizes':'Waste and product sizes'),inner);
-    v.append(res,more); app.append(v); fillRoof();
-    bar('Copy list',()=>copy(roofText()));
+  // ---------- thumbnails ----------
+  function thumbRoof(R){
+    const box=el('div','thumb'), s=sv('svg',{viewBox:'0 0 100 80','aria-hidden':'true'});
+    if(R&&R.secs.some(x=>x.ok)){
+      let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+      for(const q of R.secs) if(q.ok) for(const [x,y] of q.V){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
+      const k=Math.min(92/(x1-x0||1),72/(y1-y0||1)), ox=(100-(x1-x0)*k)/2, oy=(80-(y1-y0)*k)/2, P=([x,y])=>[(x-x0)*k+ox,(y-y0)*k+oy];
+      for(const fc of R.faces){const o=[...fc.rows.map(r=>fc.toP(r.s,r.a)),...fc.rows.slice().reverse().map(r=>fc.toP(r.s,r.b))].map(P);
+        sv('polygon',{points:pts(o),fill:'var(--pb)',stroke:'var(--accent)','stroke-width':1.2,'stroke-linejoin':'round'},s);}
+    } else sv('path',{d:'M12 46 50 16l38 30M22 40v26h56V40',fill:'none',stroke:'var(--accent)','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'},s);
+    box.append(s); return box;
   }
-  function fillRoof(){
-    const res=$('res'); if(!res) return; res.innerHTML='';
-    const r=roofCalc();
-    if(r.err){res.append(card(null,el('p','callout',r.err)));return;}
-    if(r.warn) res.append(el('p','callout',r.warn));
-    const big=el('p','big',f(r.area)); big.append(el('small',null,'sq ft'));
-    res.append(card('Square feet',big,el('p','hint',f(r.area/100,1)+' squares. '+f(r.sqW,1)+' squares with '+f(st.waste)+'% waste.')));
-    const ml=card('Material list',list(r.rows));
-    if(r.cost){const c=el('div','cost');c.append(el('span',null,'Estimated material cost'+(r.cost.ss?' (clips not priced)':'')),el('b',null,money(r.cost.total)));ml.append(list(r.cost.lines.map(([k,x])=>[k,money(x)])),c);}
-    res.append(ml);
-    if(r.metal){
-      const cl=card('Cut list');
-      if(r.cut) cutList(cl,r.cut);
-      else{cl.append(el('p','hint','Report totals don’t give the roof’s shape, so there is no piece-by-piece list. Trace the roof from the report’s length diagram to get every panel and its length.'));
-        const b=el('button','btn alt','Trace the roof');b.onclick=()=>{st.method='trace';autoWaste();go('roof');};cl.append(b);}
-      res.append(cl);
-    }
-    if(r.R){const lc=card('Layout');drawRoof(lc,r.R,r.metal);res.append(lc);}
+  function thumbWall(w){
+    const box=el('div','thumb'), s=sv('svg',{viewBox:'0 0 100 80','aria-hidden':'true'});
+    const W=+w.w||1, H=+w.h||1, P=+w.peak||0, T=H+P, k=Math.min(90/W,70/T), ox=(100-W*k)/2, oy=(80-T*k)/2, Y=y=>oy+(T-y)*k;
+    const shape=[[ox,Y(0)],[ox+W*k,Y(0)],[ox+W*k,Y(H)]].concat(P>0?[[ox+W*k/2,Y(T)]]:[]).concat([[ox,Y(H)]]);
+    sv('polygon',{points:pts(shape),fill:'var(--pb)',stroke:'var(--accent)','stroke-width':1.4,'stroke-linejoin':'round'},s);
+    for(let y=+st.exp/12;y<T;y+=+st.exp/12*2) sv('line',{x1:ox,x2:ox+W*k,y1:Y(y),y2:Y(y),stroke:'var(--seam)','stroke-width':.5},s);
+    for(const o of w.open||[]){const y0=o.t==='door'?0:+o.y||0;sv('rect',{x:ox+(+o.x||0)*k,y:Y(y0+(+o.h||0)),width:(+o.w||0)*k,height:(+o.h||0)*k,fill:'var(--hole)',stroke:'var(--fg)','stroke-width':.8},s);}
+    box.append(s); return box;
   }
-  function cutList(host,it){
-    const rows=[]; let n=0,ins=0;
-    for(const [inch,c] of it.byLen){rows.push([ftIn(+inch),c+' pc'+(c>1?'s':''),null,'len']);n+=c;ins+=inch*c;}
-    rows.push(['Total',n+' panels, '+f(ins/12)+' ft',null,'tot']);
-    host.append(el('p','hint','Every panel length and how many to order. Lengths are to the long point and include the '+f(st.over,2)+'" eave overhang.'),list(rows));
-    const d=el('details','sub2'); d.append(el('summary',null,'Show every piece, by roof face'));
-    for(const fc of it.faces){
-      const h=el('p','fh');h.append(el('span','code',fc.code),(fc.name?fc.name+', ':'')+'faces '+fc.dir+', '+fc.pieces.length+' panel'+(fc.pieces.length>1?'s':''));
-      const ol=el('ol','cuts');for(const p of fc.pieces){const li=el('li');li.append(el('b',null,p.code),el('span',null,ftIn(p.inch)));if(p.rip)li.append(el('small',null,'rip to '+p.rip+'"'));ol.append(li);}
-      d.append(h,ol);
-    }
-    d.append(el('p','hint','Hip and valley panels get cut on an angle from the long point. The last panel on each face is ripped to the width shown.'));
-    host.append(d);
+  function hero(label,area,key,sub,thumb){
+    const c=el('section','card hero'), l=el('div');
+    const big=el('p','big'); big.append(document.createTextNode(f(shownArea[key])),el('small',null,'sq ft'));
+    l.append(el('p','eyebrow',label),big,el('p','sub2',sub)); c.append(l,thumb);
+    big.dataset.v=shownArea[key]; requestAnimationFrame(()=>countUp(big,Math.round(area))); shownArea[key]=Math.round(area);
+    return c;
+  }
+  function tiles(list){const g=el('div','tiles');for(const [k,v,s,tone] of list){const t=el('div','tile t-'+tone);t.append(el('span','k',k),el('span','v',v));if(s)t.append(el('span','s',s));g.append(t);}return g;}
+  function bars(rows,fmt,unit){
+    const u=el('ul','bars'), max=Math.max(...rows.map(r=>+r[0]));
+    for(const [len,c] of rows){const li=el('li'),tr=el('span','track'),fi=el('span','fill');fi.style.width=Math.max(4,len/max*100)+'%';tr.append(fi);
+      const q=el('span','c',String(c));q.append(el('small',null,unit));li.append(el('span','l',fmt(+len)),tr,q);u.append(li);}
+    return u;
+  }
+  function total(label,value){const d=el('div','total');d.append(el('span',null,label),el('b',null,value));return d;}
+
+  // ---------- roof tabs ----------
+  function roofMaterials(v){
+    const r=roofCalc(); if(r.err){v.append(empty('Nothing to add up yet',r.err));return;}
+    v.append(hero('Roof area',r.area,'roof',f(r.area/100,1)+' squares · '+f(r.sqW,1)+' with '+f(st.waste)+'% waste',thumbRoof(r.R)));
+    if(r.warn) v.append(callout(r.warn));
+    v.append(r.metal?tiles([['Panels',r.panels?f(r.panels):'—',r.panels?'cut to length':'trace for count','accent'],['Panel',f(r.lf),'linear ft','amber'],['Squares',f(r.sqW,1),'with waste','teal']])
+      :tiles([['Bundles',f(r.bundles),'3 per square','accent'],['Squares',f(r.area/100,1),'roof area','amber'],['With waste',f(r.sqW,1),f(st.waste)+'% waste','teal']]));
+    v.append(card('Material list',r.rows.length+' items',mlist(r.rows)));
+    if(r.cost){const c=el('div','cost');c.append(el('span','hint','Estimated material'+(r.cost.ss?', clips not priced':'')),el('b',null,money(r.cost.total)));
+      v.append(card('Cost',null,mlist(r.cost.lines.map(([k,x])=>[k,money(x)])),c));}
+    v.append(btn('Copy list',()=>copy(roofText()),null,'copy'));
+  }
+  function traceCard(text){return card(null,null,el('p','hint',text),btn('Trace the roof',()=>{st.method='trace';autoWaste();go('measure');},'ghost'));}
+  function roofCuts(v){
+    const r=roofCalc(); if(r.err){v.append(empty('No cut list yet',r.err));return;}
+    if(!r.metal){v.append(card('Shingles',null,el('p','hint','Shingles are ordered by the bundle, so there’s no cut list. Switch the material to Metal on Measure for a panel cut list.')));return;}
+    if(!r.cut){v.append(traceCard('Report totals don’t give the roof’s shape, so there’s no piece-by-piece list. Trace the roof from the report’s length diagram to get every panel and its length.'));return;}
+    let n=0,ins=0; for(const [i,c] of r.cut.byLen){n+=c;ins+=i*c;}
+    v.append(card('Panels by length',f(n)+' panels',el('p','hint','Order these lengths. Measured to the long point, with the '+f(st.over,2)+'" eave overhang.'),bars(r.cut.byLen,ftIn,'pcs'),total('Total',f(n)+' panels · '+f(ins/12)+' ft')));
+    const ev=card('Every piece','by roof face',el('p','hint','Codes match the Layout drawing. Hip and valley panels are cut on an angle from the long point; the last panel on a face is ripped to the width shown.'));
+    r.cut.faces.forEach((fc,i)=>{
+      const d=el('details','fold'); if(i===0) d.open=true;
+      const s=el('summary'), h=el('span','fh'); h.append(el('span','code',fc.code),(fc.name?fc.name+', ':'')+'faces '+fc.dir); s.append(h,el('span','hint',fc.pieces.length+' pcs')); d.append(s);
+      const ol=el('ol','cuts'); for(const p of fc.pieces){const li=el('li');li.append(el('b',null,p.code),el('span',null,ftIn(p.inch)));if(p.rip)li.append(el('small',null,'rip to '+p.rip+'"'));ol.append(li);}
+      const inn=el('div','inner'); inn.append(ol); d.append(inn); ev.append(d);
+    });
+    v.append(ev,btn('Copy list',()=>copy(roofText()),null,'copy'));
+  }
+  function roofLayout(v){
+    const r=roofCalc(); if(r.err){v.append(empty('No layout yet',r.err));return;}
+    if(!r.R){v.append(traceCard('Report totals don’t give the roof’s shape. Trace the roof to see the layout drawing.'));return;}
+    const c=card(r.metal?'Panel layout':'Roof plan',r.metal?f(r.panels)+' panels':null); drawRoof(c,r.R,r.metal); v.append(c);
   }
 
+  // ---------- siding tabs ----------
+  function sideMeasure(v){
+    v.append(card('Plank',null,pick('HardiePlank',PLANKS,()=>st.exp,x=>st.exp=+x,refresh),el('p','hint','12 ft planks.')));
+    st.walls.forEach((w,wi)=>{
+      const c=card(w.name||'Wall '+(wi+1),null), up=()=>later(refresh);
+      if(st.walls.length>1){const rm=el('button','x','Remove wall');rm.onclick=()=>{st.walls.splice(wi,1);st.wallSel=0;save();render();};c.querySelector('.card-h').append(rm);c.querySelector('.card-h span')?.remove();}
+      c.append(txt('Name',()=>w.name,x=>w.name=x),
+        grid('grid2',num('Width',()=>w.w,x=>w.w=x,'ft',up),num('Height',()=>w.h,x=>w.h=x,'ft',up)),
+        grid('grid2',num('Gable height',()=>w.peak,x=>w.peak=x,'ft',up)),
+        el('p','hint','Height is from the bottom of the siding to the soffit. Gable: the triangle above the wall, 0 if none.'));
+      (w.open||[]).forEach((o,oi)=>{
+        const ob=el('div','sub'), oh=el('div','sub-h');
+        oh.append(selIn([['window','Window'],['door','Door']],()=>o.t,x=>{o.t=x;render();},null,'Opening '+(oi+1)+' type'));
+        const rm=el('button','x','Remove');rm.onclick=()=>{w.open.splice(oi,1);save();render();};oh.append(rm);
+        ob.append(oh,grid('grid4',num('Width',()=>o.w,x=>o.w=x,'ft',up,'mini'),num('Height',()=>o.h,x=>o.h=x,'ft',up,'mini'),num('From left',()=>o.x,x=>o.x=x,'ft',up,'mini'),o.t==='door'?null:num('Up',()=>o.y,x=>o.y=x,'ft',up,'mini')));
+        c.append(ob);
+      });
+      const aw=el('button','pill','+ Window'), ad=el('button','pill','+ Door');
+      aw.onclick=()=>{(w.open=w.open||[]).push({t:'window',w:3,h:5,x:0,y:3});save();render();};
+      ad.onclick=()=>{(w.open=w.open||[]).push({t:'door',w:3,h:7,x:0});save();render();};
+      c.append(grid('row',aw,ad)); v.append(c);
+    });
+    const addW=btn('+ Add a wall',()=>{st.walls.push({name:'Wall '+(st.walls.length+1),w:0,h:+(st.walls[0]&&st.walls[0].h)||9,peak:0,open:[]});save();render();},'ghost');
+    v.append(addW,card('Corners',null,grid('grid2',num('Outside corners',()=>st.corners.out,x=>st.corners.out=x,null,()=>later(refresh)),num('Inside corners',()=>st.corners.inn,x=>st.corners.inn=x,null,()=>later(refresh)))),
+      btn('See materials',()=>go('materials'),null,'arrow'));
+  }
+  function sideMaterials(v){
+    const r=sideCalc(); if(r.err){v.append(empty('Nothing to add up yet',r.err));return;}
+    const S=r.S;
+    v.append(hero('Siding area',S.net,'siding','Walls '+f(S.gross)+' sq ft, less '+f(S.open)+' sq ft of openings',thumbWall(st.walls[0])));
+    if(r.warn) v.append(callout(r.warn));
+    v.append(tiles([['Planks',f(r.buy),'12 ft, to buy','accent'],['Pieces',f(S.pieces.length),'cut from '+f(S.planks),'amber'],['Squares',f(S.net/100,1),'net','teal']]));
+    const rows=r.rows.filter(x=>x[1]!=null);
+    v.append(card('Material list',rows.length+' items',mlist(rows)),btn('Copy list',()=>copy(sideText()),null,'copy'));
+  }
+  function sideCuts(v){
+    const r=sideCalc(); if(r.err){v.append(empty('No cut list yet',r.err));return;}
+    const S=r.S; let n=0; for(const [,c] of r.byLen) n+=c;
+    v.append(card('Pieces by length',f(n)+' pieces',el('p','hint','12’0" pieces are full planks. Shorter pieces are cut from the planks on the material list.'),bars(r.byLen,ftIn4,'pcs'),total('Total',f(n)+' pieces from '+f(S.planks)+' planks')));
+    const cc=card('Course by course','1 = bottom',el('p','hint','∠ angle cut for the gable. Notch: cut around that window or door.'));
+    S.walls.forEach((w,wi)=>{ if(!w.courses.length) return;
+      const d=el('details','fold'); if(wi===0) d.open=true;
+      const s=el('summary'); s.append(el('span',null,w.name),el('span','hint',w.courses.length+' courses')); d.append(s);
+      const ul=el('ul','courses');
+      for(const c of w.courses){const li=el('li');li.append(el('i',null,'#'+c.i),el('span',null,c.pieces.map(p=>ftIn4(p.len)+(p.ends?' ∠':'')+(p.notch.length?' notch '+p.notch.join(','):'')).join('  ·  ')+(c.rip?'  (rip to '+c.rip+'")':'')));ul.append(li);}
+      const inn=el('div','inner'); inn.append(ul); d.append(inn); cc.append(d);
+    });
+    v.append(cc,btn('Copy list',()=>copy(sideText()),null,'copy'));
+  }
+  function sideLayout(v){
+    const r=sideCalc(); if(r.err){v.append(empty('No layout yet',r.err));return;}
+    const walls=r.S.walls.filter(w=>w.courses.length); if(!walls.length){v.append(empty('No layout yet','Enter a wall width and height.'));return;}
+    if(st.wallSel>=walls.length) st.wallSel=0;
+    if(walls.length>1){const p=el('div','wallpick');p.setAttribute('role','group');p.setAttribute('aria-label','Wall');
+      walls.forEach((w,i)=>{const b=el('button',null,w.name);b.setAttribute('aria-pressed',String(i===st.wallSel));b.onclick=()=>{st.wallSel=i;save();render();};p.append(b);});v.append(p);}
+    const w=walls[st.wallSel], c=card(w.name,w.courses.length+' courses');
+    c.append(el('p','hint','Every course and plank, with each piece’s length. Course numbers on the left; 1 is the bottom.'));
+    drawWall(c,w,+st.exp); v.append(c);
+  }
+  const DIRS=[['N','↑ N'],['E','→ E'],['S','↓ S'],['W','← W']], TURN={E:'S',S:'W',W:'N',N:'E'};
+  function sections(host){
+    st.sections.forEach((sec,si)=>{
+      const box=el('div','sub'), h=el('div','sub-h');
+      h.append(el('b',null,sec.name||'Section '+(si+1)));
+      if(st.sections.length>1){const rm=el('button','x','Remove');rm.onclick=()=>{st.sections.splice(si,1);save();render();};h.append(rm);}
+      box.append(h,grid('grid2',txt('Name',()=>sec.name,x=>sec.name=x),pick('Pitch',PITCH_OPTS,()=>sec.pitch,x=>{sec.pitch=+x;later(secStatus);})));
+      if(si>0) box.append(grid('grid2',num('Starts, ft east of first corner',()=>sec.x,x=>sec.x=x,'ft',()=>later(secStatus)),num('ft south of first corner',()=>sec.y,x=>sec.y=x,'ft',()=>later(secStatus))));
+      const rows=el('div','erows');
+      sec.edges.forEach((e,ei)=>{
+        const r=el('div','erow'), n=ei+1, ch=()=>later(secStatus);
+        const x=el('button','x','×');x.setAttribute('aria-label','Remove edge '+n);x.onclick=()=>{sec.edges.splice(ei,1);save();render();};
+        r.append(selIn(DIRS,()=>e.d,v=>e.d=v,ch,'Edge '+n+' direction'),numIn(()=>e.len,v=>e.len=v,ch,'Edge '+n+' length in feet'),
+          selIn([['eave','Eave'],['rake','Rake'],['wall','Wall']],()=>e.t||'eave',v=>e.t=v,ch,'Edge '+n+' type'),x);
+        rows.append(r);
+      });
+      const add=el('button','pill','+ Edge');
+      add.onclick=()=>{const l=sec.edges[sec.edges.length-1];sec.edges.push({d:l?TURN[l.d]:'E',len:0,t:'eave'});save();render();const ins=document.querySelectorAll('.sub')[si].querySelectorAll('.erow input');ins[ins.length-1].focus();};
+      const stt=el('span','status');stt.dataset.sec=si;
+      box.append(rows,grid('row',add,stt)); host.append(box);
+    });
+  }
+  function secStatus(){
+    const R=buildRoof(st.sections,1,0);
+    document.querySelectorAll('.status[data-sec]').forEach(s=>{const x=R.secs[+s.dataset.sec];if(!x)return;
+      s.className='status'+(x.ok?(x.note?'':' ok'):' err');s.textContent=x.ok?(x.note||'Outline closes ✓'):x.msg;});
+  }
+
+  function sideCalc(){
+    const S=buildSiding(st.walls,+st.exp,144);
+    if(!(S.gross>0)) return {err:'Enter at least one wall width and height.'};
+    const extra=+st.extra||0, buy=Math.ceil(S.planks*(1+extra/100)), maxH=Math.max(...st.walls.map(w=>+w.h||0));
+    const runs=Math.max(1,Math.ceil(maxH/12)), outB=Math.round(+st.corners.out||0)*2*runs, inB=Math.round(+st.corners.inn||0)*runs, trimB=Math.ceil(S.openTrim*1.1/144);
+    const nails=Math.ceil((buy*9+(outB+inB+trimB)*12)/100)*100;
+    const plank=PLANKS.find(p=>+p[0]===+st.exp)[1];
+    const rows=[['HardiePlank, 12 ft',buy+' pcs',plank+'. '+S.planks+' from the cut list plus '+f(extra)+'% for breakage.'],
+      ['Starter strip',Math.ceil(S.starter/144)+' pcs',f(S.starter/12)+' ft along the bottom, 12 ft pieces'],
+      ['Outside corner boards',outB?outB+' pcs':null,f(st.corners.out)+' corners, 2 boards each, 12 ft'],
+      ['Inside corner boards',inB?inB+' pcs':null,f(st.corners.inn)+' corners, 1 board each, 12 ft'],
+      ['Window and door trim',trimB?trimB+' pcs':null,f(S.openTrim/12)+' ft around openings, 12 ft boards'],
+      ['Siding nails','about '+f(nails),'blind nailed at every stud, plus trim'],
+      ['House wrap',(x=>x+' roll'+(x>1?'s':''))(Math.ceil(S.gross*1.15/1350)),'9 ft × 150 ft rolls']];
+    const m=new Map(); for(const p of S.pieces) m.set(p.len,(m.get(p.len)||0)+1);
+    return {S,buy,rows,byLen:[...m].sort((a,b)=>b[0]-a[0]),warn:S.walls.filter(w=>w.msg).map(w=>w.name+': '+w.msg).join(' ')};
+  }
   // ---------- drawings ----------
   const SVGNS='http://www.w3.org/2000/svg';
   function sv(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.append(e);return e;}
   const pts=P=>P.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ');
   function viewer(host,svg,startZoom,maxZoom){
     let z=1; const zb=el('div','zoom'), vw=el('div','viewer');
-    const zo=el('button','btn-sm','−'), zi=el('button','btn-sm','+'), zf=el('button','btn-sm','Fit'), zl=el('span');
+    const zo=el('button','pill','−'), zi=el('button','pill','+'), zf=el('button','pill','Fit'), zl=el('span');
     zo.setAttribute('aria-label','Zoom out'); zi.setAttribute('aria-label','Zoom in'); zb.append(zo,zi,zf,zl); vw.append(svg); host.append(zb,vw);
     const set=nz=>{const r=vw.getBoundingClientRect(),cx=(vw.scrollLeft+r.width/2)/z,cy=(vw.scrollTop+r.height/2)/z;z=Math.min(maxZoom,Math.max(1,nz));svg.style.setProperty('--z',z);vw.scrollLeft=cx*z-r.width/2;vw.scrollTop=cy*z-r.height/2;zl.textContent=z===1?'Zoom in to read the labels':Math.round(z*100)+'%';};
     zi.onclick=()=>set(z*1.6); zo.onclick=()=>set(z/1.6); zf.onclick=()=>set(1);
@@ -671,7 +909,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
     const svg=sv('svg',{viewBox:(-padL)+' '+(-pad)+' '+(W+padL+pad)+' '+(T+2*pad),role:'img','aria-label':w.name+' with every course and plank'});
     const id='clip'+Math.random().toString(36).slice(2,8), shape=[[0,Y(0)],[W,Y(0)],[W,Y(H)]].concat(P>0?[[W/2,Y(T)]]:[]).concat([[0,Y(H)]]);
     sv('polygon',{points:pts(shape)},sv('clipPath',{id},sv('defs',{},svg)));
-    const g=sv('g',{'clip-path':'url(#'+id+')'},svg), fs=Math.max(2,exp*.5);
+    const g=sv('g',{'clip-path':'url(#'+id+')'},svg), fs=Math.max(2.4,exp*.6);
     for(const c of w.courses){
       c.pieces.forEach((p,k)=>sv('rect',{x:p.x0,y:Y(c.y1),width:p.x1-p.x0,height:c.y1-c.y0,fill:(k+c.i)%2?'var(--pa)':'var(--pb)',stroke:'var(--seam)','stroke-width':.4},g));
       sv('text',{x:-3,y:Y((c.y0+c.y1)/2),'font-size':fs*.9,'text-anchor':'end','dominant-baseline':'central'},svg).textContent=c.i;
@@ -685,94 +923,9 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
       sv('text',{x:(o.x0+o.x1)/2,y:Y((o.y0+o.y1)/2),'font-size':Math.min(10,(o.x1-o.x0)/4),'text-anchor':'middle','dominant-baseline':'central'},svg).textContent=o.code;
     }
     sv('polygon',{points:pts(shape),fill:'none',stroke:'var(--fg)','stroke-width':1.2,'stroke-linejoin':'round'},svg);
-    viewer(host,svg,2.6,6);
+    viewer(host,svg,Math.min(5,Math.max(1.6,W/150)),8);
   }
 
-  // ---------- siding: measurements ----------
-  function sidingView(app){
-    topbar(app,'Siding','home','Home');
-    const v=el('div','view');
-    const plank=card('1. Plank',pick('HardiePlank',PLANKS,()=>st.exp,x=>st.exp=+x),el('p','hint','12 ft planks.'));
-    const walls=card('2. Walls',el('p','hint','Add each wall you’re siding. Height is from the bottom of the siding to the soffit. Gable: how tall the triangle above the wall is, 0 if none. For a window, “up” is from the bottom of the siding to the bottom of the window.'));
-    st.walls.forEach((w,wi)=>{
-      const box=el('div','sub'), h=el('div','sub-h');
-      h.append(el('b',null,w.name||'Wall '+(wi+1)));
-      if(st.walls.length>1){const rm=el('button','x','Remove wall');rm.onclick=()=>{st.walls.splice(wi,1);save();render();};h.append(rm);}
-      box.append(h,txt('Name',()=>w.name,x=>w.name=x),
-        grid('grid2',num('Width',()=>w.w,x=>w.w=x,'ft'),num('Height',()=>w.h,x=>w.h=x,'ft')),
-        grid('grid2',num('Gable height',()=>w.peak,x=>w.peak=x,'ft')));
-      (w.open||[]).forEach((o,oi)=>{
-        const ob=el('div','sub'), oh=el('div','sub-h');
-        oh.append(selIn([['window','Window'],['door','Door']],()=>o.t,x=>{o.t=x;render();},null,'Opening '+(oi+1)+' type'));
-        const rm=el('button','x','Remove');rm.onclick=()=>{w.open.splice(oi,1);save();render();};oh.append(rm);
-        const gr=grid('grid4',num('Width',()=>o.w,x=>o.w=x,'ft'),num('Height',()=>o.h,x=>o.h=x,'ft'),num('From left',()=>o.x,x=>o.x=x,'ft'),o.t==='door'?null:num('Up',()=>o.y,x=>o.y=x,'ft'));
-        gr.querySelectorAll('.field').forEach(x=>x.classList.add('mini'));
-        ob.append(oh,gr); box.append(ob);
-      });
-      const aw=el('button','btn-sm','+ Window'), ad=el('button','btn-sm','+ Door');
-      aw.onclick=()=>{(w.open=w.open||[]).push({t:'window',w:3,h:5,x:0,y:3});save();render();};
-      ad.onclick=()=>{(w.open=w.open||[]).push({t:'door',w:3,h:7,x:0});save();render();};
-      box.append(grid('row',aw,ad)); walls.append(box);
-    });
-    const addW=el('button','btn alt','+ Add a wall'); addW.onclick=()=>{st.walls.push({name:'Wall '+(st.walls.length+1),w:0,h:+(st.walls[0]&&st.walls[0].h)||9,peak:0,open:[]});save();render();};
-    walls.append(addW);
-    const corners=card('3. Corners',grid('grid2',num('Outside corners',()=>st.corners.out,x=>st.corners.out=x),num('Inside corners',()=>st.corners.inn,x=>st.corners.inn=x)));
-    v.append(plank,walls,corners); app.append(v);
-    bar('Get my list →',()=>go('sideRes'));
-  }
-
-  // ---------- siding: results ----------
-  function sideCalc(){
-    const S=buildSiding(st.walls,+st.exp,144);
-    if(!(S.gross>0)) return {err:'Enter at least one wall width and height.'};
-    const extra=+st.extra||0, buy=Math.ceil(S.planks*(1+extra/100)), maxH=Math.max(...st.walls.map(w=>+w.h||0));
-    const runs=Math.max(1,Math.ceil(maxH/12)), outB=Math.round(+st.corners.out||0)*2*runs, inB=Math.round(+st.corners.inn||0)*runs, trimB=Math.ceil(S.openTrim*1.1/144);
-    const nails=Math.ceil((buy*9+(outB+inB+trimB)*12)/100)*100;
-    const plank=PLANKS.find(p=>+p[0]===+st.exp)[1];
-    const rows=[['HardiePlank, 12 ft',buy+' pcs',plank+'. '+S.planks+' from the cut list plus '+f(extra)+'% for breakage.'],
-      ['Starter strip',Math.ceil(S.starter/144)+' pcs',f(S.starter/12)+' ft along the bottom, 12 ft pieces'],
-      ['Outside corner boards',outB?outB+' pcs':null,f(st.corners.out)+' corners, 2 boards each, 12 ft'],
-      ['Inside corner boards',inB?inB+' pcs':null,f(st.corners.inn)+' corners, 1 board each, 12 ft'],
-      ['Window and door trim',trimB?trimB+' pcs':null,f(S.openTrim/12)+' ft around openings, 12 ft boards'],
-      ['Siding nails','about '+f(nails),'blind nailed at every stud, plus trim'],
-      ['House wrap',(x=>x+' roll'+(x>1?'s':''))(Math.ceil(S.gross*1.15/1350)),'9 ft × 150 ft rolls']];
-    const m=new Map(); for(const p of S.pieces) m.set(p.len,(m.get(p.len)||0)+1);
-    return {S,rows,byLen:[...m].sort((a,b)=>b[0]-a[0]),warn:S.walls.filter(w=>w.msg).map(w=>w.name+': '+w.msg).join(' ')};
-  }
-  function sideResView(app){
-    topbar(app,'Siding results','siding','Edit');
-    const v=el('div','view'), res=el('div','view'); res.id='res';
-    const more=el('details','more'), inner=el('div','inner');
-    inner.append(num('Extra planks for breakage',()=>st.extra,x=>st.extra=x,'%',()=>later(fillSide)));
-    more.append(el('summary',null,'Extra for breakage'),inner);
-    v.append(res,more); app.append(v); fillSide();
-    bar('Copy list',()=>copy(sideText()));
-  }
-  function fillSide(){
-    const res=$('res'); if(!res) return; res.innerHTML='';
-    const r=sideCalc();
-    if(r.err){res.append(card(null,el('p','callout',r.err)));return;}
-    const S=r.S;
-    if(r.warn) res.append(el('p','callout',r.warn));
-    const big=el('p','big',f(S.net)); big.append(el('small',null,'sq ft'));
-    res.append(card('Square feet',big,el('p','hint','Walls '+f(S.gross)+' sq ft, minus '+f(S.open)+' sq ft of windows and doors.')));
-    res.append(card('Material list',list(r.rows)));
-    const cl=card('Cut list',el('p','hint','Every plank length and how many to cut. 12’0" pieces are full planks.'));
-    let n=0; const rows=[]; for(const [len,c] of r.byLen){rows.push([ftIn4(len),c+' pc'+(c>1?'s':''),null,'len']);n+=c;}
-    rows.push(['Total',n+' pieces from '+S.planks+' planks',null,'tot']); cl.append(list(rows));
-    for(const w of S.walls){ if(!w.courses.length) continue;
-      const d=el('details','sub2'); d.append(el('summary',null,'Show '+w.name+', course by course'));
-      const cs=el('div','courses');
-      for(const c of w.courses){const row=el('div');row.append(el('i',null,'#'+c.i),el('span',null,c.pieces.map(p=>ftIn4(p.len)+(p.ends?' ∠':'')+(p.notch.length?' notch '+p.notch.join(','):'')).join('  ·  ')+(c.rip?'  (rip to '+c.rip+'")':'')));cs.append(row);}
-      d.append(el('p','hint','Course 1 is at the bottom. ∠ = angle cut for the gable. Notch = cut around that window or door.'),cs); cl.append(d);
-    }
-    res.append(cl);
-    const lc=card('Layout');
-    for(const w of S.walls){ if(!w.courses.length) continue; lc.append(el('p','fh',w.name)); drawWall(lc,w,+st.exp); }
-    res.append(lc);
-  }
-
-  // ---------- copy ----------
   async function copy(text){
     try{await navigator.clipboard.writeText(text);toast('List copied');}
     catch(e){let t=document.querySelector('.copyout');if(!t){t=el('textarea','inp copyout');t.readOnly=true;$('res').prepend(t);}t.value=text;t.focus();t.select();window.scrollTo(0,0);toast('Select and copy the list');}
@@ -794,8 +947,6 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
       for(const c of w.courses) L.push('#'+c.i+': '+c.pieces.map(p=>ftIn4(p.len)+(p.ends?' angle':'')+(p.notch.length?' notch '+p.notch.join(','):'')).join(', ')+(c.rip?' (rip to '+c.rip+'")':'')); }
     return L.join('\n');
   }
-
-  const VIEWS={home:homeView,roof:roofView,roofRes:roofResView,siding:sidingView,sideRes:sideResView};
 
   function slopeWarn(p,ss){
     if(st.mat==='shingle'){
@@ -882,7 +1033,7 @@ Rules:
     const got=[]; for(const [k,rk,label] of [['eave','eaves_ft','eaves'],['rake','rakes_ft','rakes'],['ridge','ridges_ft','ridges'],['hip','hips_ft','hips'],['valley','valleys_ft','valleys'],['flash','flashing_ft','flashing']]) if(put(q,k,r[rk])) got.push(label+' '+f(r[rk]));
     if(got.length) done.push(got.join(', ')+' ft');
     if(r.suggested_waste_pct>0&&r.suggested_waste_pct<40){st.waste=+r.suggested_waste_pct;st.wasteEdited=true;done.push('waste '+st.waste+'% (from the report)');} else autoWaste();
-    st.method='report'; st.view='roof'; render();
+    st.method='report'; st.trade='roof'; st.tab='measure'; render();
     const s2=$('impSt'); s2.className='st ok'; s2.textContent='Filled in from '+(d.source&&d.source!=='other'?d.source:'the report')+'. Check these against the report:';
     const ul=el('ul'); for(const x of done) ul.append(el('li',null,x)); if(d.notes) ul.append(el('li',null,String(d.notes).slice(0,200))); s2.append(ul);
   }
@@ -925,7 +1076,7 @@ Rules:
       caps=await sample.limits().catch(()=>null);
       if(caps&&caps.images){ $('impFile').accept='application/pdf,.pdf,'+caps.images.mediaTypes.join(','); setSt(''); }
       else { $('impFile').accept='application/pdf,.pdf'; $('impBtn').textContent='Choose the PDF report'; setSt('Screenshots aren’t supported here, but the PDF works.'); }
-      if(st.view==='roof'&&st.method==='report') render();
+      if(st.trade==='roof'&&st.tab==='measure'&&st.method==='report') render();
     }catch(e){ setSt(errFull(e),'err'); }
   }
   window.addEventListener('pagehide',save);

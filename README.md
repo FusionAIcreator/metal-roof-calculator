@@ -1,12 +1,13 @@
 # Job calculator
 
-Phone-friendly takeoff calculator for metal or shingle roofs and HardiePlank siding. Pick **Roof** or **Siding**, enter the measurements, tap **Get my list**. Every job gives three things:
+Phone-friendly takeoff calculator for metal or shingle roofs and HardiePlank siding. Switch between **Roof** and **Siding** at the top; the bottom tab bar has four tabs that work for both:
 
-- **Square feet**
-- **Material list**
-- **Cut list with a layout drawing**
+- **Measure:** enter the job.
+- **Materials:** square feet up top, then the material list.
+- **Cut list:** every length and how many, plus every piece.
+- **Layout:** a drawing with every panel or plank labeled.
 
-**Copy list** puts the whole thing in plain text to send to your supplier.
+Live totals sit under the switch on every tab. The copy button puts everything in plain text for your supplier. Waste, prices and product sizes are behind the settings button.
 
 ## Roof
 - Metal (exposed fastener, R-panel, 5V, standing seam) or shingles.
