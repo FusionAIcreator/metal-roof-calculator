@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f2933">
+<title>Metal Roof Calculator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M2 18 16 6l14 12v10H2z%22 fill=%22%23b45309%22/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f3f4f6; --card: #ffffff; --text: #111827; --muted: #6b7280;
+    --line: #e5e7eb; --accent: #b45309; --accent-ink: #ffffff; --input: #f9fafb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark;
+      --bg: #0f1418; --card: #1a2128; --text: #f3f4f6; --muted: #9ca3af;
+      --line: #2b343d; --accent: #f59e0b; --accent-ink: #111827; --input: #11171c;
+    }
+  }
+  :root[data-theme="dark"] { color-scheme: dark;
+    --bg: #0f1418; --card: #1a2128; --text: #f3f4f6; --muted: #9ca3af;
+    --line: #2b343d; --accent: #f59e0b; --accent-ink: #111827; --input: #11171c; }
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  header { background: #1f2933; color: #fff; padding: 16px; }
+  header h1 { margin: 0; font-size: 20px; }
+  header p { margin: 2px 0 0; color: #cbd2d9; font-size: 14px; }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  @media (min-width: 860px) { main { grid-template-columns: 1fr 1fr; align-items: start; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
+  h2:not(:first-child) { margin-top: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label { display: block; font-size: 14px; font-weight: 600; }
+  label small { font-weight: 400; color: var(--muted); }
+  input, select {
+    width: 100%; margin-top: 4px; padding: 12px; font-size: 17px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--input); color: var(--text);
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 4px; }
+  .seg button { padding: 12px; font-size: 16px; border: 0; background: var(--input); color: var(--text); cursor: pointer; }
+  .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat { background: var(--input); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .stat b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 13px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 10px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+  td.r, th.r { text-align: right; white-space: nowrap; }
+  td small { display: block; color: var(--muted); font-size: 13px; }
+  tfoot td { font-weight: 800; font-size: 18px; border-bottom: 0; }
+  .btn { width: 100%; margin-top: 14px; padding: 14px; font-size: 16px; font-weight: 700; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 600; margin-top: 8px; }
+  .note { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
+  .bar { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: #1f2933; color: #fff; font-weight: 700; }
+  .bar a { color: #fbbf24; text-decoration: none; }
+  @media (min-width: 860px) { .bar { display: none; } }
+  .err { color: #dc2626; font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Metal Roof Calculator</h1>
+  <p>Enter measurements → get your order list.</p>
+</header>
+
+<main>
+  <section class="card" id="inputs">
+    <h2>Roof</h2>
+    <label>Roof type
+      <div class="seg" id="roofType">
+        <button type="button" data-v="gable" class="on">Gable (2 sides)</button>
+        <button type="button" data-v="shed">Shed (1 side)</button>
+      </div>
+    </label>
+    <div class="grid" style="margin-top:12px">
+      <label>Length <small>ft · ridge</small><input id="length" type="number" inputmode="decimal" min="0" step="any" value="40"></label>
+      <label>Width <small id="widthHint">ft · span</small><input id="width" type="number" inputmode="decimal" min="0" step="any" value="30"></label>
+      <label>Pitch <small>/12</small>
+        <select id="pitch"></select>
+      </label>
+      <label>Overhang <small>in, per eave</small><input id="overhangIn" type="number" inputmode="decimal" min="0" step="any" value="0"></label>
+    </div>
+
+    <h2>Panel</h2>
+    <div class="grid">
+      <label>Panel coverage <small>in</small><input id="panelWidthIn" type="number" inputmode="decimal" min="1" step="any" value="36"></label>
+      <label>Waste <small>%</small><input id="wastePct" type="number" inputmode="decimal" min="0" step="any" value="10"></label>
+    </div>
+
+    <h2>Prices</h2>
+    <div class="grid">
+      <label>Panel <small>$/LF</small><input id="pricePanelLF" type="number" inputmode="decimal" min="0" step="any" value="3.50"></label>
+      <label>Trim &amp; ridge <small>$/LF</small><input id="priceTrimLF" type="number" inputmode="decimal" min="0" step="any" value="2.50"></label>
+      <label>Fasteners <small>$/box</small><input id="priceFastenerBox" type="number" inputmode="decimal" min="0" step="any" value="45"></label>
+      <label>Screws per box<input id="screwsPerBox" type="number" inputmode="numeric" min="1" step="1" value="250"></label>
+    </div>
+
+    <h2>Settings</h2>
+    <div class="grid">
+      <label>Screws per square<input id="screwsPerSquare" type="number" inputmode="numeric" min="0" step="1" value="80"></label>
+      <label>Trim stick length <small>ft</small><input id="trimStickFt" type="number" inputmode="decimal" min="1" step="any" value="10"></label>
+    </div>
+    <button class="btn ghost" id="reset" type="button">Reset to defaults</button>
+  </section>
+
+  <section class="card" id="results">
+    <h2>Summary</h2>
+    <div class="stats">
+      <div class="stat"><b id="sSquares">–</b><span>Squares</span></div>
+      <div class="stat"><b id="sPanels">–</b><span>Panels</span></div>
+      <div class="stat"><b id="sPanelLen">–</b><span>Panel length</span></div>
+      <div class="stat"><b id="sTotal">–</b><span>Est. material cost</span></div>
+    </div>
+
+    <h2>Order list</h2>
+    <table>
+      <thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Cost</th></tr></thead>
+      <tbody id="list"></tbody>
+      <tfoot><tr><td>Total</td><td></td><td class="r" id="total">–</td></tr></tfoot>
+    </table>
+    <button class="btn" id="copy" type="button">Copy order list</button>
+    <textarea id="copyText" rows="7" hidden readonly style="width:100%;margin-top:10px;font:14px/1.4 ui-monospace,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--input);color:var(--text)"></textarea>
+    <p class="note" id="notes"></p>
+  </section>
+</main>
+
+<div class="bar"><span id="barText">–</span><a href="#results">Order list ↓</a></div>
+
+<script src="calc.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const NUM_FIELDS = ['length','width','pitch','overhangIn','panelWidthIn','wastePct','pricePanelLF','priceTrimLF','priceFastenerBox','screwsPerBox','screwsPerSquare','trimStickFt'];
+  const KEY = 'metal-roof-calc-v1';
+  let roofType = 'gable';
+  let orderText = '';
+
+  // Pitch dropdown 0/12 .. 12/12 in half steps
+  const pitchSel = $('pitch');
+  for (let p = 0; p <= 12; p += 0.5) {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p + '/12';
+    if (p === 4) o.selected = true;
+    pitchSel.appendChild(o);
+  }
+
+  const defaults = {};
+  NUM_FIELDS.forEach((f) => (defaults[f] = $(f).value));
+
+  // Restore saved inputs (best-effort)
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved) {
+      NUM_FIELDS.forEach((f) => { if (saved[f] != null) $(f).value = saved[f]; });
+      if (saved.roofType) roofType = saved.roofType;
+    }
+  } catch (e) {}
+
+  const money = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = (n, d = 0) => n.toLocaleString('en-US', { maximumFractionDigits: d });
+
+  function setRoofType(v) {
+    roofType = v;
+    document.querySelectorAll('#roofType button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+    $('widthHint').textContent = v === 'shed' ? 'ft · low to high' : 'ft · span';
+  }
+
+  function render() {
+    const inp = { roofType };
+    NUM_FIELDS.forEach((f) => (inp[f] = parseFloat($(f).value) || 0));
+    try { localStorage.setItem(KEY, JSON.stringify({ ...inp })); } catch (e) {}
+
+    if (inp.length <= 0 || inp.width <= 0 || inp.panelWidthIn <= 0 || inp.screwsPerBox <= 0) {
+      $('list').innerHTML = '<tr><td colspan="3" class="err">Enter length, width and panel coverage.</td></tr>';
+      ['sSquares','sPanels','sPanelLen','sTotal','total'].forEach((id) => ($(id).textContent = '–'));
+      orderText = '';
+      return;
+    }
+
+    const r = RoofCalc.calculate(inp);
+    const len = RoofCalc.ftIn(r.panelLenIn);
+
+    $('sSquares').textContent = num(r.squares, 2);
+    $('sPanels').textContent = r.panels;
+    $('sPanelLen').textContent = len;
+    $('sTotal').textContent = money(r.total);
+    $('total').textContent = money(r.total);
+    $('barText').textContent = `${r.panels} panels · ${money(r.total)}`;
+
+    const rows = [
+      ['Metal panels', `${r.panels} @ ${len}`, `${num(r.panelLF, 1)} LF total · ${r.panelsPerSide}/side + waste`, r.panelCost],
+      ['Fasteners', `${r.fastenerBoxes} box${r.fastenerBoxes === 1 ? '' : 'es'}`, `${num(r.screws)} screws`, r.fastenerCost],
+    ];
+    if (r.ridgeLF > 0) rows.push(['Ridge cap', `${num(r.ridgeOrder, 1)} LF`, `${r.ridgePieces} × ${r.stick}' pcs`, r.ridgeCost]);
+    const trimDetail = [`eave ${num(r.eaveLF, 1)}'`, `rake ${num(r.rakeLF, 1)}'`];
+    if (r.highSideLF) trimDetail.push(`high side ${num(r.highSideLF, 1)}'`);
+    rows.push(['Trim', `${num(r.trimOrder, 1)} LF`, `${r.trimPieces} × ${r.stick}' pcs · ${trimDetail.join(', ')}`, r.trimCost]);
+
+    $('list').innerHTML = rows.map(([name, qty, detail, cost]) =>
+      `<tr><td>${name}<small>${detail}</small></td><td class="r">${qty}</td><td class="r">${money(cost)}</td></tr>`).join('');
+
+    $('notes').textContent =
+      `${num(r.squares, 2)} squares (${num(r.areaSqFt)} sq ft, no waste). Slope length ${num(r.slopeFt, 2)}' at ${inp.pitch}/12. ` +
+      `Waste ${inp.wastePct}% added to panels, screws and trim. Ridge/trim cost rounded up to full sticks.`;
+
+    orderText = [
+      `METAL ROOF ORDER — ${inp.length}' x ${inp.width}' ${roofType}, ${inp.pitch}/12`,
+      `Panels: ${r.panels} @ ${len} (${inp.panelWidthIn}" coverage) = ${num(r.panelLF, 1)} LF`,
+      `Fasteners: ${r.fastenerBoxes} boxes (${num(r.screws)} screws)`,
+      r.ridgeLF > 0 ? `Ridge cap: ${r.ridgePieces} x ${r.stick}' (${num(r.ridgeOrder, 1)} LF)` : null,
+      `Trim: ${r.trimPieces} x ${r.stick}' (${num(r.trimOrder, 1)} LF)`,
+      `Squares: ${num(r.squares, 2)}`,
+      `Est. material: ${money(r.total)}`,
+    ].filter(Boolean).join('\n');
+  }
+
+  document.querySelectorAll('#roofType button').forEach((b) =>
+    b.addEventListener('click', () => { setRoofType(b.dataset.v); render(); }));
+  $('inputs').addEventListener('input', render);
+
+  $('reset').addEventListener('click', () => {
+    NUM_FIELDS.forEach((f) => ($(f).value = defaults[f]));
+    setRoofType('gable');
+    render();
+  });
+
+  $('copy').addEventListener('click', async () => {
+    if (!orderText) return;
+    const btn = $('copy');
+    try { await navigator.clipboard.writeText(orderText); btn.textContent = 'Copied ✓'; }
+    catch (e) { const t = $('copyText'); t.value = orderText; t.hidden = false; t.focus(); t.select(); btn.textContent = 'Select & copy below'; }
+    setTimeout(() => (btn.textContent = 'Copy order list'), 1500);
+  });
+
+  setRoofType(roofType);
+  render();
+})();
+</script>
+</body>
+</html>
