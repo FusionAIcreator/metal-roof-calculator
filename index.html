@@ -96,6 +96,43 @@ select.inp{appearance:auto}
 .filebtn.off{opacity:.45;pointer-events:none}
 #impFile:focus-visible + .filebtn{outline:3px solid var(--accent);outline-offset:2px}
 
+/* layout: outline editor */
+.lsec{background:var(--surface);border-radius:10px;padding:12px;margin-bottom:12px}
+.lsec-h{display:grid;grid-template-columns:1fr 96px;gap:8px}
+.erow{display:grid;grid-template-columns:22px 76px 1fr 1.2fr 34px;gap:6px;align-items:center;margin-bottom:6px}
+.erow .inp{padding:9px 6px;font-size:16px}
+.erow b{font-weight:500;color:var(--muted);font-size:13px;text-align:right}
+.erow .x{border:0;background:none;color:var(--muted);font-size:20px;padding:4px}
+.lsec-f{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:4px}
+.lsec-f .grow{flex:1 1 140px;font-size:14px;color:var(--muted)}
+.lsec-f .grow.err{color:var(--warn);font-weight:600}
+.lsec-f .grow.ok{color:var(--good)}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+/* layout: drawing and cut list */
+:root{--pa:#DCE6F5;--pb:#C4D4EC;--seam:#7C93B8;--ridgec:#B42318;--valc:#2459A6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pa:#22324A;--pb:#2B3F5D;--seam:#5A7398;--ridgec:#F2776B;--valc:#78AEEB}}
+:root[data-theme="dark"]{--pa:#22324A;--pb:#2B3F5D;--seam:#5A7398;--ridgec:#F2776B;--valc:#78AEEB}
+#layOut h2{font:600 24px/1.1 "Barlow Condensed",sans-serif;margin:18px 0 6px}
+.viewer{background:var(--surface);border-radius:12px;overflow:auto;-webkit-overflow-scrolling:touch;max-height:78vh;border:1px solid var(--line)}
+#plan{display:block;width:calc(100% * var(--z,1));height:auto;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:600}
+#plan text{fill:var(--ink)}
+.zoom{display:flex;gap:8px;align-items:center;margin:8px 0 6px}
+.zoom .btn-sm{min-width:46px;font-size:18px;font-weight:600}
+.zoom span{color:var(--muted);font-size:14px;margin-left:auto}
+.key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--muted);margin:6px 0 10px}
+.key i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.fsec{background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.fsec h3{margin:0 0 8px;font:600 19px/1.2 "Barlow Condensed",sans-serif}
+.fsec h3 small{color:var(--muted);font-weight:500;font-size:15px}
+.code{display:inline-block;min-width:30px;padding:1px 6px;margin-right:8px;border-radius:5px;background:var(--ink);color:var(--surface);text-align:center}
+.cuts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.cuts li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 6px;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:15px}
+.cuts b{font-family:"Barlow Condensed",sans-serif;color:var(--muted)}
+.cuts span{font:600 16px/1.2 "Barlow Condensed",sans-serif}
+.cuts small{flex-basis:100%;font-size:12px;color:var(--amber)}
+.notes{font-size:14px;color:var(--muted);padding-left:18px;margin:6px 0 12px}
+.notes li{margin-bottom:4px}
+
 </style>
 </head>
 <body>
@@ -144,6 +181,13 @@ select.inp{appearance:auto}
     <div class="seg mode" role="group" aria-label="Measurements">
       <button data-src="report" aria-pressed="false">From report</button>
       <button data-src="footprint" aria-pressed="true">Footprint</button>
+      <button data-src="layout" aria-pressed="false">Layout</button>
+    </div>
+
+    <div id="layIn" hidden>
+      <p class="auto">Walk around the roof edge from any corner, entering each edge off the report's length diagram. Rake / gable edges: enter the rake length the report shows (along the slope). Wall: a lower roof's high side against the house.</p>
+      <div id="secs"></div>
+      <div class="btnrow"><button class="btn-sm" id="addSec">+ Section (porch, lower roof)</button><button class="btn-sm" id="exSec">Load example</button></div>
     </div>
 
     <div id="fpIn">
@@ -173,6 +217,7 @@ select.inp{appearance:auto}
         <label class="field"><span>Ridges</span><div class="unit" data-u="ft"><input class="inp" id="qRi" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
         <label class="field"><span>Hips</span><div class="unit" data-u="ft"><input class="inp" id="qH" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
         <label class="field"><span>Valleys</span><div class="unit" data-u="ft"><input class="inp" id="qV" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
+        <label class="field"><span>Flashing</span><div class="unit" data-u="ft"><input class="inp" id="qF" type="number" min="0" inputmode="decimal" step="any" placeholder="0"></div></label>
       </div>
     </div>
 
@@ -190,6 +235,8 @@ select.inp{appearance:auto}
     </div>
     <button class="btn alt copy" data-copy="p-roof">Copy order list</button>
     <p class="note" id="rNote"></p>
+
+    <div id="layOut" hidden></div>
 
     <details>
       <summary>Product coverage</summary>
@@ -272,13 +319,147 @@ select.inp{appearance:auto}
 function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1800);}
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 
+// ---------- roof layout engine: outline -> faces -> panels ----------
+// Sections are walked edge by edge (N/E/S/W + length + eave|rake|wall). With one pitch per section,
+// the roof over a rectilinear outline is its straight skeleton, which for right-angle outlines is the
+// L-infinity distance to the eaves: a point belongs to the eave whose wavefront reaches it first.
+const LDIR={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]};
+function buildRoof(sections,cov,over){
+  const R={secs:[],faces:[],area:0,eave:0,rake:0,wall:0,ridge:0,hips:0,valleys:0,panels:0,lf:0,clips:0,pitch:null};
+  const H=cov/24;                                    // scan spacing: 24 lines per panel width
+  (sections||[]).forEach((sec,si)=>{
+    const S={name:sec.name||('Section '+(si+1)),ok:false,msg:'',note:''}; R.secs.push(S);
+    const p=+sec.pitch||0, pf=Math.sqrt(1+(p/12)**2);
+    const E=(sec.edges||[]).filter(e=>LDIR[e.d]&&+e.len>0);
+    if(E.length<4){S.msg='Needs at least 4 edges.';return;}
+    const L=E.map(e=>e.t==='rake'?e.len/pf:+e.len);   // rakes are entered along the slope, like the reports show them
+    let gx=0,gy=0; E.forEach((e,i)=>{gx+=LDIR[e.d][0]*L[i];gy+=LDIR[e.d][1]*L[i];});
+    const gap=(g,pos,neg)=>Math.abs(g)<.05?'':f2(Math.abs(g))+' ft '+(g>0?pos:neg);
+    if(Math.abs(gx)>1.5||Math.abs(gy)>1.5){S.msg='Doesn’t close: the last edge ends '+[gap(gx,'east','west'),gap(gy,'south','north')].filter(Boolean).join(' and ')+' of the start.';return;}
+    const fixed=[];                                   // report lengths are rounded, so absorb a small gap in the last edge on that axis
+    for(const ax of [0,1]){const g=ax?gy:gx; if(Math.abs(g)<1e-6)continue;
+      let i=E.length-1; while(i>=0&&LDIR[E[i].d][ax]===0)i--;
+      if(i<0){S.msg='Doesn’t close.';return;}
+      L[i]-=g*LDIR[E[i].d][ax]; if(L[i]<.05){S.msg='Doesn’t close.';return;}
+      if(Math.abs(g)>=.05) fixed.push('edge '+(sec.edges.indexOf(E[i])+1)+' '+(g*LDIR[E[i].d][ax]<0?'+':'−')+f2(Math.abs(g))+' ft');
+    }
+    if(fixed.length) S.note='Adjusted '+fixed.join(', ')+' so the outline closes.';
+    const V=[[+sec.x||0,+sec.y||0]];
+    E.forEach((e,i)=>{const q=V[V.length-1];V.push([q[0]+LDIR[e.d][0]*L[i],q[1]+LDIR[e.d][1]*L[i]]);});
+    V.pop();
+    const inside=pt=>{let c=false;for(let i=0,j=V.length-1;i<V.length;j=i++){const a=V[i],b=V[j];if((a[1]>pt[1])!==(b[1]>pt[1])&&pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+    let area2=0; for(let i=0,j=V.length-1;i<V.length;j=i++) area2+=(V[j][0]+V[i][0])*(V[j][1]-V[i][1]);
+    const orient=area2>0?1:-1;                        // which side of each edge is inside
+    const edges=E.map((e,i)=>{const a=V[i],b=V[(i+1)%V.length],d=LDIR[e.d],ax=d[0]?0:1;
+      const nrm=[-d[1]*orient,d[0]*orient];           // interior normal
+      const mid=[(a[0]+b[0])/2+nrm[0]*1e-3,(a[1]+b[1])/2+nrm[1]*1e-3];
+      if(!inside(mid)){nrm[0]*=-1;nrm[1]*=-1;}
+      return {a,b,t:e.t||'eave',ax,nrm,len:L[i]};});
+    for(const e of edges){ if(e.t==='eave')R.eave+=e.len; else if(e.t==='rake')R.rake+=e.len*pf; else R.wall+=e.len; }
+    // coplanar eaves (same line, same side) are one roof plane
+    const G=[];
+    for(const e of edges){ if(e.t!=='eave')continue;
+      const c=e.ax===0?e.a[1]:e.a[0], n=e.ax===0?e.nrm[1]:e.nrm[0], lo=Math.min(e.a[e.ax],e.b[e.ax]), hi=Math.max(e.a[e.ax],e.b[e.ax]);
+      let g=G.find(g=>g.ax===e.ax&&Math.abs(g.c-c)<1e-6&&g.n===n); if(!g){g={ax:e.ax,c,n,segs:[]};G.push(g);} g.segs.push([lo,hi]); }
+    if(!G.length){S.msg='Needs at least one eave.';return;}
+    const toS=(g,P)=>g.ax===0?P[0]:P[1], toU=(g,P)=>((g.ax===0?P[1]:P[0])-g.c)*g.n;
+    const toP=(g,s,u)=>g.ax===0?[s,g.c+g.n*u]:[g.c+g.n*u,s];
+    function owner(P){
+      if(!inside(P)) return -1;
+      let best=-1,bv=Infinity,bd=Infinity;
+      for(let k=0;k<G.length;k++){const g=G[k],u=toU(g,P); if(u<-1e-9)continue; const s=toS(g,P);
+        let v=Infinity,dd=Infinity; for(const [lo,hi] of g.segs){const d=Math.max(0,lo-s,s-hi),w=Math.max(u,d); if(w<v||(w===v&&d<dd)){v=w;dd=d;}}
+        if(v<bv-1e-9||(Math.abs(v-bv)<=1e-9&&dd<bd)){best=k;bv=v;bd=dd;}}
+      return best;
+    }
+    const proj=(g,ax)=>V.map(q=>ax==='s'?toS(g,q):toU(g,q));
+    const hAt=P=>{let v=Infinity;for(const g of G){const u=toU(g,P);if(u<-1e-9)continue;const s=toS(g,P);for(const [lo,hi] of g.segs)v=Math.min(v,Math.max(u,lo-s,s-hi));}return v;};
+    const xs=V.map(q=>q[0]),ys=V.map(q=>q[1]); let hTop=0;
+    for(let x=Math.min(...xs);x<=Math.max(...xs);x+=.5)for(let y=Math.min(...ys);y<=Math.max(...ys);y+=.5){const P=[x,y];if(inside(P))hTop=Math.max(hTop,hAt(P));}
+    hTop+=.75;
+    G.forEach((g,k)=>{
+      const us=proj(g,'u'), umax=Math.min(Math.max(...us),hTop), ss=proj(g,'s'), s0=Math.min(...ss), s1=Math.max(...ss);
+      const mine=(s,u)=>owner(toP(g,s,u))===k;
+      function line(s){
+        const out=[],du=1/4; let inA=null, prev=1e-6, pin=mine(s,prev); if(pin)inA=prev;
+        const edge=(lo,hi,want)=>{for(let i=0;i<22;i++){const m=(lo+hi)/2; if(mine(s,m)===want)hi=m; else lo=m;}return hi;};
+        for(let u=du;u<umax+du;u+=du){const uu=Math.min(u,umax-1e-6),cur=mine(s,uu);
+          if(cur!==pin){const x=edge(prev,uu,cur); if(cur)inA=x; else {out.push([inA,x]);inA=null;} pin=cur;}
+          prev=uu; if(uu>=umax-1e-6)break;}
+        if(inA!=null) out.push([inA,prev]);
+        return out.filter(([a,b])=>b-a>1e-4);
+      }
+      // find where this plane starts and ends across the eave direction
+      const has=s=>line(s).length>0;
+      let a0=null,a1=null; const ok=[];
+      const C=cov/3; for(let s=s0+1e-6;s<s1;s+=C){ if(has(s)){ if(a0==null)a0=s; a1=s; } }
+      if(a0==null) return;
+      const refine=(out,inn)=>{for(let i=0;i<24;i++){const m=(out+inn)/2; if(has(m))inn=m; else out=m;}return inn;};
+      { const o=Math.max(s0+1e-6,a0-C); a0=has(o)?o:refine(o,a0); }
+      { const o=Math.min(s1-1e-6,a1+C); a1=has(o)?o:refine(o,a1); }
+      // fine scan aligned to panel edges, then join intervals into connected pieces
+      const comps=[]; let last=[];
+      const n=Math.max(1,Math.ceil((a1-a0)/H-1e-9));
+      for(let j=0;j<=n;j++){ const s=j===n?a1:a0+j*H, ivs=line(s), now=[];
+        for(const [a,b] of ivs){ const pc=last.find(q=>q.a<b+1.5*H&&a<q.b+1.5*H);
+          let c=pc?pc.c:null; if(!c){c={rows:[]};comps.push(c);}
+          const r=c.rows[c.rows.length-1]; if(r&&r.j===j){r.a=Math.min(r.a,a);r.b=Math.max(r.b,b);} else c.rows.push({j,s,a,b});
+          now.push({a,b,c}); }
+        last=now; }
+      for(const c of comps){ if(c.rows.length<2) continue;
+        const face={sec:si,pf,g,rows:c.rows,dir:g.ax===0?(g.n>0?'north':'south'):(g.n>0?'west':'east'),panels:[],toP:(s,u)=>toP(g,s,u)};
+        const rows=c.rows, j0=rows[0].j, sA=rows[0].s, sB=rows[rows.length-1].s;
+        // corners that fall between scan lines: extend the two neighbouring slopes to where they meet
+        const peak=(side,sign)=>{const out=[];for(let i=1;i+2<rows.length;i++){const l=(rows[i][side]-rows[i-1][side])/(rows[i].s-rows[i-1].s), r=(rows[i+2][side]-rows[i+1][side])/(rows[i+2].s-rows[i+1].s);
+          if(sign*l>1e-6&&sign*r<-1e-6){const t=(rows[i+1][side]-rows[i][side]-r*(rows[i+1].s-rows[i].s))/(l-r); if(t>0&&t<rows[i+1].s-rows[i].s) out.push({s:rows[i].s+t,v:rows[i][side]+l*t});}}return out;};
+        const tops=peak('b',1), bots=peak('a',-1);
+        for(let k2=0;sA+k2*cov<sB-.125;k2++){
+          const lo=sA+k2*cov, hi=Math.min(sB,lo+cov), R2=rows.filter(r=>r.s>=lo-1e-6&&r.s<=hi+1e-6);
+          if(!R2.length) continue;
+          let umin=Math.min(...R2.map(r=>r.a)), umax2=Math.max(...R2.map(r=>r.b));
+          for(const t of tops) if(t.s>lo&&t.s<hi) umax2=Math.max(umax2,t.v);
+          for(const t of bots) if(t.s>lo&&t.s<hi) umin=Math.min(umin,t.v);
+          const eaveEnd=umin<.01, len=(umax2-umin)*pf+(eaveEnd?over:0), inch=Math.ceil(len*12-1e-6);
+          const poly=[...R2.map(r=>toP(g,r.s,r.a)),...R2.slice().reverse().map(r=>toP(g,r.s,r.b))];
+          face.panels.push({lo,hi,umin,umax:umax2,inch,rip:hi-lo<cov-1e-3?Math.round((hi-lo)*12*4)/4:0,poly,eave:eaveEnd});
+        }
+        face.sliver=(sB-sA)%cov>1e-4&&(sB-sA)%cov<=.125?Math.round(((sB-sA)%cov)*48)/4:0;
+        // area and the lines between faces (each shared line is counted from both sides, so halve later)
+        let fa=0; face.lines={ridge:0,hip:0,valley:0};
+        const onOutline=P=>edges.some(e=>{const ax=e.ax,o=1-ax,lo2=Math.min(e.a[ax],e.b[ax]),hi2=Math.max(e.a[ax],e.b[ax]);return Math.abs(P[o]-e.a[o])<.02&&P[ax]>lo2-.02&&P[ax]<hi2+.02;});
+        for(let i=0;i+1<rows.length;i++){const r=rows[i],q=rows[i+1],ds=q.s-r.s;
+          fa+=ds*((r.b-r.a)+(q.b-q.a))/2;
+          const segLen=(d1,d2)=>Math.sqrt(ds*ds+((d2-d1)*pf)**2);
+          const mid=(side)=>toP(g,(r.s+q.s)/2,(r[side]+q[side])/2);
+          if((r.a>.01||q.a>.01)&&!onOutline(mid('a'))) face.lines.valley+=segLen(r.a,q.a);
+          if(!onOutline(mid('b'))){ if(Math.abs(q.b-r.b)<.5*ds) face.lines.ridge+=segLen(r.b,q.b); else face.lines.hip+=segLen(r.b,q.b);} }
+        face.area=fa*pf;
+        face.cx=(sA+sB)/2;
+        R.faces.push(face);
+      }
+    });
+    S.ok=true; S.V=V; S.edges=edges; S.pitch=p;
+    R.pitch=R.pitch==null?p:Math.min(R.pitch,p);
+  });
+  // codes A, B, C… in reading order (top to bottom, then left to right)
+  const cen=fc=>{const P=fc.rows.map(r=>fc.toP(r.s,(r.a+r.b)/2));return [P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];};
+  R.faces.forEach(fc=>fc.c=cen(fc));
+  R.faces.sort((x,y)=>x.sec-y.sec||Math.round(x.c[1])-Math.round(y.c[1])||x.c[0]-y.c[0]);
+  R.faces.forEach((fc,i)=>{fc.code=i<26?String.fromCharCode(65+i):String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26);
+    fc.panels.forEach((p,j)=>{p.code=fc.code+(j+1); R.panels++; R.lf+=p.inch/12; R.clips+=Math.ceil(p.inch/24)+1;});
+    R.area+=fc.area; R.ridge+=fc.lines.ridge/2; R.hips+=fc.lines.hip/2; R.valleys+=fc.lines.valley/2;});
+  return R;
+}
+function f2(x){return (Math.round(x*10)/10).toString();}
+function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
+
 (function(){
   const $=id=>document.getElementById(id);
   const n=id=>{const v=parseFloat($(id).value);return isFinite(v)?Math.max(0,v):0;};
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
   const LS='jobcalc-v3';
   const st={tab:'roof', mat:'metal', src:'footprint', style:'gable', ssrc:'walls'};
-  const WASTE={metal:{gable:5,hip:12,report:10},shingle:{gable:10,hip:15,report:12}};
+  const WASTE={metal:{gable:5,hip:12,report:10,layout:5},shingle:{gable:10,hip:15,report:12,layout:12}};
 
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   document.querySelectorAll('select.pitch').forEach(s=>{for(const p of PITCHES){const o=document.createElement('option');o.value=p;o.textContent=p+'/12';if(p===6)o.selected=true;s.append(o);}});
@@ -290,8 +471,12 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
 
   // ---------- roof geometry, from either source ----------
   function roofGeo(){
+    if(st.src==='layout'){
+      const R=layout();
+      return {area:R.area,pitch:R.pitch==null?6:R.pitch,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:R.valleys,wall:R.wall,gable:null,layout:R};
+    }
     if(st.src==='report'){
-      return {area:n('qA'),pitch:n('qP'),eave:n('qE'),rake:n('qR'),ridge:n('qRi'),hips:n('qH'),valleys:n('qV'),gable:null};
+      return {area:n('qA'),pitch:n('qP'),eave:n('qE'),rake:n('qR'),ridge:n('qRi'),hips:n('qH'),valleys:n('qV'),wall:n('qF'),gable:null};
     }
     const L=n('rL'),W=n('rW'),p=n('rP'),pf=Math.sqrt(1+(p/12)**2);
     const area=L*W*pf+n('rX');
@@ -325,7 +510,9 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
     const cut=$('rCut'); cut.innerHTML=''; $('rCost').innerHTML='';
     $('rNote').textContent='';
     $('rWarn').textContent=g.area>0?slopeWarn(g.pitch,isSS):'';
-    if(!(g.area>0)){ setMain('rOut','0',''); $('rLbl').textContent=st.src==='report'?'Enter the report numbers or import the report.':'Enter the roof size.'; rows($('rList'),[]); return; }
+    $('layOut').hidden=st.src!=='layout';
+    if(g.layout){ secStatus(g.layout); drawLayout(g.layout,st.mat==='metal'); }
+    if(!(g.area>0)){ setMain('rOut','0',''); $('rLbl').textContent=st.src==='report'?'Enter the report numbers or import the report.':st.src==='layout'?'Finish the roof outline.':'Enter the roof size.'; rows($('rList'),[]); return; }
 
     if(st.mat==='shingle'){
       setMain('rOut',Math.ceil(sqW*3),'bundles'); $('rLbl').textContent='Shingles, 3 bundles per square';
@@ -337,6 +524,7 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
         ['Ridge cap',Math.ceil((g.ridge+g.hips)/Math.max(1,n('cRidge')))+' bundles',f(g.ridge+g.hips)+' ft'],
         under, ice,
         ['Drip edge',Math.ceil((g.eave+g.rake)*1.05/10)+' pcs','10 ft'],
+        ['Headwall flashing',g.wall?Math.ceil(g.wall*1.05/10)+' pcs':null,g.wall?f(g.wall)+' ft':''],
         ['Coil nails',Math.max(1,Math.ceil(nails/Math.max(1,n('cNails'))))+' box'+(nails>n('cNails')?'es':''),'~'+f(nails)]
       ]);
       return;
@@ -347,7 +535,11 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
     const trimLen=Math.max(1,n('cTrim')); let trimPcs=0;
     const pcs=lf=>{if(!(lf>0))return null;const k=Math.ceil(lf*1.05/trimLen);trimPcs+=k;return k+' pcs';};
     let totalLF, panels, clips, screwBags=0;
-    if(g.gable){
+    if(g.layout){
+      const R=g.layout; panels=R.panels; totalLF=R.lf; clips=ss?R.clips:0;
+      setMain('rOut',panels,'panels');
+      $('rLbl').textContent=(ss?'Standing seam, ':'')+cov+'" coverage, cut to length, see layout';
+    } else if(g.gable){
       const perSide=Math.ceil(g.gable.L/covFt);
       const lenIn=Math.ceil(g.gable.slope*12+n('mOver'));
       const lenFt=lenIn/12;
@@ -371,12 +563,13 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
     const list=[
       ['Roof area',f(g.area)+' ft²','('+f(g.area/100,1)+' sq)'],
       ['Squares with waste',f(sqW,1)],
-      g.gable?['Total panel',f(totalLF)+' ft']:['Panels along eaves','~'+panels,'lengths vary'],
+      g.gable||g.layout?['Total panel',f(totalLF)+' ft',g.layout?'cut list, no waste':'']:['Panels along eaves','~'+panels,'lengths vary'],
       ['Eave trim',pcs(g.eave),f(g.eave)+' ft'],
       ['Rake / gable trim',pcs(g.rake),g.rake?f(g.rake)+' ft':''],
       ['Ridge cap',pcs(g.ridge),g.ridge?f(g.ridge)+' ft':''],
       ['Hip cap',pcs(g.hips),g.hips?f(g.hips)+' ft':''],
-      ['Valley flashing',pcs(g.valleys),g.valleys?f(g.valleys)+' ft':'']
+      ['Valley flashing',pcs(g.valleys),g.valleys?f(g.valleys)+' ft':''],
+      ['Headwall flashing',pcs(g.wall),g.wall?f(g.wall)+' ft':'']
     ];
     if(ss){
       const z=2*g.ridge+2*g.hips;
@@ -430,7 +623,7 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
   function calc(){roof();siding();save();}
   function save(){const vals={};document.querySelectorAll('input.inp,select.inp').forEach(i=>{if(i.id)vals[i.id]=i.value;});try{localStorage.setItem(LS,JSON.stringify({st,vals}));}catch(e){}}
   function load(){try{const s=JSON.parse(localStorage.getItem(LS)||'null');if(!s)return;Object.assign(st,s.st||{});for(const [k,v] of Object.entries(s.vals||{})){const i=$(k);if(i)i.value=v;}}catch(e){}}
-  function wasteKey(){return st.src==='report'?'report':st.style;}
+  function wasteKey(){return st.src==='footprint'?st.style:st.src;}
   function defWaste(){return WASTE[st.mat][wasteKey()];}
   // only auto-set waste while it's still the default; typing the default again turns auto back on
   function syncWaste(){ if(!st.wasteEdited) $('rWaste').value=defWaste(); }
@@ -441,7 +634,7 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
     $('metalIn').hidden=st.mat!=='metal'; $('nailWrap').classList.toggle('hide',st.mat!=='shingle');
     document.querySelectorAll('.sh').forEach(e=>e.classList.toggle('hide',st.mat!=='shingle'));
     document.querySelectorAll('.mt').forEach(e=>e.classList.toggle('hide',st.mat!=='metal'));
-    $('fpIn').hidden=st.src!=='footprint'; $('repIn').hidden=st.src!=='report';
+    $('fpIn').hidden=st.src!=='footprint'; $('repIn').hidden=st.src!=='report'; $('layIn').hidden=st.src!=='layout';
     $('sWallsIn').hidden=st.ssrc!=='walls'; $('sRepIn').hidden=st.ssrc!=='report';
     calc();
   }
@@ -450,6 +643,130 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
   $('rWaste').addEventListener('input',()=>{st.wasteEdited=n('rWaste')!==defWaste();});
   document.querySelectorAll('input.inp,select.inp').forEach(i=>i.addEventListener('input',calc));
   document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('focus',()=>i.select()));
+
+  // ---------- layout: outline editor ----------
+  const DEF_SEC=()=>({name:'Main roof',pitch:6,edges:[{d:'E',len:40,t:'eave'},{d:'S',len:30,t:'eave'},{d:'W',len:40,t:'eave'},{d:'N',len:30,t:'eave'}]});
+  const EXAMPLE=()=>{const e=s=>s.split(' ').map(x=>{const m=x.match(/^([NESW])([\d.]+)([rw]?)$/);return {d:m[1],len:+m[2],t:m[3]==='r'?'rake':m[3]==='w'?'wall':'eave'};});
+    return [{name:'Main roof',pitch:5,edges:e('E30 S10 E15 S23 W15 S10 W30 N12 W8 N10r N9r E8 N13')},{name:'Front porch',pitch:5,x:13.8,y:43,edges:e('E14w S6r W14 N6r')}];};
+  const DIRL={N:'\u2191 N',E:'\u2192 E',S:'\u2193 S',W:'\u2190 W'}, TURN={E:'S',S:'W',W:'N',N:'E'};
+  let layTimer=null; const later=()=>{clearTimeout(layTimer);layTimer=setTimeout(calc,250);};
+  function opt(sel,v,t,on){const o=el('option',null,t);o.value=v;if(on)o.selected=true;sel.append(o);}
+  function fld(label,input){const l=el('label','field');l.append(el('span',null,label),input);return l;}
+  function numIn(v,on){const i=el('input','inp');i.type='number';i.min='0';i.step='any';i.inputMode='decimal';i.value=v==null?'':v;i.oninput=()=>{on(parseFloat(i.value)||0);later();};i.onfocus=()=>i.select();return i;}
+  function drawSecs(){
+    const host=$('secs'); host.innerHTML='';
+    st.sections.forEach((sec,si)=>{
+      const card=el('div','lsec'), head=el('div','lsec-h');
+      const nm=el('input','inp'); nm.value=sec.name||''; nm.oninput=()=>{sec.name=nm.value;later();};
+      const ps=el('select','inp'); for(const p of PITCHES) opt(ps,p,p+'/12',+sec.pitch===p); ps.onchange=()=>{sec.pitch=+ps.value;calc();};
+      head.append(fld('Section',nm),fld('Pitch',ps)); card.append(head);
+      if(si>0){ const two=el('div','two');
+        two.append(fld('Starts, ft east of first corner',numIn(sec.x,v=>sec.x=v)),fld('ft south of first corner',numIn(sec.y,v=>sec.y=v)));
+        card.append(two); }
+      sec.edges.forEach((e,ei)=>{
+        const r=el('div','erow'); r.append(el('b',null,ei+1));
+        const d=el('select','inp'); d.setAttribute('aria-label','Edge '+(ei+1)+' direction'); for(const k of ['N','E','S','W']) opt(d,k,DIRL[k],e.d===k); d.onchange=()=>{e.d=d.value;calc();};
+        const len=numIn(e.len,v=>e.len=v); len.setAttribute('aria-label','Edge '+(ei+1)+' length, ft'); len.placeholder='ft';
+        const t=el('select','inp'); t.setAttribute('aria-label','Edge '+(ei+1)+' type'); for(const [k,lb] of [['eave','Eave'],['rake','Rake / gable'],['wall','Wall']]) opt(t,k,lb,(e.t||'eave')===k); t.onchange=()=>{e.t=t.value;calc();};
+        const x=el('button','x','\u00d7'); x.setAttribute('aria-label','Remove edge '+(ei+1)); x.onclick=()=>{sec.edges.splice(ei,1);drawSecs();calc();};
+        r.append(d,len,t,x); card.append(r);
+      });
+      const foot=el('div','lsec-f');
+      const add=el('button','btn-sm','+ Edge'); add.onclick=()=>{const l=sec.edges[sec.edges.length-1];sec.edges.push({d:l?TURN[l.d]:'E',len:0,t:'eave'});drawSecs();const ins=$('secs').querySelectorAll('.lsec')[si].querySelectorAll('.erow input');ins[ins.length-1].focus();};
+      foot.append(add, el('span','grow'));
+      if(st.sections.length>1){ const rm=el('button','btn-sm','Remove section'); rm.onclick=()=>{st.sections.splice(si,1);drawSecs();calc();}; foot.append(rm); }
+      card.append(foot); host.append(card);
+    });
+  }
+  function secStatus(R){
+    document.querySelectorAll('#secs .lsec').forEach((c,i)=>{const s=R.secs[i],g=c.querySelector('.grow'); if(!s||!g)return;
+      g.className='grow'+(s.ok?(s.note?'':' ok'):' err'); g.textContent=s.ok?(s.note||'Outline closes \u2713'):s.msg;});
+  }
+  $('addSec').onclick=()=>{st.sections.push({name:'Section '+(st.sections.length+1),pitch:+(st.sections[0]&&st.sections[0].pitch)||6,x:0,y:0,edges:[{d:'E',len:0,t:'eave'}]});drawSecs();calc();};
+  $('exSec').onclick=()=>{const b=$('exSec');
+    if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Tap again to replace your outline';setTimeout(()=>{delete b.dataset.arm;b.textContent='Load example';},3000);return;}
+    delete b.dataset.arm; b.textContent='Load example'; st.sections=EXAMPLE(); drawSecs(); calc();};
+  let layKey='', layR=null;
+  function layout(){
+    const cov=parseFloat($('mPanel').value)/12, over=n('mOver')/12, key=JSON.stringify([st.sections,cov,over]);
+    if(key!==layKey){layKey=key; layR=buildRoof(st.sections,cov,over);}
+    return layR;
+  }
+
+  // ---------- layout: drawing and cut list ----------
+  const SVGNS='http://www.w3.org/2000/svg';
+  function sv(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.append(e);return e;}
+  const pts=P=>P.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ');
+  let zoom=0;
+  function drawLayout(R,metal){
+    const host=$('layOut'); host.innerHTML='';
+    const ok=R.secs.filter(s=>s.ok); if(!ok.length) return;
+    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+    for(const s of ok) for(const [x,y] of s.V){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
+    const m=2; host.append(el('h2',null,metal?'Panel layout':'Roof plan'));
+    const zb=el('div','zoom'); zb.setAttribute('role','group'); zb.setAttribute('aria-label','Zoom');
+    const zo=el('button','btn-sm','\u2212'), zi=el('button','btn-sm','+'), zf=el('button','btn-sm','Fit'), zl=el('span');
+    zo.setAttribute('aria-label','Zoom out'); zi.setAttribute('aria-label','Zoom in'); zb.append(zo,zi,zf,zl);
+    const vw=el('div','viewer'); host.append(zb,vw);
+    const svg=sv('svg',{id:'plan',viewBox:(x0-m)+' '+(y0-m)+' '+(x1-x0+2*m)+' '+(y1-y0+2*m),role:'img','aria-label':metal?'Roof plan with every panel and its cut length':'Roof plan'});
+    const defs=sv('defs',{},svg), mk=sv('marker',{id:'arr',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},defs);
+    sv('path',{d:'M0 0L10 5L0 10z',fill:'var(--good)'},mk);
+    for(const fc of R.faces){
+      const outline=[...fc.rows.map(r=>fc.toP(r.s,r.a)),...fc.rows.slice().reverse().map(r=>fc.toP(r.s,r.b))];
+      if(metal) fc.panels.forEach((p,i)=>sv('polygon',{points:pts(p.poly),fill:i%2?'var(--pa)':'var(--pb)',stroke:'var(--seam)','stroke-width':.06},svg));
+      else sv('polygon',{points:pts(outline),fill:'var(--pa)'},svg);
+      sv('polygon',{points:pts(outline),fill:'none',stroke:'var(--ridgec)','stroke-width':.14,'stroke-linejoin':'round'},svg);
+    }
+    for(const s of ok) for(const e of s.edges){
+      const st2=e.t==='rake'?{stroke:'var(--good)','stroke-dasharray':'.7 .4'}:e.t==='wall'?{stroke:'var(--amber)'}:{stroke:'var(--ink)'};
+      sv('line',Object.assign({x1:e.a[0],y1:e.a[1],x2:e.b[0],y2:e.b[1],'stroke-width':.24,'stroke-linecap':'round'},st2),svg);
+    }
+    for(const fc of R.faces){
+      const vert=fc.g.ax===0;
+      if(metal) for(const p of fc.panels){
+        const mid=(p.lo+p.hi)/2, row=fc.rows.reduce((a,r)=>Math.abs(r.s-mid)<Math.abs(a.s-mid)?r:a), span=row.b-row.a;
+        const label=p.code+' '+ftIn(p.inch), fs=Math.max(.2,Math.min(.95,(p.hi-p.lo)*.42,span/(label.length*.5)));
+        const [x,y]=fc.toP(mid,(row.a+row.b)/2), t=sv('text',{x:x.toFixed(2),y:y.toFixed(2),'font-size':fs.toFixed(2),'text-anchor':'middle','dominant-baseline':'central'},svg);
+        if(vert) t.setAttribute('transform','rotate(-90 '+x.toFixed(2)+' '+y.toFixed(2)+')');
+        t.textContent=label;
+      } else {
+        const r=fc.rows.reduce((a,q)=>q.b-q.a>a.b-a.a?q:a), [x,y]=fc.toP(r.s,(r.a+r.b)/2); sv('text',{x,y,'font-size':1.4,'text-anchor':'middle','dominant-baseline':'central'},svg).textContent=fc.code;
+      }
+      if(metal&&fc.panels.length){ const p=fc.panels[0], u=p.umin+.45, a=fc.toP(p.lo+.15,u), b=fc.toP(p.lo+1.9,u);
+        sv('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'var(--good)','stroke-width':.2,'marker-end':'url(#arr)'},svg); }
+    }
+    const cx=x1+m*.55, cy=y1+m*.2; sv('line',{x1:cx,y1:cy,x2:cx,y2:cy-1.6,stroke:'var(--ink)','stroke-width':.14},svg);
+    sv('text',{x:cx,y:cy-2.2,'font-size':1,'text-anchor':'middle'},svg).textContent='N';
+    vw.append(svg);
+    const setZ=z=>{const r=vw.getBoundingClientRect(),old=zoom||1,cxp=(vw.scrollLeft+r.width/2)/old,cyp=(vw.scrollTop+r.height/2)/old;zoom=Math.min(5,Math.max(1,z));svg.style.setProperty('--z',zoom);vw.scrollLeft=cxp*zoom-r.width/2;vw.scrollTop=cyp*zoom-r.height/2;zl.textContent=zoom===1?(metal?'Zoom in to read labels':''):Math.round(zoom*100)+'%';};
+    zi.onclick=()=>setZ((zoom||1)*1.6); zo.onclick=()=>setZ((zoom||1)/1.6); zf.onclick=()=>setZ(1);
+    requestAnimationFrame(()=>setZ(zoom||(metal&&window.innerWidth<700?2.2:1)));
+    const key=el('div','key');
+    for(const [c,t] of [['var(--ridgec)','Ridge, hip, valley'],['var(--ink)','Eave'],['var(--good)','Rake'],['var(--amber)','Wall']].concat(metal?[['var(--good)','Start here, lay this way']]:[])){const sp=el('span');const i=el('i');i.style.background=c;sp.append(i,t);key.append(sp);}
+    host.append(key);
+    if(!metal){ host.append(el('p','note','Switch to Metal for the panel layout and cut list.')); return; }
+    const notes=el('ul','notes');
+    for(const t of ['Each strip is one panel, labeled with its code and cut length. Panel 1 starts at the green arrow and they count up that way.',
+      'Lengths are to the long point and include the '+f(n('mOver'),2)+'" overhang where the panel reaches the eave. Hip and valley panels get cut on an angle from there.',
+      'The last panel on a face is ripped to the width shown.',
+      'Built from the outline you entered. Report lengths are rounded to the foot, so check the longest runs on site before cutting.']) notes.append(el('li',null,t));
+    host.append(notes);
+    host.append(el('h2',null,'Cut list'));
+    for(const fc of R.faces){ if(!fc.panels.length) continue;
+      const box=el('section','fsec'), h=el('h3'), sec=R.secs[fc.sec];
+      h.append(el('span','code',fc.code), (R.secs.length>1?sec.name+', ':'')+'faces '+fc.dir+' ');
+      h.append(el('small',null,fc.panels.length+' panel'+(fc.panels.length>1?'s':'')+', '+f(fc.panels.reduce((a,p)=>a+p.inch,0)/12)+' ft'));
+      const ol=el('ol','cuts');
+      for(const p of fc.panels){const li=el('li');li.append(el('b',null,p.code),el('span',null,ftIn(p.inch)));if(p.rip)li.append(el('small',null,'rip to '+p.rip+'"'));ol.append(li);}
+      box.append(h,ol);
+      if(fc.sliver) box.append(el('p','note','Leaves a '+fc.sliver+'" strip at the end for the trim to cover.'));
+      host.append(box);
+    }
+    const box=el('section','fsec'); box.append(el('h3',null,'Order by length'));
+    const ol=el('ol','cuts'); for(const [inch,c] of byLength(R)){const li=el('li');li.append(el('b',null,c+' \u00d7'),el('span',null,ftIn(+inch)));ol.append(li);}
+    box.append(ol); host.append(box);
+  }
+  function byLength(R){const m=new Map();for(const fc of R.faces)for(const p of fc.panels)m.set(p.inch,(m.get(p.inch)||0)+1);return [...m].sort((a,b)=>b[0]-a[0]);}
 
   // ---------- copy order list ----------
   document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
@@ -461,6 +778,12 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
     if(cut) lines.push(cut.firstChild.textContent);
     out.querySelectorAll('dl').forEach(dl=>{const k=[...dl.children];for(let i=0;i+1<k.length;i+=2){const dd=k[i+1];const sub=dd.querySelector('small');const v=sub?dd.firstChild.textContent+' ('+sub.textContent.replace(/^\(|\)$/g,'')+')':dd.textContent;lines.push(k[i].textContent+': '+v);}});
     const c=out.querySelector('.cost'); if(c) lines.push(c.firstChild.textContent+': '+c.lastChild.textContent);
+    if(pane.id==='p-roof'&&st.src==='layout'&&st.mat==='metal'&&layR&&layR.panels){
+      lines.push('','PANELS BY LENGTH ('+$('mPanel').selectedOptions[0].textContent+')');
+      for(const [inch,cnt] of byLength(layR)) lines.push(cnt+' @ '+ftIn(+inch));
+      lines.push('','CUT LIST BY FACE');
+      for(const fc of layR.faces) if(fc.panels.length) lines.push(fc.code+' (faces '+fc.dir+'): '+fc.panels.map(p=>p.code+' '+ftIn(p.inch)+(p.rip?' rip '+p.rip+'"':'')).join(', '));
+    }
     const text=lines.join('\n');
     try{await navigator.clipboard.writeText(text);toast('Order list copied');}
     catch(e){const t=document.createElement('textarea');t.value=text;t.className='inp';t.rows=8;t.readOnly=true;b.after(t);t.focus();t.select();toast('Select and copy the list');}
@@ -501,12 +824,13 @@ function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className
   }
   const PROMPT=`You are reading a roofing and/or siding measurement report from HOVER or EagleView (a contractor's takeoff report). The report text and/or images are provided.
 Extract the measurements and reply with ONLY one JSON object in exactly this shape (numbers only, no units, null when the report does not give it):
-{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"suggested_waste_pct":n},"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
+{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"flashing_ft":n,"suggested_waste_pct":n},"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
 Rules:
 - Convert feet-and-inches like 45' 6" to decimal feet (45.5). Convert squares to square feet if needed (1 square = 100 sq ft).
 - roof.total_area_sqft is the total roof area WITHOUT waste. pitch is the predominant pitch as the rise over 12 (6 for 6/12).
 - rakes are also called gables or rake edges. eaves are also called starter or drip edge at eaves.
 - If a waste table is shown, suggested_waste_pct is the report's suggested waste percent.
+- flashing_ft is the report's Flashing total (headwall/apron flashing), not step flashing.
 - siding.siding_area_sqft is the total wall area to be sided (facades plus gables) with openings removed; if only a gross area and an openings area are given, subtract them. opening_trim_ft is the total perimeter of windows and doors if given.
 - Set the whole "roof" or "siding" object's fields to null if that part is not in the report. Do not guess numbers that are not in the report.`;
 
@@ -533,7 +857,7 @@ Rules:
     const anyRoof=['total_area_sqft','eaves_ft','rakes_ft','ridges_ft','hips_ft','valleys_ft'].some(k=>+r[k]>0);
     if(anyRoof){ roofHit=true; if(put('qA',r.total_area_sqft)) done.push('Roof area '+f(r.total_area_sqft)+' ft²'); else done.push('No total roof area on that page. Type it in from the report summary.'); }
     if(r.pitch>0){ const p=nearPitch(+r.pitch); $('qP').value=p; if(roofHit)done.push('pitch '+p+'/12'); }
-    const lens=[['qE','eaves_ft','eaves'],['qR','rakes_ft','rakes'],['qRi','ridges_ft','ridges'],['qH','hips_ft','hips'],['qV','valleys_ft','valleys']];
+    const lens=[['qE','eaves_ft','eaves'],['qR','rakes_ft','rakes'],['qRi','ridges_ft','ridges'],['qH','hips_ft','hips'],['qV','valleys_ft','valleys'],['qF','flashing_ft','flashing']];
     const got=[]; for(const [id,k,label] of lens){ if(roofHit){ if(!put(id,r[k])) $(id).value=''; else got.push(label+' '+f(r[k])); } }
     if(got.length) done.push(got.join(', ')+' ft');
     if(roofHit){ st.src='report'; if(r.suggested_waste_pct>0&&r.suggested_waste_pct<40){$('rWaste').value=r.suggested_waste_pct;st.wasteEdited=true;done.push('waste '+r.suggested_waste_pct+'% (from report)');} else syncWaste(); }
@@ -588,7 +912,8 @@ Rules:
       else { $('impFile').accept='application/pdf,.pdf'; $('impBtn').textContent='Choose the PDF report'; setSt('Screenshots aren\u2019t supported here, but the PDF works.'); }
     }catch(e){ setSt(errFull(e),'err'); }
   }
-  load(); if(st.wasteEdited==null) st.wasteEdited=n('rWaste')!==defWaste();
+  load(); if(!Array.isArray(st.sections)||!st.sections.length) st.sections=[DEF_SEC()];
+  drawSecs(); if(st.wasteEdited==null) st.wasteEdited=n('rWaste')!==defWaste();
   show(); initImport();
 })();
 
