@@ -102,6 +102,11 @@ select.inp{appearance:auto}
 .unit{position:relative}
 .unit .inp{padding-right:44px}
 .unit::after{content:attr(data-u);position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
+.fi{display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:0}
+.fi .unit .inp{padding-left:12px;padding-right:30px}
+.fi .unit::after{right:10px;font-size:14px}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .mini>span{font-size:12px}
 .mini .inp{min-height:48px;padding:8px 10px;font-size:17px}
 
@@ -170,7 +175,8 @@ details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
 .sub-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .sub-h b{font:700 18px/1.1 var(--f-body)}
 .erows{display:grid;gap:8px;counter-reset:edge}
-.erow{display:grid;grid-template-columns:18px 74px minmax(0,1fr) minmax(0,1fr) 30px;gap:6px;align-items:center;counter-increment:edge}
+.erow{display:grid;grid-template-columns:18px minmax(0,1fr) minmax(0,1fr) 30px;gap:6px 8px;align-items:center;counter-increment:edge;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.erow .fi{grid-column:2/4;grid-row:2}
 .erow::before{content:counter(edge);font-size:13px;color:var(--faint);text-align:right;font-variant-numeric:tabular-nums}
 .erow .inp{min-height:48px;padding:8px;font-size:16px;border-radius:12px}
 .x{border:0;background:none;color:var(--muted);font-size:15px;font-weight:600;min-height:44px;padding:0 6px}
@@ -494,7 +500,18 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
   function field(label,input,unit,cls){const l=el('label','field'+(cls?' '+cls:''));l.append(el('span',null,label));if(unit){const u=el('div','unit');u.dataset.u=unit;u.append(input);l.append(u);}else l.append(input);return l;}
   function numIn(get,set,after,aria){const i=el('input','inp');i.type='number';i.min='0';i.step='any';i.inputMode='decimal';const v=get();i.value=v==null?'':v;i.placeholder='0';if(aria)i.setAttribute('aria-label',aria);
     i.oninput=()=>{set(i.value===''?'':Math.max(0,parseFloat(i.value)||0));save();if(after)after();};i.onfocus=()=>i.select();return i;}
-  const num=(label,get,set,unit,after,cls)=>field(label,numIn(get,set,after),unit,cls);
+  function ftInIn(get,set,after,aria){
+    const w=el('div','fi'), v=+get()||0; let ft=Math.floor(v+1e-9), inch=Math.round((v-ft)*12*100)/100; if(inch>=12){ft++;inch=0;}
+    const box=(val,u,name)=>{const d=el('div','unit');d.dataset.u=u;const i=el('input','inp');i.type='number';i.min='0';i.step='any';i.inputMode='decimal';
+      i.value=val>0?val:'';i.placeholder='0';i.setAttribute('aria-label',(aria||'Length')+', '+name);i.onfocus=()=>i.select();d.append(i);w.append(d);return i;};
+    const fI=box(ft,'ft','feet'), iI=box(inch,'in','inches');
+    const total=()=>{const t=Math.max(0,parseFloat(fI.value)||0)+Math.max(0,parseFloat(iI.value)||0)/12;set(t>0?Math.round(t*1e6)/1e6:'');save();if(after)after();};
+    fI.oninput=total; iI.oninput=total;
+    iI.onchange=()=>{const n=Math.max(0,parseFloat(iI.value)||0);if(n>=12){fI.value=(Math.max(0,parseFloat(fI.value)||0)+Math.floor(n/12));iI.value=Math.round((n%12)*100)/100||'';total();}};
+    return w;
+  }
+  function ftField(label,get,set,after,cls){const d=el('div','field'+(cls?' '+cls:''));d.setAttribute('role','group');d.setAttribute('aria-label',label);d.append(el('span',null,label),ftInIn(get,set,after,label));return d;}
+  const num=(label,get,set,unit,after,cls)=>unit==='ft'?ftField(label,get,set,after,cls):field(label,numIn(get,set,after),unit,cls);
   function selIn(opts,get,set,after,aria){const s=el('select','inp');if(aria)s.setAttribute('aria-label',aria);for(const [v,t] of opts){const o=el('option',null,t);o.value=v;if(String(get())===String(v))o.selected=true;s.append(o);}s.onchange=()=>{set(s.value);save();if(after)after();};return s;}
   const pick=(label,opts,get,set,after)=>field(label,selIn(opts,get,set,after));
   function txt(label,get,set,after){const i=el('input','inp');i.value=get()||'';i.oninput=()=>{set(i.value);save();if(after)after();};return field(label,i);}
@@ -762,7 +779,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
         const ob=el('div','sub'), oh=el('div','sub-h');
         oh.append(selIn([['window','Window'],['door','Door']],()=>o.t,x=>{o.t=x;render();},null,'Opening '+(oi+1)+' type'));
         const rm=el('button','x','Remove');rm.onclick=()=>{w.open.splice(oi,1);save();render();};oh.append(rm);
-        ob.append(oh,grid('grid4',num('Width',()=>o.w,x=>o.w=x,'ft',up,'mini'),num('Height',()=>o.h,x=>o.h=x,'ft',up,'mini'),num('From left',()=>o.x,x=>o.x=x,'ft',up,'mini'),o.t==='door'?null:num('Up',()=>o.y,x=>o.y=x,'ft',up,'mini')));
+        ob.append(oh,grid('grid2',num('Width',()=>o.w,x=>o.w=x,'ft',up,'mini'),num('Height',()=>o.h,x=>o.h=x,'ft',up,'mini'),num('From left',()=>o.x,x=>o.x=x,'ft',up,'mini'),o.t==='door'?null:num('Up',()=>o.y,x=>o.y=x,'ft',up,'mini')));
         c.append(ob);
       });
       const aw=el('button','pill','+ Window'), ad=el('button','pill','+ Door');
@@ -819,7 +836,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
       sec.edges.forEach((e,ei)=>{
         const r=el('div','erow'), n=ei+1, ch=()=>later(secStatus);
         const x=el('button','x','×');x.setAttribute('aria-label','Remove edge '+n);x.onclick=()=>{sec.edges.splice(ei,1);save();render();};
-        r.append(selIn(DIRS,()=>e.d,v=>e.d=v,ch,'Edge '+n+' direction'),numIn(()=>e.len,v=>e.len=v,ch,'Edge '+n+' length in feet'),
+        r.append(selIn(DIRS,()=>e.d,v=>e.d=v,ch,'Edge '+n+' direction'),ftInIn(()=>e.len,v=>e.len=v,ch,'Edge '+n+' length'),
           selIn([['eave','Eave'],['rake','Rake'],['wall','Wall']],()=>e.t||'eave',v=>e.t=v,ch,'Edge '+n+' type'),x);
         rows.append(r);
       });

@@ -20,7 +20,7 @@ Live totals sit under the switch on every tab. The copy button puts everything i
 - Optional prices for an estimated material cost. Waste and product sizes are under the results.
 
 ## Siding
-- Pick the HardiePlank width.
+- Pick the HardiePlank width. Every length is entered in feet and inches (inches take decimals, so 6.5 = 6½").
 - Add each wall: width, height, and gable height if it has one. Place each window and door by its size, distance from the left, and height up the wall.
 - Material list: 12 ft planks to buy (cut pieces are packed into planks), starter strip, corner boards, window and door trim, nails, house wrap.
 - Cut list: every plank length and how many, plus each wall course by course. Gable pieces get angle cuts, pieces notched around openings are marked, and the top course rip is shown.
