@@ -141,6 +141,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .mlist .d{grid-column:1;font-size:14px;color:var(--muted)}
 .mlist .q{grid-row:1/span 2;grid-column:2;text-align:right;font:800 24px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums}
 .mlist .q small{display:block;font:500 12px var(--f-body);color:var(--muted);margin-top:3px}
+.order{list-style:none;margin:0;padding:0;display:grid}
+.order li{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:baseline;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.order li:first-child{border-top:0}
+.order .oq{font-size:15px;color:var(--muted);min-width:4.6em}
+.order .oq b{font:800 26px/1 var(--f-display);font-stretch:85%;color:var(--fg);margin-right:4px;font-variant-numeric:tabular-nums}
+.order .oat{font-size:15px;color:var(--muted)}
+.order .ol{font:600 21px/1 var(--f-mono);color:var(--accent)}
 .cost{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .cost b{font:800 36px/1 var(--f-display);font-stretch:85%;color:var(--good)}
 .bars{display:grid;gap:8px;margin:0;padding:0;list-style:none}
@@ -673,7 +680,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
       if(R){panels=R.panels;totalLF=R.lf;clips=ss?R.clips:0;cut=engineItems(R);}
       else {totalLF=g.area*w/covFt;clips=ss?Math.ceil(totalLF/2)+Math.ceil(g.eave/covFt):0;}
       const name=PANELS.find(p=>p[0]===st.panel)[1]; sum={panels:R?panels:0,lf:totalLF};
-      rows.push(R?['Panels',panels+' pcs',name+', '+f(totalLF)+' ft, cut to length (see cut list)']:['Panels',f(Math.ceil(totalLF/10)*10)+' ft',name+', waste included']);
+      rows.push(R?['Panels',panels+' pcs',name+', '+f(totalLF)+' ft, cut to length (lengths listed above)']:['Panels',f(Math.ceil(totalLF/10)*10)+' ft',name+', waste included']);
       rows.push(pcs('Eave trim',g.eave),pcs('Rake trim',g.rake),pcs('Ridge cap',g.ridge),pcs('Hip cap',g.hips),pcs('Valley flashing',g.valleys),pcs('Headwall flashing',g.wall));
       if(ss){
         rows.push(pcs('Z-closure',2*g.ridge+2*g.hips),['Panel clips','about '+f(clips),'24" apart'],['Pancake screws','about '+f(clips),'1 per clip']);
@@ -738,6 +745,11 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
     if(r.warn) v.append(callout(r.warn));
     v.append(r.metal?tiles([['Panels',r.panels?f(r.panels):'—',r.panels?'cut to length':'trace for count','accent'],['Panel',f(r.lf),'linear ft','amber'],['Squares',f(r.sqW,1),'with waste','teal']])
       :tiles([['Bundles',f(r.bundles),'3 per square','accent'],['Squares',f(r.area/100,1),'roof area','amber'],['With waste',f(r.sqW,1),f(st.waste)+'% waste','teal']]));
+    if(r.metal&&r.cut){ let n=0,ins=0; const u=el('ul','order');
+      for(const [inch,c] of r.cut.byLen){ n+=c; ins+=inch*c; const li=el('li'), q=el('span','oq'); q.append(el('b',null,String(c)),' pc'+(c>1?'s':'')); li.append(q,el('span','oat','at'),el('span','ol',ftIn(+inch))); u.append(li); }
+      v.append(card('Panels to order',f(n)+' pcs \u00b7 '+f(ins/12)+' ft',el('p','hint',PANELS.find(p=>p[0]===st.panel)[1]+', cut to length. Each length includes the '+f(st.over,2)+'" eave overhang.'),u)); }
+    else if(r.metal) v.append(card('Panels to order',null,callout('This report only gives total footage, not the roof\u2019s shape, so there\u2019s no list of lengths yet.'),
+      el('p','hint','Import the report\u2019s length diagram page, or trace the roof from it, and this becomes a list like \u201c4 pcs at 16\u20195\u201d\u201d.'),btn('Trace the roof',()=>{st.method='trace';autoWaste();go('measure');},'ghost')));
     v.append(card('Material list',r.rows.length+' items',mlist(r.rows)));
     if(r.cost){const c=el('div','cost');c.append(el('span','hint','Estimated material'+(r.cost.ss?', clips not priced':'')),el('b',null,money(r.cost.total)));
       v.append(card('Cost',null,mlist(r.cost.lines.map(([k,x])=>[k,money(x)])),c));}
@@ -950,10 +962,11 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
   const rowsText=rows=>rows.map(([k,v,n])=>k+': '+v+(n?' ('+n+')':''));
   function roofText(){
     const r=roofCalc(); if(r.err) return r.err;
-    const L=[(r.metal?'METAL':'SHINGLE')+' ROOF ORDER','','SQUARE FEET: '+f(r.area)+' sq ft ('+f(r.area/100,1)+' squares, '+f(r.sqW,1)+' with '+f(st.waste)+'% waste)','','MATERIAL LIST',...rowsText(r.rows)];
+    const L=[(r.metal?'METAL':'SHINGLE')+' ROOF ORDER','','SQUARE FEET: '+f(r.area)+' sq ft ('+f(r.area/100,1)+' squares, '+f(r.sqW,1)+' with '+f(st.waste)+'% waste)',''];
+    if(r.cut){L.push('PANELS TO ORDER ('+PANELS.find(p=>p[0]===st.panel)[1]+', cut to length)');for(const [inch,c] of r.cut.byLen)L.push(c+' pc'+(c>1?'s':'')+' at '+ftIn(+inch));L.push('');}
+    L.push('MATERIAL LIST',...rowsText(r.rows));
     if(r.cost) L.push('Estimated material cost: '+money(r.cost.total));
-    if(r.cut){L.push('','PANEL CUT LIST');for(const [inch,c] of r.cut.byLen)L.push(c+' @ '+ftIn(+inch));
-      L.push('','EVERY PIECE, BY ROOF FACE');for(const fc of r.cut.faces)L.push(fc.code+' ('+(fc.name?fc.name+', ':'')+'faces '+fc.dir+'): '+fc.pieces.map(p=>p.code+' '+ftIn(p.inch)+(p.rip?' rip '+p.rip+'"':'')).join(', '));}
+    if(r.cut){L.push('','EVERY PIECE, BY ROOF FACE');for(const fc of r.cut.faces)L.push(fc.code+' ('+(fc.name?fc.name+', ':'')+'faces '+fc.dir+'): '+fc.pieces.map(p=>p.code+' '+ftIn(p.inch)+(p.rip?' rip '+p.rip+'"':'')).join(', '));}
     return L.join('\n');
   }
   function sideText(){
@@ -1000,20 +1013,24 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
       text+='\n--- Page '+i+' ---\n'+tc.items.map(t=>t.str+(t.hasEOL?'\n':' ')).join('');
       if(text.length>120000) break;
     }
-    if(text.replace(/\s|---|Page \d+/g,'').length>400) return {text,images:[]};
-    // scanned PDF: render the first pages as pictures instead
-    const imgs=[];
-    for(let i=1;i<=Math.min(doc.numPages,maxImgs);i++){
-      const pg=await doc.getPage(i); const v1=pg.getViewport({scale:1}); const vp=pg.getViewport({scale:1400/v1.width});
+    const render=async i=>{const pg=await doc.getPage(i); const v1=pg.getViewport({scale:1}); const vp=pg.getViewport({scale:1600/v1.width});
       const c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height;
       await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
-      imgs.push(await new Promise(r=>c.toBlob(r,'image/jpeg',0.85)));
+      return await new Promise(r=>c.toBlob(r,'image/jpeg',0.85));};
+    if(text.replace(/\s|---|Page \d+/g,'').length>400){
+      // the length diagram has the roof's shape; find it by its title
+      const per=text.split(/\n--- Page (\d+) ---\n/), hits=[];
+      for(let k=1;k+1<per.length;k+=2) if(/length diagram|roof lines|lengths diagram|line lengths|roof diagram/i.test(per[k+1])) hits.push(+per[k]);
+      const imgs=[]; for(const i of hits.slice(0,Math.min(2,maxImgs))) imgs.push(await render(i));
+      return {text,images:imgs};
     }
+    // scanned PDF: render the first pages as pictures instead
+    const imgs=[]; for(let i=1;i<=Math.min(doc.numPages,maxImgs);i++) imgs.push(await render(i));
     return {text:'',images:imgs};
   }
   const PROMPT=`You are reading a roofing and/or siding measurement report from HOVER or EagleView (a contractor's takeoff report). The report text and/or images are provided.
 Extract the measurements and reply with ONLY one JSON object in exactly this shape (numbers only, no units, null when the report does not give it):
-{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"flashing_ft":n,"suggested_waste_pct":n},"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
+{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"flashing_ft":n,"suggested_waste_pct":n},"outline":[{"name":"Main roof","pitch":n,"x":0,"y":0,"edges":[{"d":"N"|"E"|"S"|"W","len":n,"t":"eave"|"rake"|"wall"}]}]|null,"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
 Rules:
 - Convert feet-and-inches like 45' 6" to decimal feet (45.5). Convert squares to square feet if needed (1 square = 100 sq ft).
 - roof.total_area_sqft is the total roof area WITHOUT waste. pitch is the predominant pitch as the rise over 12 (6 for 6/12).
@@ -1021,7 +1038,13 @@ Rules:
 - If a waste table is shown, suggested_waste_pct is the report's suggested waste percent.
 - flashing_ft is the report's Flashing total (headwall/apron flashing), not step flashing.
 - siding.siding_area_sqft is the total wall area to be sided (facades plus gables) with openings removed; if only a gross area and an openings area are given, subtract them. opening_trim_ft is the total perimeter of windows and doors if given.
-- Set the whole "roof" or "siding" object's fields to null if that part is not in the report. Do not guess numbers that are not in the report.`;
+- Set the whole "roof" or "siding" object's fields to null if that part is not in the report. Do not guess numbers that are not in the report.
+Outline (the roof's shape, from the length diagram picture; north is up):
+- Walk the OUTER edge of each roof section clockwise, starting at its north-west corner. Each edge is one entry: d is the direction you travel along it (N, E, S or W), len is the length printed on that edge in feet (ignore any + sign before a number), t is "eave" for a level edge at the bottom of a slope, "rake" for a sloped gable edge (use the rake length printed on it), or "wall" for a lower roof's high side against a wall.
+- When a side is split into several labeled segments (for example two rakes on either side of a gable ridge, or an eave interrupted by a wing), list each segment as its own edge, in order.
+- Only the perimeter: never include ridges, hips or valleys.
+- A lower roof that is its own plane (a porch or shed) is its own section. Its x and y are how far east and south its first corner is from the main section's first corner, in feet.
+- Every edge must run N, E, S or W. If the roof has angled walls, or the diagram is missing or unreadable, set "outline" to null. Never invent lengths.`;
 
   function setSt(msg,cls){const s=$('impSt');s.className='st'+(cls?' '+cls:'');s.textContent=msg;}
   function errMsg(code){
@@ -1041,6 +1064,13 @@ Rules:
   function errFull(e){const code=(e&&e.code)||'unknown';const m=e&&e.message?' '+String(e.message).slice(0,120):'';return errMsg(code)+' (Error: '+code+(code==='unknown'||code==='upstream_error'?m:'')+')';}
   let importReady=false, importPending=true, importErr=null; const hasClaude=!!(window.claude&&typeof window.claude.use==='function');
   function put(o,k,v){ if(v==null||!isFinite(+v)||+v<=0){o[k]='';return false;} o[k]=Math.round(+v*10)/10; return true; }
+  function cleanOutline(o,pitch){
+    if(!Array.isArray(o)||!o.length) return null;
+    const secs=o.map((x,i)=>({name:String(x&&x.name||(i?'Section '+(i+1):'Main roof')).slice(0,40),pitch:nearPitch(+(x&&x.pitch)||pitch),x:+(x&&x.x)||0,y:+(x&&x.y)||0,
+      edges:(x&&Array.isArray(x.edges)?x.edges:[]).filter(e=>e&&/^[NESW]$/.test(e.d)&&+e.len>0).map(e=>({d:e.d,len:Math.round(+e.len*100)/100,t:['eave','rake','wall'].includes(e.t)?e.t:'eave'}))}))
+      .filter(x=>x.edges.length>=4);
+    return secs.length?secs:null;
+  }
   function apply(d){
     const done=[], r=d&&d.roof||{}, q=st.rep;
     const anyRoof=['total_area_sqft','eaves_ft','rakes_ft','ridges_ft','hips_ft','valleys_ft'].some(k=>+r[k]>0);
@@ -1050,7 +1080,14 @@ Rules:
     const got=[]; for(const [k,rk,label] of [['eave','eaves_ft','eaves'],['rake','rakes_ft','rakes'],['ridge','ridges_ft','ridges'],['hip','hips_ft','hips'],['valley','valleys_ft','valleys'],['flash','flashing_ft','flashing']]) if(put(q,k,r[rk])) got.push(label+' '+f(r[rk]));
     if(got.length) done.push(got.join(', ')+' ft');
     if(r.suggested_waste_pct>0&&r.suggested_waste_pct<40){st.waste=+r.suggested_waste_pct;st.wasteEdited=true;done.push('waste '+st.waste+'% (from the report)');} else autoWaste();
-    st.method='report'; st.trade='roof'; st.tab='measure'; render();
+    const secs=cleanOutline(d.outline,q.pitch||6);
+    if(secs){ const R=buildRoof(secs,1,0), bad=R.secs.filter(x=>!x.ok);
+      if(!bad.length&&R.faces.length){ st.sections=secs; st.method='trace'; autoWaste();
+        done.unshift('Traced the roof outline from the diagram ('+secs.reduce((a,x)=>a+x.edges.length,0)+' edges'+(secs.length>1?', '+secs.length+' sections':'')+'). Your panel list is on Materials.');
+        R.secs.forEach(x=>{if(x.note)done.push(x.name+': '+x.note);}); }
+      else { st.method='report'; done.unshift('Read the diagram, but the outline didn\u2019t close ('+bad.map(x=>x.name+': '+x.msg).join(' ')+'). Totals are filled in; trace the roof by hand for the panel list.'); } }
+    else { st.method='report'; done.unshift('No length diagram I could trace in that file, so this gives totals only. For the panel list, import the length diagram page, or trace the roof by hand.'); }
+    st.trade='roof'; st.tab='measure'; render();
     const s2=$('impSt'); s2.className='st ok'; s2.textContent='Filled in from '+(d.source&&d.source!=='other'?d.source:'the report')+'. Check these against the report:';
     const ul=el('ul'); for(const x of done) ul.append(el('li',null,x)); if(d.notes) ul.append(el('li',null,String(d.notes).slice(0,200))); s2.append(ul);
   }

@@ -14,8 +14,9 @@ Live totals sit under the switch on every tab. The copy button puts everything i
 - Three ways to measure:
   - **Simple:** a plain gable or hip roof from length, width and pitch.
   - **Trace:** any roof with square corners. Go around the edge from the report's length diagram, entering each edge as eave, rake or wall. Add a section for a porch or lower roof. The calculator works out every face, hip, valley and ridge.
-  - **Report:** type in report totals, or import a HOVER / EagleView PDF or screenshot. Totals give square feet and materials. Trace the roof for a cut list.
+  - **Report:** type in report totals, or import a HOVER / EagleView PDF or screenshot. The import also reads the length diagram and traces the roof outline, so you get the panel list straight from the report. If the diagram can't be traced, you get totals and a prompt to trace by hand.
 - Material list: panels, trim and caps in pieces, closures, screws or clips, underlayment, ice and water shield, flashing; for shingles, bundles, starter, ridge cap, drip edge and nails.
+- Panels to order: every panel length and how many, written the way you order ("4 pcs at 16'5\""), at the top of Materials and in the copied list.
 - Cut list: every panel length and how many of each, plus every piece by roof face. The layout drawing labels each panel with its code and cut length.
 - Optional prices for an estimated material cost. Waste and product sizes are under the results.
 
