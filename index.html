@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#090C10">
-<title>Job calculator V2</title>
+<title>Job calculator V3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,500..800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -182,8 +182,11 @@ details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
 .sub-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .sub-h b{font:700 18px/1.1 var(--f-body)}
 .erows{display:grid;gap:8px;counter-reset:edge}
-.erow{display:grid;grid-template-columns:18px minmax(0,1fr) minmax(0,1fr) 30px;gap:6px 8px;align-items:center;counter-increment:edge;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.erow{display:grid;grid-template-columns:18px repeat(3,minmax(0,1fr)) 30px;gap:6px 8px;align-items:center;counter-increment:edge;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.erow>select:first-child{grid-column:2}
+.erow>select:nth-child(3){grid-column:3/5}
 .erow .fi{grid-column:2/4;grid-row:2}
+.erow .ep{grid-column:4/6;grid-row:2}
 .erow::before{content:counter(edge);font-size:13px;color:var(--faint);text-align:right;font-variant-numeric:tabular-nums}
 .erow .inp{min-height:48px;padding:8px;font-size:16px;border-radius:12px}
 .x{border:0;background:none;color:var(--muted);font-size:15px;font-weight:600;min-height:44px;padding:0 6px}
@@ -298,7 +301,9 @@ function buildRoof(sections,cov,over){
     const p=+sec.pitch||0, pf=Math.sqrt(1+(p/12)**2);
     const E=(sec.edges||[]).filter(e=>LDIR[e.d]&&+e.len>0);
     if(E.length<4){S.msg='Needs at least 4 edges.';return;}
-    const L=E.map(e=>e.t==='rake'?e.len/pf:+e.len);   // rakes are entered along the slope, like the reports show them
+    // each edge may carry its own pitch (the face that slopes down to it); otherwise the section's
+    const PE=E.map(e=>+e.pitch>0?+e.pitch:p), PF=PE.map(q=>Math.sqrt(1+(q/12)**2));
+    const L=E.map((e,i)=>e.t==='rake'?e.len/PF[i]:+e.len);   // rakes are entered along the slope, like the reports show them
     let gx=0,gy=0; E.forEach((e,i)=>{gx+=LDIR[e.d][0]*L[i];gy+=LDIR[e.d][1]*L[i];});
     const gap=(g,pos,neg)=>Math.abs(g)<.05?'':f2(Math.abs(g))+' ft '+(g>0?pos:neg);
     if(Math.abs(gx)>1.5||Math.abs(gy)>1.5){S.msg='Doesn’t close: the last edge ends '+[gap(gx,'east','west'),gap(gy,'south','north')].filter(Boolean).join(' and ')+' of the start.';return;}
@@ -320,13 +325,17 @@ function buildRoof(sections,cov,over){
       const nrm=[-d[1]*orient,d[0]*orient];           // interior normal
       const mid=[(a[0]+b[0])/2+nrm[0]*1e-3,(a[1]+b[1])/2+nrm[1]*1e-3];
       if(!inside(mid)){nrm[0]*=-1;nrm[1]*=-1;}
-      return {a,b,t:e.t||'eave',ax,nrm,len:L[i]};});
-    for(const e of edges){ if(e.t==='eave')R.eave+=e.len; else if(e.t==='rake')R.rake+=e.len*pf; else R.wall+=e.len; }
+      return {a,b,t:e.t||'eave',ax,nrm,len:L[i],p:PE[i],pf:PF[i]};});
+    for(const e of edges){ if(e.t==='eave')R.eave+=e.len; else if(e.t==='rake')R.rake+=e.len*e.pf; else R.wall+=e.len; }
     // coplanar eaves (same line, same side) are one roof plane
     const G=[];
-    for(const e of edges){ if(e.t!=='eave')continue;
+    // a plane grows past a reflex corner as fast as its neighbour's front moves, so remember the neighbour's slope at each end
+    const kOf=(e,own)=>Math.max(1e-3,(e&&e.t==='eave'?e.p:own)/12);
+    edges.forEach((e,i)=>{ if(e.t!=='eave')return;
       const c=e.ax===0?e.a[1]:e.a[0], n=e.ax===0?e.nrm[1]:e.nrm[0], lo=Math.min(e.a[e.ax],e.b[e.ax]), hi=Math.max(e.a[e.ax],e.b[e.ax]);
-      let g=G.find(g=>g.ax===e.ax&&Math.abs(g.c-c)<1e-6&&g.n===n); if(!g){g={ax:e.ax,c,n,segs:[]};G.push(g);} g.segs.push([lo,hi]); }
+      const prev=edges[(i-1+edges.length)%edges.length], next=edges[(i+1)%edges.length], aLo=e.a[e.ax]<=e.b[e.ax];
+      const kLo=kOf(aLo?prev:next,e.p), kHi=kOf(aLo?next:prev,e.p);
+      let g=G.find(g=>g.ax===e.ax&&Math.abs(g.c-c)<1e-6&&g.n===n&&g.p===e.p); if(!g){g={ax:e.ax,c,n,p:e.p,k:Math.max(1e-3,e.p/12),pf:e.pf,segs:[]};G.push(g);} g.segs.push([lo,hi,kLo,kHi]); });
     if(!G.length){S.msg='Needs at least one eave.';return;}
     const toS=(g,P)=>g.ax===0?P[0]:P[1], toU=(g,P)=>((g.ax===0?P[1]:P[0])-g.c)*g.n;
     const toP=(g,s,u)=>g.ax===0?[s,g.c+g.n*u]:[g.c+g.n*u,s];
@@ -334,17 +343,16 @@ function buildRoof(sections,cov,over){
       if(!inside(P)) return -1;
       let best=-1,bv=Infinity,bd=Infinity;
       for(let k=0;k<G.length;k++){const g=G[k],u=toU(g,P); if(u<-1e-9)continue; const s=toS(g,P);
-        let v=Infinity,dd=Infinity; for(const [lo,hi] of g.segs){const d=Math.max(0,lo-s,s-hi),w=Math.max(u,d); if(w<v||(w===v&&d<dd)){v=w;dd=d;}}
+        let v=Infinity,dd=Infinity; for(const [lo,hi,kl,kh] of g.segs){const d=Math.max(0,lo-s,s-hi),w=Math.max(u*g.k,s<lo?(lo-s)*kl:s>hi?(s-hi)*kh:0); if(w<v||(w===v&&d<dd)){v=w;dd=d;}}
         if(v<bv-1e-9||(Math.abs(v-bv)<=1e-9&&dd<bd)){best=k;bv=v;bd=dd;}}
       return best;
     }
     const proj=(g,ax)=>V.map(q=>ax==='s'?toS(g,q):toU(g,q));
-    const hAt=P=>{let v=Infinity;for(const g of G){const u=toU(g,P);if(u<-1e-9)continue;const s=toS(g,P);for(const [lo,hi] of g.segs)v=Math.min(v,Math.max(u,lo-s,s-hi));}return v;};
+    const hAt=P=>{let v=Infinity;for(const g of G){const u=toU(g,P);if(u<-1e-9)continue;const s=toS(g,P);for(const [lo,hi,kl,kh] of g.segs)v=Math.min(v,Math.max(u*g.k,s<lo?(lo-s)*kl:s>hi?(s-hi)*kh:0));}return v;};
     const xs=V.map(q=>q[0]),ys=V.map(q=>q[1]); let hTop=0;
     for(let x=Math.min(...xs);x<=Math.max(...xs);x+=.5)for(let y=Math.min(...ys);y<=Math.max(...ys);y+=.5){const P=[x,y];if(inside(P))hTop=Math.max(hTop,hAt(P));}
-    hTop+=.75;
     G.forEach((g,k)=>{
-      const us=proj(g,'u'), umax=Math.min(Math.max(...us),hTop), ss=proj(g,'s'), s0=Math.min(...ss), s1=Math.max(...ss);
+      const us=proj(g,'u'), umax=Math.min(Math.max(...us),hTop/g.k+.75), ss=proj(g,'s'), s0=Math.min(...ss), s1=Math.max(...ss);
       const mine=(s,u)=>owner(toP(g,s,u))===k;
       function line(s){
         const out=[],du=1/4; let inA=null, prev=1e-6, pin=mine(s,prev); if(pin)inA=prev;
@@ -373,6 +381,7 @@ function buildRoof(sections,cov,over){
           now.push({a,b,c}); }
         last=now; }
       for(const c of comps){ if(c.rows.length<2) continue;
+        const pf=g.pf;                                // this face's own slope
         const face={sec:si,pf,g,rows:c.rows,dir:g.ax===0?(g.n>0?'north':'south'):(g.n>0?'west':'east'),panels:[],toP:(s,u)=>toP(g,s,u)};
         const rows=c.rows, j0=rows[0].j, sA=rows[0].s, sB=rows[rows.length-1].s;
         // corners that fall between scan lines: extend the two neighbouring slopes to where they meet
@@ -405,7 +414,7 @@ function buildRoof(sections,cov,over){
       }
     });
     S.ok=true; S.V=V; S.edges=edges; S.pitch=p;
-    R.pitch=R.pitch==null?p:Math.min(R.pitch,p);
+    for(const g of G) R.pitch=R.pitch==null?g.p:Math.min(R.pitch,g.p);
   });
   // codes A, B, C… in reading order (top to bottom, then left to right)
   const cen=fc=>{const P=fc.rows.map(r=>fc.toP(r.s,(r.a+r.b)/2));return [P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];};
@@ -482,7 +491,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
 (function(){
   const $=id=>document.getElementById(id);
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v4', APP_VERSION='V2';
+  const LS='jobcalc-v4', APP_VERSION='V3';
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
   const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
@@ -636,7 +645,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
         grid('grid2',num('Length along ridge',()=>st.L,x=>st.L=x,'ft',()=>later(refresh)),num('Width',()=>st.W,x=>st.W=x,'ft',()=>later(refresh))),
         pick('Pitch',PITCH_OPTS,()=>st.pitch,x=>st.pitch=+x,refresh));
     } else if(st.method==='trace'){
-      m.append(el('p','hint','Any roof with square corners. Start at a corner and go around the edge, using the report’s length diagram. Rake: a gable edge, entered as the rake length on the report. Wall: a lower roof’s high side against the house.'));
+      m.append(el('p','hint','Any roof with square corners. Start at a corner and go around the edge, using the report’s length diagram. Rake: a gable edge, entered as the rake length on the report. Wall: a lower roof’s high side against the house. If part of the roof has a different pitch, set it on the edges of that part.'));
       sections(m);
       const add=el('button','pill','+ Porch or lower roof');
       add.onclick=()=>{st.sections.push({name:'Section '+(st.sections.length+1),pitch:+st.sections[0]?.pitch||6,x:0,y:0,edges:[{d:'E',len:0,t:'eave'}]});save();render();};
@@ -870,6 +879,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
         const x=el('button','x','×');x.setAttribute('aria-label','Remove edge '+n);x.onclick=()=>{sec.edges.splice(ei,1);save();render();};
         r.append(selIn(DIRS,()=>e.d,v=>e.d=v,ch,'Edge '+n+' direction'),ftInIn(()=>e.len,v=>e.len=v,ch,'Edge '+n+' length'),
           selIn([['eave','Eave'],['rake','Rake'],['wall','Wall']],()=>e.t||'eave',v=>e.t=v,ch,'Edge '+n+' type'),x);
+        const ep=selIn([['','Same'],...PITCH_OPTS],()=>e.pitch||'',v=>{if(v)e.pitch=+v;else delete e.pitch;},ch,'Edge '+n+' pitch, if different from the section'); ep.classList.add('ep'); r.append(ep);
         rows.append(r);
       });
       const add=el('button','pill','+ Edge');
@@ -1025,7 +1035,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
   }
   const PROMPT=`You are reading a roofing and/or siding measurement report from HOVER or EagleView (a contractor's takeoff report). The report text and/or images are provided.
 Extract the measurements and reply with ONLY one JSON object in exactly this shape (numbers only, no units, null when the report does not give it):
-{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"flashing_ft":n,"suggested_waste_pct":n},"outline":[{"name":"Main roof","pitch":n,"x":0,"y":0,"edges":[{"d":"N"|"E"|"S"|"W","len":n,"t":"eave"|"rake"|"wall"}]}]|null,"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
+{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"flashing_ft":n,"suggested_waste_pct":n},"outline":[{"name":"Main roof","pitch":n,"x":0,"y":0,"edges":[{"d":"N"|"E"|"S"|"W","len":n,"t":"eave"|"rake"|"wall","pitch":n}]}]|null,"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
 Rules:
 - Convert feet-and-inches like 45' 6" to decimal feet (45.5). Convert squares to square feet if needed (1 square = 100 sq ft).
 - roof.total_area_sqft is the total roof area WITHOUT waste. pitch is the predominant pitch as the rise over 12 (6 for 6/12).
@@ -1034,12 +1044,15 @@ Rules:
 - flashing_ft is the report's Flashing total (headwall/apron flashing), not step flashing.
 - siding.siding_area_sqft is the total wall area to be sided (facades plus gables) with openings removed; if only a gross area and an openings area are given, subtract them. opening_trim_ft is the total perimeter of windows and doors if given.
 - Set the whole "roof" or "siding" object's fields to null if that part is not in the report. Do not guess numbers that are not in the report.
-Outline (the roof's shape, from the length diagram picture; north is up):
+Outline (the roof's shape, from the LENGTH DIAGRAM picture; north is up):
 - Walk the OUTER edge of each roof section clockwise, starting at its north-west corner. Each edge is one entry: d is the direction you travel along it (N, E, S or W), len is the length printed on that edge in feet (ignore any + sign before a number), t is "eave" for a level edge at the bottom of a slope, "rake" for a sloped gable edge (use the rake length printed on it), or "wall" for a lower roof's high side against a wall.
-- When a side is split into several labeled segments (for example two rakes on either side of a gable ridge, or an eave interrupted by a wing), list each segment as its own edge, in order.
-- Only the perimeter: never include ridges, hips or valleys.
-- A lower roof that is its own plane (a porch or shed) is its own section. Its x and y are how far east and south its first corner is from the main section's first corner, in feet.
-- Every edge must run N, E, S or W. If the roof has angled walls, or the diagram is missing or unreadable, set "outline" to null. Never invent lengths.`;
+- Use the printed numbers, not the drawing's proportions: the diagram is not to scale and short segments are often drawn shorter than their label.
+- When a side is split into several segments (two rakes either side of a gable ridge, an eave interrupted by a wing or a connector), list each segment as its own edge, in order. If a short segment has no label, work it out from the other segments on that side (for example a 31 ft side with 14 and 11 ft known leaves 6 ft) and say so in notes.
+- Only the perimeter: never include ridges, hips or valleys (the red and blue lines inside).
+- A connected roof is ONE section even if parts of it have different pitches or it has wings and connectors. Set the section pitch to the main pitch, and give "pitch" on each edge whose face has a different pitch (read it from the PITCH DIAGRAM if provided; a face's pitch applies to the edges at the bottom of that face).
+- Only a lower roof that is its own separate plane (a porch or shed roof against a wall) is a separate section. Its x and y are how far east and south its first corner is from the main section's first corner, in feet.
+- Check before answering: the east-going lengths must add up to the west-going lengths, and the south-going to the north-going (within about a foot). If they don't, re-read the labels.
+- Every edge must run N, E, S or W. Complex roofs with many corners are normal; trace them. Set "outline" to null only when there is no length diagram, or the roof has angled (non-90-degree) walls. Never invent lengths.`;
 
   function setSt(msg,cls){const s=$('impSt');s.className='st'+(cls?' '+cls:'');s.textContent=msg;}
   function errMsg(code){
@@ -1059,10 +1072,12 @@ Outline (the roof's shape, from the length diagram picture; north is up):
   function errFull(e){const code=(e&&e.code)||'unknown';const m=e&&e.message?' '+String(e.message).slice(0,120):'';return errMsg(code)+' (Error: '+code+(code==='unknown'||code==='upstream_error'?m:'')+')';}
   let importReady=false, importPending=true, importErr=null; const hasClaude=!!(window.claude&&typeof window.claude.use==='function');
   function put(o,k,v){ if(v==null||!isFinite(+v)||+v<=0){o[k]='';return false;} o[k]=Math.round(+v*10)/10; return true; }
+  const blankSection=p=>({name:'Main roof',pitch:+p||6,edges:[{d:'E',len:0,t:'eave'},{d:'S',len:0,t:'eave'},{d:'W',len:0,t:'eave'},{d:'N',len:0,t:'eave'}]});
   function cleanOutline(o,pitch){
     if(!Array.isArray(o)||!o.length) return null;
     const secs=o.map((x,i)=>({name:String(x&&x.name||(i?'Section '+(i+1):'Main roof')).slice(0,40),pitch:nearPitch(+(x&&x.pitch)||pitch),x:+(x&&x.x)||0,y:+(x&&x.y)||0,
-      edges:(x&&Array.isArray(x.edges)?x.edges:[]).filter(e=>e&&/^[NESW]$/.test(e.d)&&+e.len>0).map(e=>({d:e.d,len:Math.round(+e.len*100)/100,t:['eave','rake','wall'].includes(e.t)?e.t:'eave'}))}))
+      edges:(x&&Array.isArray(x.edges)?x.edges:[]).filter(e=>e&&/^[NESW]$/.test(e.d)&&+e.len>0).map(e=>{const o={d:e.d,len:Math.round(+e.len*100)/100,t:['eave','rake','wall'].includes(e.t)?e.t:'eave'};
+        if(+e.pitch>0){const q=nearPitch(+e.pitch);if(q!==nearPitch(+(x&&x.pitch)||pitch))o.pitch=q;} return o;})}))
       .filter(x=>x.edges.length>=4);
     return secs.length?secs:null;
   }
@@ -1074,14 +1089,14 @@ Outline (the roof's shape, from the length diagram picture; north is up):
     if(r.pitch>0){ q.pitch=nearPitch(+r.pitch); done.push('pitch '+q.pitch+'/12'); }
     const got=[]; for(const [k,rk,label] of [['eave','eaves_ft','eaves'],['rake','rakes_ft','rakes'],['ridge','ridges_ft','ridges'],['hip','hips_ft','hips'],['valley','valleys_ft','valleys'],['flash','flashing_ft','flashing']]) if(put(q,k,r[rk])) got.push(label+' '+f(r[rk]));
     if(got.length) done.push(got.join(', ')+' ft');
-    if(r.suggested_waste_pct>0&&r.suggested_waste_pct<40){st.waste=+r.suggested_waste_pct;st.wasteEdited=true;done.push('waste '+st.waste+'% (from the report)');} else autoWaste();
+    if(st.mat==='shingle'&&r.suggested_waste_pct>0&&r.suggested_waste_pct<40){st.waste=+r.suggested_waste_pct;st.wasteEdited=true;done.push('waste '+st.waste+'% (from the report)');} else autoWaste();
     const secs=cleanOutline(d.outline,q.pitch||6);
     if(secs){ const R=buildRoof(secs,1,0), bad=R.secs.filter(x=>!x.ok);
       if(!bad.length&&R.faces.length){ st.sections=secs; st.method='trace'; autoWaste();
         done.unshift('Traced the roof outline from the diagram ('+secs.reduce((a,x)=>a+x.edges.length,0)+' edges'+(secs.length>1?', '+secs.length+' sections':'')+'). Your panel list is on Materials.');
         R.secs.forEach(x=>{if(x.note)done.push(x.name+': '+x.note);}); }
-      else { st.method='report'; done.unshift('Read the diagram, but the outline didn\u2019t close ('+bad.map(x=>x.name+': '+x.msg).join(' ')+'). Totals are filled in; trace the roof by hand for the panel list.'); } }
-    else { st.method='report'; done.unshift('No length diagram I could trace in that file, so this gives totals only. For the panel list, import the length diagram page, or trace the roof by hand.'); }
+      else { st.method='report'; st.sections=[blankSection(q.pitch)]; done.unshift('Read the diagram, but the outline didn\u2019t close ('+bad.map(x=>x.name+': '+x.msg).join(' ')+'). Totals are filled in; trace the roof by hand for the panel list.'); } }
+    else { st.method='report'; st.sections=[blankSection(q.pitch)]; done.unshift('No length diagram I could trace in that file, so this gives totals only. For the panel list, import the length diagram page, or trace the roof by hand.'); }
     st.trade='roof'; st.tab='measure'; render();
     const s2=$('impSt'); s2.className='st ok'; s2.textContent='Filled in from '+(d.source&&d.source!=='other'?d.source:'the report')+'. Check these against the report:';
     const ul=el('ul'); for(const x of done) ul.append(el('li',null,x)); if(d.notes) ul.append(el('li',null,String(d.notes).slice(0,200))); s2.append(ul);
@@ -1097,7 +1112,9 @@ Outline (the roof's shape, from the length diagram picture; north is up):
   $('impStop').onclick=()=>{ if(ctl) ctl.abort(); };
   // ---------- PDF preview: see every page, pick the ones to read ----------
   let pdf=null;   // {doc,name,n,text:[],sel:Set}
-  const PAGE_HINT=/length diagram|roof lines|lengths diagram|line lengths|roof diagram|report summary|measurement summary|roof measurements|all structures/i;
+  const PAGE_PICKS=[/length diagram|roof lines|lengths diagram|line lengths/i,/pitch diagram|roof pitches|pitch per facet/i,/report summary|measurement summary|roof measurements|areas per pitch/i];
+  // a page counts when the phrase is its title, near the top, and it isn't the table of contents
+  const isPick=(t,re)=>!/table of contents/i.test(t)&&re.test(t.slice(0,600));
   async function renderPage(i,width){const pg=await pdf.doc.getPage(i), v1=pg.getViewport({scale:1}), vp=pg.getViewport({scale:width/v1.width});
     const c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height; await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise; return c;}
   const maxPages=()=>caps&&caps.images?Math.max(1,caps.images.maxCount):6;
@@ -1107,7 +1124,7 @@ Outline (the roof's shape, from the length diagram picture; north is up):
     catch(e){ setSt(errMsg('pdf'),'err'); return; }
     pdf={doc,name:file.name,n:Math.min(doc.numPages,40),text:[],sel:new Set()};
     for(let i=1;i<=pdf.n;i++){ const tc=await (await doc.getPage(i)).getTextContent(); pdf.text[i]=tc.items.map(t=>t.str+(t.hasEOL?'\n':' ')).join(''); }
-    for(let i=1;i<=pdf.n&&pdf.sel.size<maxPages();i++) if(PAGE_HINT.test(pdf.text[i])) pdf.sel.add(i);
+    for(const re of PAGE_PICKS){ if(pdf.sel.size>=maxPages()) break; for(let i=1;i<=pdf.n;i++) if(isPick(pdf.text[i],re)){ pdf.sel.add(i); break; } }
     if(!pdf.sel.size) for(let i=1;i<=Math.min(2,pdf.n);i++) pdf.sel.add(i);
     setSt(''); drawPdfBox();
     for(let i=1;i<=pdf.n;i++){ const slot=document.querySelector('.pgimg[data-p="'+i+'"]'); if(!pdf||!slot) return; slot.prepend(await renderPage(i,240)); }
@@ -1130,7 +1147,7 @@ Outline (the roof's shape, from the length diagram picture; north is up):
     }
     const go=btn('Read selected pages',readSelected);
     go.id='pdfGo';
-    box.append(h,el('p','hint','Tap a page to see it full size. Pick the pages to read: the summary with the totals and the length diagram. Pages that look like those are picked for you.'),grid,go);
+    box.append(h,el('p','hint','Tap a page to see it full size. Pick the pages to read: the length diagram, the pitch diagram and the summary with the totals. Pages that look like those are picked for you.'),grid,go);
     syncPdfBox();
   }
   async function viewPage(i){

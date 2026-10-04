@@ -1,6 +1,6 @@
 # Job calculator
 
-Current version: **V2**. Each published update raises the version (V3, V4, …); it shows in the page title and next to the app name.
+Current version: **V3**. Each published update raises the version (V3, V4, …); it shows in the page title and next to the app name.
 
 Phone-friendly takeoff calculator for metal or shingle roofs and HardiePlank siding. Switch between **Roof** and **Siding** at the top; the bottom tab bar has four tabs that work for both:
 
@@ -15,7 +15,7 @@ Live totals sit under the switch on every tab. The copy button puts everything i
 - Metal (exposed fastener, R-panel, 5V, standing seam) or shingles.
 - Three ways to measure:
   - **Simple:** a plain gable or hip roof from length, width and pitch.
-  - **Trace:** any roof with square corners. Go around the edge from the report's length diagram, entering each edge as eave, rake or wall. Add a section for a porch or lower roof. The calculator works out every face, hip, valley and ridge.
+  - **Trace:** any roof with square corners. Go around the edge from the report's length diagram, entering each edge as eave, rake or wall. If part of the roof has a different pitch, set it on that part's edges. Add a section for a porch or lower roof. The calculator works out every face, hip, valley and ridge, including hips between different pitches.
   - **Report:** type in report totals, or import a HOVER / EagleView PDF or screenshot. The import also reads the length diagram and traces the roof outline, so you get the panel list straight from the report. If the diagram can't be traced, you get totals and a prompt to trace by hand.
 - Material list: panels, trim and caps in pieces, closures, screws or clips, underlayment, ice and water shield, flashing; for shingles, bundles, starter, ridge cap, drip edge and nails.
 - Panels to order: every panel length and how many, written the way you order ("4 pcs at 16'5\""), at the top of Materials and in the copied list.
