@@ -1,5 +1,7 @@
 # Job calculator
 
+Current version: **V2**. Each published update raises the version (V3, V4, …); it shows in the page title and next to the app name.
+
 Phone-friendly takeoff calculator for metal or shingle roofs and HardiePlank siding. Switch between **Roof** and **Siding** at the top; the bottom tab bar has four tabs that work for both:
 
 - **Measure:** enter the job.
@@ -28,7 +30,9 @@ Live totals sit under the switch on every tab. The copy button puts everything i
 - The layout drawing shows each wall with every course and plank.
 
 ## Report import
-Importing a report uses Claude, so it only works in the Claude-hosted version of the page. Everywhere else the import box is hidden and everything else works.
+Pick a HOVER or EagleView PDF and every page shows as a thumbnail. Tap a page to see it full size, and pick which pages Claude reads (the summary and the length diagram are picked for you). The report stays on screen afterwards, so you can read it while tracing. Screenshots are read straight away.
+
+Importing uses Claude, so it only works in the Claude-hosted version of the page. Everywhere else the import box is hidden and everything else works.
 
 ## Run locally
 No build step: `python3 -m http.server 8000`, then open http://localhost:8000.

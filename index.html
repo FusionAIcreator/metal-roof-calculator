@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#090C10">
-<title>Job calculator V1</title>
+<title>Job calculator V2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,500..800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -222,6 +222,25 @@ details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
 .imp .st.err{color:var(--warn)}
 .imp .st.ok{color:var(--good)}
 .imp ul{margin:6px 0 0;padding-left:20px}
+.ver{padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.04em}
+.pdfbox{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:14px}
+.pdfhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pdfhead b{font-weight:700;overflow-wrap:anywhere}
+.pages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pg{display:grid;gap:6px;min-width:0}
+.pgimg{display:block;width:100%;padding:0;border:2px solid var(--line2);border-radius:10px;background:#fff;overflow:hidden;aspect-ratio:8.5/11;position:relative}
+.pgimg canvas{display:block;width:100%;height:auto}
+.pgimg .pn{position:absolute;left:6px;top:6px;padding:1px 7px;border-radius:7px;background:rgba(9,12,16,.75);color:#fff;font-size:12px;font-weight:700}
+.pg.on .pgimg{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.use{min-height:40px;border-radius:10px;border:1px solid var(--line2);background:var(--raised);color:var(--muted);font-size:14px;font-weight:600}
+.pg.on .use,.use.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.pgview{position:fixed;inset:0;z-index:25;background:var(--bg);display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding-top:env(safe-area-inset-top,0px)}
+.pgview-h,.pgview-f{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px}
+.pgview-f{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.pgview-h b{font:800 22px/1 var(--f-display);font-stretch:85%}
+.pgscroll{overflow:auto;-webkit-overflow-scrolling:touch;background:var(--surface2)}
+.pgscroll canvas{display:block;width:calc(100% * var(--z,1));height:auto;background:#fff}
 
 /* tab bar */
 .tabbar{position:fixed;z-index:10;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:536px;margin:0 auto;height:70px;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border-radius:26px;background:var(--glass);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line2);box-shadow:var(--shadow)}
@@ -255,11 +274,12 @@ details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
 
 <!-- report import lives outside the views so the file input survives re-renders -->
 <div class="card imp" id="imp" hidden>
-  <p class="hint" style="color:var(--fg)"><strong>Import a HOVER or EagleView report.</strong> Pick the PDF or screenshots of the summary page. Claude reads it and fills in the totals.</p>
+  <p class="hint" style="color:var(--fg)"><strong>Import a HOVER or EagleView report.</strong> Pick the PDF, then choose which pages Claude reads. Screenshots work too.</p>
   <input type="file" id="impFile" class="vh" multiple accept="application/pdf,.pdf,image/png,image/jpeg,image/webp">
   <label class="btn ghost filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
   <button class="pill hide" id="impStop">Stop</button>
   <div class="st" id="impSt" aria-live="polite">Getting import ready…</div>
+  <div id="pdfBox" class="pdfbox" hidden></div>
 </div>
 <script>
 function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1900);}
@@ -462,7 +482,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
 (function(){
   const $=id=>document.getElementById(id);
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v4';
+  const LS='jobcalc-v4', APP_VERSION='V2';
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
   const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
@@ -547,7 +567,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
     document.body.append($('imp')); $('imp').hidden=true;
     const app=$('app'); app.innerHTML='';
     const hd=el('header','hd'), row=el('div','hd-row'), brand=el('div','brand');
-    brand.append(svgEl(ICON.logo),el('span',null,'Job calculator'));
+    brand.append(svgEl(ICON.logo),el('span',null,'Job calculator'),el('span','ver',APP_VERSION));
     const icons=el('div','icons'), cp=el('button','ibtn'), gs=el('button','ibtn');
     cp.append(svgEl(ICON.copy)); cp.setAttribute('aria-label','Copy the list'); cp.onclick=()=>copy(st.trade==='roof'?roofText():sideText());
     gs.append(svgEl(ICON.gear)); gs.setAttribute('aria-label','Settings'); gs.onclick=openSheet;
@@ -1003,31 +1023,6 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
     window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDF_WORKER;
     return window.pdfjsLib;
   }
-  async function readPdf(file,maxImgs){
-    const lib=await pdfjs();
-    const doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,disableFontFace:true}).promise;
-    let text='';
-    const pages=Math.min(doc.numPages,40);
-    for(let i=1;i<=pages;i++){
-      const pg=await doc.getPage(i); const tc=await pg.getTextContent();
-      text+='\n--- Page '+i+' ---\n'+tc.items.map(t=>t.str+(t.hasEOL?'\n':' ')).join('');
-      if(text.length>120000) break;
-    }
-    const render=async i=>{const pg=await doc.getPage(i); const v1=pg.getViewport({scale:1}); const vp=pg.getViewport({scale:1600/v1.width});
-      const c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height;
-      await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
-      return await new Promise(r=>c.toBlob(r,'image/jpeg',0.85));};
-    if(text.replace(/\s|---|Page \d+/g,'').length>400){
-      // the length diagram has the roof's shape; find it by its title
-      const per=text.split(/\n--- Page (\d+) ---\n/), hits=[];
-      for(let k=1;k+1<per.length;k+=2) if(/length diagram|roof lines|lengths diagram|line lengths|roof diagram/i.test(per[k+1])) hits.push(+per[k]);
-      const imgs=[]; for(const i of hits.slice(0,Math.min(2,maxImgs))) imgs.push(await render(i));
-      return {text,images:imgs};
-    }
-    // scanned PDF: render the first pages as pictures instead
-    const imgs=[]; for(let i=1;i<=Math.min(doc.numPages,maxImgs);i++) imgs.push(await render(i));
-    return {text:'',images:imgs};
-  }
   const PROMPT=`You are reading a roofing and/or siding measurement report from HOVER or EagleView (a contractor's takeoff report). The report text and/or images are provided.
 Extract the measurements and reply with ONLY one JSON object in exactly this shape (numbers only, no units, null when the report does not give it):
 {"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"flashing_ft":n,"suggested_waste_pct":n},"outline":[{"name":"Main roof","pitch":n,"x":0,"y":0,"edges":[{"d":"N"|"E"|"S"|"W","len":n,"t":"eave"|"rake"|"wall"}]}]|null,"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
@@ -1092,35 +1087,94 @@ Outline (the roof's shape, from the length diagram picture; north is up):
     const ul=el('ul'); for(const x of done) ul.append(el('li',null,x)); if(d.notes) ul.append(el('li',null,String(d.notes).slice(0,200))); s2.append(ul);
   }
   async function runImport(files){
-    if(!files.length) return;
+    const images=files.filter(f=>/^image\//.test(f.type));
+    if(!images.length){ setSt('Pick a PDF report or a screenshot (PNG or JPEG).','err'); return; }
     if(!sample){ setSt(importPending?'The import is still starting up. Try again in a few seconds.':(importErr||errMsg('no_sample')),'err'); return; }
-    setSt('Got '+files.map(x=>x.name||'file').join(', ')+'. Working on it…');
-    ctl=new AbortController(); $('impStop').classList.remove('hide'); $('impBtn').classList.add('off');
+    const maxImgs=caps&&caps.images?caps.images.maxCount:0;
+    if(!maxImgs){ setSt(errMsg('images_unavailable'),'err'); return; }
+    await send(async()=>{ setSt('Reading the measurements\u2026 this can take up to a minute.'); return {text:'',images:images.slice(0,maxImgs)}; });
+  }
+  $('impStop').onclick=()=>{ if(ctl) ctl.abort(); };
+  // ---------- PDF preview: see every page, pick the ones to read ----------
+  let pdf=null;   // {doc,name,n,text:[],sel:Set}
+  const PAGE_HINT=/length diagram|roof lines|lengths diagram|line lengths|roof diagram|report summary|measurement summary|roof measurements|all structures/i;
+  async function renderPage(i,width){const pg=await pdf.doc.getPage(i), v1=pg.getViewport({scale:1}), vp=pg.getViewport({scale:width/v1.width});
+    const c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height; await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise; return c;}
+  const maxPages=()=>caps&&caps.images?Math.max(1,caps.images.maxCount):6;
+  async function openPdf(file){
+    setSt('Opening '+file.name+'\u2026');
+    let doc; try{ const lib=await pdfjs(); doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,disableFontFace:true}).promise; }
+    catch(e){ setSt(errMsg('pdf'),'err'); return; }
+    pdf={doc,name:file.name,n:Math.min(doc.numPages,40),text:[],sel:new Set()};
+    for(let i=1;i<=pdf.n;i++){ const tc=await (await doc.getPage(i)).getTextContent(); pdf.text[i]=tc.items.map(t=>t.str+(t.hasEOL?'\n':' ')).join(''); }
+    for(let i=1;i<=pdf.n&&pdf.sel.size<maxPages();i++) if(PAGE_HINT.test(pdf.text[i])) pdf.sel.add(i);
+    if(!pdf.sel.size) for(let i=1;i<=Math.min(2,pdf.n);i++) pdf.sel.add(i);
+    setSt(''); drawPdfBox();
+    for(let i=1;i<=pdf.n;i++){ const slot=document.querySelector('.pgimg[data-p="'+i+'"]'); if(!pdf||!slot) return; slot.prepend(await renderPage(i,240)); }
+  }
+  function toggle(i){ if(pdf.sel.has(i)) pdf.sel.delete(i); else { if(pdf.sel.size>=maxPages()){ toast('Up to '+maxPages()+' pages at a time'); return false; } pdf.sel.add(i); } syncPdfBox(); return true; }
+  function syncPdfBox(){
+    document.querySelectorAll('.pg').forEach(g=>{const i=+g.dataset.p,on=pdf.sel.has(i);g.classList.toggle('on',on);const u=g.querySelector('.use');u.textContent=on?'\u2713 Reading':'Read';u.setAttribute('aria-pressed',String(on));});
+    const go=$('pdfGo'), k=pdf.sel.size; go.disabled=!k; go.firstChild.textContent=k?'Read '+k+' selected page'+(k>1?'s':''):'Pick at least one page';
+  }
+  function drawPdfBox(){
+    const box=$('pdfBox'); box.innerHTML=''; box.hidden=!pdf; if(!pdf) return;
+    const h=el('div','pdfhead'), x=el('button','link','Close report'); x.onclick=()=>{pdf=null;drawPdfBox();};
+    const t=el('div'); t.append(el('b',null,pdf.name),el('div','hint',pdf.n+' page'+(pdf.n>1?'s':''))); h.append(t,x);
+    const grid=el('div','pages');
+    for(let i=1;i<=pdf.n;i++){
+      const g=el('div','pg'); g.dataset.p=i;
+      const im=el('button','pgimg'); im.type='button'; im.dataset.p=i; im.setAttribute('aria-label','View page '+i+' full size'); im.append(el('span','pn',String(i))); im.onclick=()=>viewPage(i);
+      const u=el('button','use'); u.type='button'; u.setAttribute('aria-label','Read page '+i); u.onclick=()=>toggle(i);
+      g.append(im,u); grid.append(g);
+    }
+    const go=btn('Read selected pages',readSelected);
+    go.id='pdfGo';
+    box.append(h,el('p','hint','Tap a page to see it full size. Pick the pages to read: the summary with the totals and the length diagram. Pages that look like those are picked for you.'),grid,go);
+    syncPdfBox();
+  }
+  async function viewPage(i){
+    let z=1; const ov=el('div','pgview'); ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true'); ov.setAttribute('aria-label','Report page');
+    const hd=el('div','pgview-h'), title=el('b'), close=el('button','pill','Done'); close.onclick=()=>ov.remove(); hd.append(title,close);
+    const sc=el('div','pgscroll'), ft=el('div','pgview-f');
+    const prev=el('button','pill','\u2039 Prev'), next=el('button','pill','Next \u203a'), use=el('button','use'), zi=el('button','pill','+'), zo=el('button','pill','\u2212');
+    zi.setAttribute('aria-label','Zoom in'); zo.setAttribute('aria-label','Zoom out');
+    const zoom=nz=>{z=Math.min(4,Math.max(1,nz));const c=sc.querySelector('canvas');if(c)c.style.setProperty('--z',z);};
+    zi.onclick=()=>zoom(z*1.5); zo.onclick=()=>zoom(z/1.5);
+    const show=async p=>{ i=p; title.textContent='Page '+i+' of '+pdf.n; prev.disabled=i<=1; next.disabled=i>=pdf.n;
+      const on=pdf.sel.has(i); use.textContent=on?'\u2713 Reading this page':'Read this page'; use.classList.toggle('on',on);
+      sc.innerHTML=''; const c=await renderPage(i,Math.min(2000,Math.round(window.innerWidth*2.2))); sc.append(c); zoom(z); };
+    prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1); use.onclick=()=>{toggle(i);show(i);};
+    const zg=el('div','row'); zg.append(zo,zi);
+    ft.append(prev,use,next); hd.insertBefore(zg,close);
+    ov.append(hd,sc,ft); document.body.append(ov); close.focus();
+    const esc=e=>{if(e.key==='Escape'&&ov.isConnected){ov.remove();document.removeEventListener('keydown',esc);}}; document.addEventListener('keydown',esc);
+    await show(i);
+  }
+  async function readSelected(){
+    if(!pdf||!pdf.sel.size) return;
+    if(!sample){ setSt(importPending?'The import is still starting up. Try again in a few seconds.':(importErr||errMsg('no_sample')),'err'); return; }
+    const pages=[...pdf.sel].sort((a,b)=>a-b), canImg=!!(caps&&caps.images);
+    await send(async()=>{
+      setSt('Reading page'+(pages.length>1?'s ':' ')+pages.join(', ')+'\u2026 this can take up to a minute.');
+      const text=pages.map(i=>'\n--- Page '+i+' of '+pdf.n+' ---\n'+pdf.text[i]).join('');
+      const images=[]; if(canImg) for(const i of pages) images.push(await new Promise(async r=>(await renderPage(i,1600)).toBlob(r,'image/jpeg',0.85)));
+      return {text:text.replace(/\s|---|Page \d+ of \d+/g,'').length>40?text:'',images};
+    });
+  }
+  async function send(prepare){
+    ctl=new AbortController(); $('impStop').classList.remove('hide'); $('impBtn').classList.add('off'); const go=$('pdfGo'); if(go) go.disabled=true;
     try{
-      const maxImgs=caps&&caps.images?caps.images.maxCount:0;
-      let text='', images=[];
-      for(const file of files){
-        if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
-          setSt('Opening '+file.name+'…');
-          let r; try{ r=await readPdf(file,Math.max(0,maxImgs-images.length)); }catch(e){ throw {code:'pdf'}; }
-          text+=r.text; images=images.concat(r.images);
-        } else if(/^image\//.test(file.type)) images.push(file);
-      }
-      if(!text&&!images.length){ setSt('Pick a PDF report or a screenshot (PNG or JPEG).','err'); return; }
-      if(images.length&&!maxImgs) throw {code:'images_unavailable'};
-      images=images.slice(0,maxImgs);
-      setSt('Reading the measurements… this can take up to a minute.');
-      const input=PROMPT+(text?'\n\nREPORT TEXT:\n'+text.slice(0,120000):'\n\nThe report is in the attached image'+(images.length>1?'s':'')+'.');
+      const {text,images}=await prepare();
+      if(!text&&!images.length){ setSt('Nothing readable on those pages. Pick other pages, or use screenshots.','err'); return; }
+      const input=PROMPT+(text?'\n\nREPORT TEXT:\n'+text.slice(0,120000):'')+(images.length?'\n\nThe selected report page'+(images.length>1?'s are':' is')+' attached as image'+(images.length>1?'s':'')+'.':'');
       const opts={signal:ctl.signal}; if(images.length) opts.images=images;
       apply(await sample.json(input,opts));
-    }catch(e){
-      if(e&&e.code==='cancelled') setSt('Stopped.'); else setSt(errFull(e),'err');
-    }finally{
-      $('impStop').classList.add('hide'); $('impBtn').classList.remove('off'); $('impFile').value='';
-    }
+    }catch(e){ if(e&&e.code==='cancelled') setSt('Stopped.'); else setSt(errFull(e),'err'); }
+    finally{ $('impStop').classList.add('hide'); $('impBtn').classList.remove('off'); $('impFile').value=''; if(pdf&&$('pdfGo')) syncPdfBox(); }
   }
-  $('impFile').onchange=()=>runImport([...$('impFile').files]);
-  $('impStop').onclick=()=>{ if(ctl) ctl.abort(); };
+  $('impFile').onchange=()=>{const files=[...$('impFile').files], p=files.find(x=>x.type==='application/pdf'||/\.pdf$/i.test(x.name));
+    if(p){ openPdf(p); $('impFile').value=''; } else runImport(files);};
   async function initImport(){
     try{
       if(!hasClaude) return;
