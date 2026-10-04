@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#090C10">
-<title>Job calculator V3</title>
+<title>Job calculator V4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,500..800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -277,7 +277,7 @@ details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
 
 <!-- report import lives outside the views so the file input survives re-renders -->
 <div class="card imp" id="imp" hidden>
-  <p class="hint" style="color:var(--fg)"><strong>Import a HOVER or EagleView report.</strong> Pick the PDF, then choose which pages Claude reads. Screenshots work too.</p>
+  <p class="hint" style="color:var(--fg)"><strong>Import a HOVER or EagleView report.</strong> Pick the PDF, then choose which pages to read. EagleView roofs are rebuilt face by face straight from the PDF.</p>
   <input type="file" id="impFile" class="vh" multiple accept="application/pdf,.pdf,image/png,image/jpeg,image/webp">
   <label class="btn ghost filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
   <button class="pill hide" id="impStop">Stop</button>
@@ -488,10 +488,163 @@ function buildSiding(walls,expIn,plankIn){
 }
 function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*12,w=Math.floor(r+1e-9),fr=Math.round((r-w)*4);return f+"'"+w+(fr?['','¼','½','¾'][fr]:'')+'"';}
 
+// ---------- EagleView vector reader: the roof's faces straight from the PDF ----------
+// EagleView draws the pitch diagram as one filled outline per roof face, with an arrow (pointing downhill) and the pitch
+// digits as small filled shapes inside each face. The report's text gives the total area and the area at each pitch,
+// which fix the scale and tell which digit shape is which pitch. No reading of pictures is needed.
+function evTotals(text){
+  const num=re=>{const m=text.match(re);return m?+m[1].replace(/,/g,''):null;};
+  const T={area:num(/Total Roof Area\s*=\s*([\d,.]+)/i)||num(/Total Area \(All Pitches\)\s*=\s*([\d,.]+)/i),
+    ridge:num(/(?<!\/)Ridges\s*=\s*([\d,.]+)\s*ft/i),hip:num(/(?<!\/)Hips\s*=\s*([\d,.]+)\s*ft/i),valley:num(/Valleys\s*=\s*([\d,.]+)\s*ft/i),
+    rake:num(/Rakes\S*\s*=\s*([\d,.]+)\s*ft/i),eave:num(/Eaves(?:\/Starter)?\S*\s*=\s*([\d,.]+)\s*ft/i),
+    flash:num(/(?:^|[^p])Flashing\s*=\s*([\d,.]+)\s*ft/i),step:num(/Step flashing\s*=\s*([\d,.]+)\s*ft/i),
+    pitch:num(/Predominant Pitch\s*=\s*([\d.]+)\s*\/\s*12/i),waste:null,byPitch:[]};
+  // "Areas per Pitch" reads as labels then values: 4/12 5/12 1663.0 698.2 70.4% 29.6%
+  const i=text.search(/Areas per Pitch/i);
+  if(i>=0){ const seg=text.slice(i,i+400).split(/The table above/i)[0];
+    const ps=[...seg.matchAll(/([\d.]+)\s*\/\s*12/g)].map(m=>+m[1]), as=[...seg.replace(/[\d.]+\s*\/\s*12/g,' ').matchAll(/([\d,]+\.\d+)(?!\s*%)/g)].map(m=>+m[1].replace(/,/g,''));
+    if(ps.length&&as.length>=ps.length) T.byPitch=ps.map((p,k)=>({p,area:as[k]})); }
+  return T;
+}
+async function evShapes(lib,page){
+  const ops=await page.getOperatorList(), nm={}; for(const k in lib.OPS) nm[lib.OPS[k]]=k;
+  const mul=(m,n)=>[m[0]*n[0]+m[2]*n[1],m[1]*n[0]+m[3]*n[1],m[0]*n[2]+m[2]*n[3],m[1]*n[2]+m[3]*n[3],m[0]*n[4]+m[2]*n[5]+m[4],m[1]*n[4]+m[3]*n[5]+m[5]];
+  let ctm=[1,0,0,1,0,0], stack=[], fill=null, last=null; const faces=[], marks=[];
+  ops.fnArray.forEach((f,i)=>{const a=ops.argsArray[i], n=nm[f];
+    if(n==='save')stack.push(ctm.slice()); else if(n==='restore')ctm=stack.pop()||ctm; else if(n==='transform')ctm=mul(ctm,a);
+    else if(n==='setFillRGBColor')fill=[...a].slice(0,3).map(Number); else if(n==='setFillGray')fill=[a[0]*255,a[0]*255,a[0]*255];
+    else if(n==='constructPath'){ const pts=[]; let j=0;
+      for(const op of a[0]){ const on=nm[op];
+        if(on==='moveTo'||on==='lineTo'){pts.push([a[1][j],a[1][j+1]]);j+=2;}
+        else if(on==='curveTo'){pts.push([a[1][j+4],a[1][j+5]]);j+=6;}
+        else if(on==='curveTo2'||on==='curveTo3'){pts.push([a[1][j+2],a[1][j+3]]);j+=4;}
+        else if(on==='rectangle'){const [x,y,w,h]=a[1].slice(j,j+4);pts.push([x,y],[x+w,y],[x+w,y+h],[x,y+h]);j+=4;} }
+      last={pts:pts.map(([x,y])=>[ctm[0]*x+ctm[2]*y+ctm[4],ctm[1]*x+ctm[3]*y+ctm[5]]),sig:a[0].map(o=>nm[o][0]).join('')}; }
+    else if(last&&/^(fill|eoFill|fillStroke|eoFillStroke|closeFillStroke|closeEOFillStroke)$/.test(n)){
+      const white=fill&&fill.every(v=>v>250), light=fill&&fill.every(v=>v>150)&&!white, dark=fill&&fill.every(v=>v<70);
+      // a roof face is filled and outlined; watermark letters are only filled
+      if(light&&/Stroke/.test(n)&&last.pts.length>=3) faces.push(last.pts); else if(dark&&last.pts.length>2) marks.push(last);
+      last=null; }
+  });
+  return {faces,marks};
+}
+const evArea=V=>{let s=0;for(let i=0,j=V.length-1;i<V.length;j=i++)s+=(V[j][0]+V[i][0])*(V[j][1]-V[i][1]);return Math.abs(s)/2;};
+const evIn=(P,V)=>{let c=false;for(let i=0,j=V.length-1;i<V.length;j=i++){const a=V[i],b=V[j];if((a[1]>P[1])!==(b[1]>P[1])&&P[0]<(b[0]-a[0])*(P[1]-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+const evMid=P=>[P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];
+// Returns {faces:[{pts (plan ft, x east / y south), pitch, eave:{ax,c,n}}], note} or null.
+function evModel(shapes,T){
+  let F=shapes.faces.map(V=>{const o=V.slice(); if(o.length>3&&Math.hypot(o[0][0]-o[o.length-1][0],o[0][1]-o[o.length-1][1])<1e-6)o.pop(); return o;}).filter(V=>V.length>=3&&evArea(V)>1);
+  if(F.length<2||!(T.area>0)) return null;
+  // labels: a mark that sits in every labelled face is the arrow; the rest are pitch digits
+  const M=shapes.marks.map(m=>({sig:m.sig,pts:m.pts,c:evMid(m.pts),w:Math.max(...m.pts.map(p=>p[0]))-Math.min(...m.pts.map(p=>p[0])),h:Math.max(...m.pts.map(p=>p[1]))-Math.min(...m.pts.map(p=>p[1]))}))
+    .filter(m=>F.some(V=>evIn(m.c,V)));
+  const sigCount={}; for(const m of M) sigCount[m.sig]=(sigCount[m.sig]||0)+1;
+  const arrowSig=Object.keys(sigCount).sort((a,b)=>sigCount[b]-sigCount[a])[0];
+  const arrows=M.filter(m=>m.sig===arrowSig), digits=M.filter(m=>m.sig!==arrowSig);
+  // each arrow plus the digits next to it is one label
+  const size=arrows.length?Math.max(...arrows.map(a=>Math.max(a.w,a.h))):10;
+  const labels=arrows.map(a=>({a,d:[]}));
+  for(const d of digits){ let best=null,bd=Infinity; for(const L of labels){const dist=Math.hypot(d.c[0]-L.a.c[0],d.c[1]-L.a.c[1]); if(dist<bd){bd=dist;best=L;}} if(best&&bd<size*2.5) best.d.push(d); }
+  // give each label to a face: deepest inside first, so a label poking over a face edge goes to the face it sits in most
+  const owner=new Array(F.length).fill(null);
+  const edgeDist=(P,V)=>{let d=Infinity;for(let i=0,j=V.length-1;i<V.length;j=i++){const a=V[j],b=V[i],dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((P[0]-a[0])*dx+(P[1]-a[1])*dy)/l2));d=Math.min(d,Math.hypot(P[0]-a[0]-t*dx,P[1]-a[1]-t*dy));}return d;};
+  const pairs=[]; labels.forEach((L,li)=>{const c=evMid([L.a.c,...L.d.map(d=>d.c)]); F.forEach((V,fi)=>pairs.push({li,fi,sc:(evIn(c,V)?1:-1)*edgeDist(c,V)}));});
+  pairs.sort((x,y)=>y.sc-x.sc); const used=new Set();
+  for(const q of pairs){ if(used.has(q.li)||owner[q.fi]) continue; owner[q.fi]=labels[q.li]; used.add(q.li); }
+  // which digit shapes mean which pitch: try every pairing against the report's area at each pitch
+  const keyOf=L=>L?L.d.map(d=>d.sig).sort().join('+'):'';
+  const keys=[...new Set(owner.map(keyOf).filter(Boolean))], vals=T.byPitch.length?T.byPitch.map(x=>x.p):[T.pitch||6];
+  const pf=p=>Math.sqrt(1+(p/12)**2), plan=F.map(evArea), dflt=T.pitch||vals[0];
+  let best=null;
+  const perms=(arr,k)=>k===0?[[]]:arr.flatMap((v,i)=>perms(arr.filter((_,j)=>j!==i),k-1).map(r=>[v,...r]));
+  const tries=keys.length<=vals.length?perms(vals,keys.length):[keys.map(()=>dflt)];
+  for(const tr of tries){
+    const map={}; keys.forEach((k,i)=>map[k]=tr[i]);
+    const P=owner.map(L=>map[keyOf(L)]||dflt), sloped=P.reduce((a,p,i)=>a+plan[i]*pf(p),0), s2=T.area/sloped;
+    let err=0; if(T.byPitch.length) for(const {p,area} of T.byPitch) err+=Math.abs(P.reduce((a,q,i)=>a+(q===p?plan[i]*pf(q)*s2:0),0)-area);
+    if(!best||err<best.err) best={err,P,s2};
+  }
+  const s=Math.sqrt(best.s2);
+  // square the drawing to the compass: rotate by the main edge direction so eaves run N-S / E-W
+  // only near-square edges count, so long 45° hips and valleys don't swing it
+  let sw=0,sa=0; for(const V of F) for(let i=0;i<V.length;i++){const a=V[i],b=V[(i+1)%V.length],dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);
+    let t=Math.atan2(dy,dx); t-=Math.round(t/(Math.PI/2))*(Math.PI/2); if(Math.abs(t)<Math.PI/12){sw+=L;sa+=L*t;}}
+  const rot=sw?-sa/sw:0, cr=Math.cos(rot), sr=Math.sin(rot);
+  const toPlan=([x,y])=>{const X=(x*cr-y*sr)*s, Y=(x*sr+y*cr)*s; return [X,-Y];};          // page y is up; plan y is south
+  const faces=F.map((V,i)=>{
+    const pts=V.map(toPlan), L=owner[i];
+    let dir=null;                                                                     // downhill direction from the arrow
+    if(L){ const ap=L.a.pts.map(toPlan), c=evMid(ap), w=Math.max(...ap.map(p=>p[0]))-Math.min(...ap.map(p=>p[0])), h=Math.max(...ap.map(p=>p[1]))-Math.min(...ap.map(p=>p[1]));
+      const ax=w>=h?0:1, lo=Math.min(...ap.map(p=>p[ax])), hi=Math.max(...ap.map(p=>p[ax])), span=hi-lo;
+      const spread=end=>{const sel=ap.filter(p=>end?p[ax]>hi-span*.3:p[ax]<lo+span*.3);const o=sel.map(p=>p[1-ax]);return o.length?Math.max(...o)-Math.min(...o):0;};
+      dir=[0,0]; dir[ax]=spread(true)>=spread(false)?1:-1; }
+    // the eave: the face edge across the slope, furthest downhill; without a usable arrow, the longest outside edge
+    const cen2=evMid(pts), others=F.map((W,j)=>j===i?null:W.map(toPlan));
+    const isShared=(a,b)=>others.some(W=>W&&W.some((q,m)=>{const r=W[(m+1)%W.length];return (Math.hypot(q[0]-b[0],q[1]-b[1])<.6&&Math.hypot(r[0]-a[0],r[1]-a[1])<.6)||(Math.hypot(q[0]-a[0],q[1]-a[1])<.6&&Math.hypot(r[0]-b[0],r[1]-b[1])<.6);}));
+    const pick=useDir=>{ let e=null, score=-Infinity;
+      for(let k=0;k<pts.length;k++){const a=pts[k],b=pts[(k+1)%pts.length],dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy); if(len<.5)continue;
+        const ax=Math.abs(dx)>=Math.abs(dy)?0:1; if(Math.min(Math.abs(dx),Math.abs(dy))/len>.08)continue;
+        const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2]; let sc;
+        if(useDir){ if(dir[1-ax]===0)continue; if((mid[1-ax]-cen2[1-ax])*dir[1-ax]<=0)continue; sc=len; }
+        else sc=len-(isShared(a,b)?1000:0);
+        if(sc>score){score=sc;e={ax,c:ax===0?mid[1]:mid[0],n:Math.sign((ax===0?cen2[1]:cen2[0])-(ax===0?mid[1]:mid[0]))||1};}}
+      return e; };
+    const eave=(dir&&pick(true))||pick(false);
+    return eave?{pts,pitch:best.P[i],eave}:null;
+  }).filter(Boolean);
+  if(faces.length<F.length) return null;
+  // move to positive coordinates
+  const mx=Math.min(...faces.flatMap(f=>f.pts.map(p=>p[0]))), my=Math.min(...faces.flatMap(f=>f.pts.map(p=>p[1])));
+  for(const f of faces){ f.pts=f.pts.map(([x,y])=>[x-mx,y-my]); f.eave.c-=f.eave.ax===0?my:mx; }
+  return {faces,err:best.err};
+}
+// Panel layout over given faces (same output shape as buildRoof, so the drawing and lists work unchanged)
+function facetRoof(model,T,cov,over){
+  const R={secs:[],faces:[],area:0,eave:+T.eave||0,rake:+T.rake||0,wall:+T.flash||0,ridge:+T.ridge||0,hips:+T.hip||0,valleys:+T.valley||0,panels:0,lf:0,clips:0,pitch:null};
+  const H=cov/24, all=[];
+  const clip=(poly,ax,lo,hi)=>{const cut=(pts,keep,edge)=>{const out=[];for(let i=0;i<pts.length;i++){const a=pts[(i+pts.length-1)%pts.length],b=pts[i],ia=keep(a),ib=keep(b);
+      if(ia!==ib){const t=(edge-a[ax])/(b[ax]-a[ax]);out.push([a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])]);} if(ib)out.push(b);}return out;};
+    const p=cut(poly,q=>q[ax]>=lo-1e-9,lo); return p.length?cut(p,q=>q[ax]<=hi+1e-9,hi):p;};
+  model.faces.forEach((F,fi)=>{
+    const g={ax:F.eave.ax,c:F.eave.c,n:F.eave.n,p:F.pitch}, pf=Math.sqrt(1+(F.pitch/12)**2);
+    const sOf=P=>g.ax===0?P[0]:P[1], uOf=P=>((g.ax===0?P[1]:P[0])-g.c)*g.n, toP=(s,u)=>g.ax===0?[s,g.c+g.n*u]:[g.c+g.n*u,s];
+    const ss=F.pts.map(sOf), sA=Math.min(...ss), sB=Math.max(...ss), sax=g.ax;
+    const rows=[]; const n=Math.max(1,Math.ceil((sB-sA)/H));
+    for(let j=0;j<=n;j++){ const s=Math.min(sB-1e-6,Math.max(sA+1e-6,sA+j*H)), us=[];
+      for(let k=0;k<F.pts.length;k++){const a=F.pts[k],b=F.pts[(k+1)%F.pts.length],sa=sOf(a),sb=sOf(b); if((sa<=s&&sb>=s)||(sb<=s&&sa>=s)){ if(Math.abs(sb-sa)<1e-9){us.push(uOf(a),uOf(b));} else {const t=(s-sa)/(sb-sa);us.push(uOf(a)+t*(uOf(b)-uOf(a)));}}}
+      if(us.length>=2) rows.push({j,s,a:Math.max(0,Math.min(...us)),b:Math.max(...us)}); }
+    if(rows.length<2) return;
+    const face={sec:0,pf,g,rows,dir:g.ax===0?(g.n>0?'north':'south'):(g.n>0?'west':'east'),panels:[],toP,lines:{ridge:0,hip:0,valley:0}};
+    for(let k=0;sA+k*cov<sB-.125;k++){
+      const lo=sA+k*cov, hi=Math.min(sB,lo+cov), piece=clip(F.pts,sax,lo,hi); if(piece.length<3) continue;
+      const us=piece.map(uOf), umin=Math.max(0,Math.min(...us)), umax=Math.max(...us);
+      const eaveEnd=umin<.05, len=(umax-umin)*pf+(eaveEnd?over:0), inch=Math.ceil(len*12-1e-6);
+      face.panels.push({lo,hi,umin,umax,inch,rip:hi-lo<cov-1e-3?Math.round((hi-lo)*12*4)/4:0,poly:piece,eave:eaveEnd});
+    }
+    face.sliver=(sB-sA)%cov>1e-4&&(sB-sA)%cov<=.125?Math.round(((sB-sA)%cov)*48)/4:0;
+    face.area=evArea(F.pts)*pf; face.cx=(sA+sB)/2; face.outline=F.pts;
+    R.faces.push(face); all.push(...F.pts);
+    R.pitch=R.pitch==null?F.pitch:Math.min(R.pitch,F.pitch);
+  });
+  // outline for the drawing: every face edge not shared with another face
+  const edges=[];
+  model.faces.forEach((F,i)=>F.pts.forEach((a,k)=>{const b=F.pts[(k+1)%F.pts.length];
+    const shared=model.faces.some((G,j)=>j!==i&&G.pts.some((q,m)=>{const r=G.pts[(m+1)%G.pts.length];return (Math.hypot(q[0]-b[0],q[1]-b[1])<.6&&Math.hypot(r[0]-a[0],r[1]-a[1])<.6)||(Math.hypot(q[0]-a[0],q[1]-a[1])<.6&&Math.hypot(r[0]-b[0],r[1]-b[1])<.6);}));
+    if(!shared) edges.push({a,b,t:'eave',ax:Math.abs(b[0]-a[0])>=Math.abs(b[1]-a[1])?0:1});}));
+  R.secs.push({name:'Roof',ok:true,msg:'',note:'',V:all,edges});
+  const cen=fc=>{const P=fc.rows.map(r=>fc.toP(r.s,(r.a+r.b)/2));return [P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];};
+  R.faces.forEach(fc=>fc.c=cen(fc));
+  R.faces.sort((x,y)=>Math.round(x.c[1])-Math.round(y.c[1])||x.c[0]-y.c[0]);
+  R.faces.forEach((fc,i)=>{fc.code=i<26?String.fromCharCode(65+i):String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26);
+    fc.panels.forEach((p,j)=>{p.code=fc.code+(j+1); R.panels++; R.lf+=p.inch/12; R.clips+=Math.ceil(p.inch/24)+1;});
+    R.area+=fc.area;});
+  return R;
+}
+
 (function(){
   const $=id=>document.getElementById(id);
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v4', APP_VERSION='V3';
+  const LS='jobcalc-v4', APP_VERSION='V4';
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
   const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
@@ -499,7 +652,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
   const PLANKS=[[4,'5¼" plank, 4" exposure'],[5,'6¼" plank, 5" exposure'],[6,'7¼" plank, 6" exposure'],[7,'8¼" plank, 7" exposure'],[8,'9¼" plank, 8" exposure'],[10.75,'12" plank, 10¾" exposure']];
   const E=s=>s.split(' ').map(x=>{const m=x.match(/^([NESW])([\d.]+)([rw]?)$/);return {d:m[1],len:+m[2],t:m[3]==='r'?'rake':m[3]==='w'?'wall':'eave'};});
   const DEF=()=>({trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'simple',style:'gable',L:40,W:30,pitch:6,
-    rep:{area:'',pitch:6,eave:'',rake:'',ridge:'',hip:'',valley:'',flash:''},
+    rep:{area:'',pitch:6,eave:'',rake:'',ridge:'',hip:'',valley:'',flash:''},model:null,
     sections:[{name:'Main roof',pitch:6,edges:E('E40 S30 W40 N30')}],
     over:2,waste:5,wasteEdited:false,nails:4,
     price:{panel:0,trim:0,screw:0},
@@ -632,10 +785,10 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
   }
 
   // ---------- roof: measure ----------
-  function defWaste(){return st.mat==='metal'?(st.method==='report'?10:5):(st.method==='simple'?(st.style==='hip'?15:10):12);}
+  function defWaste(){return st.mat==='metal'?(st.method==='report'&&!st.model?10:5):(st.method==='simple'?(st.style==='hip'?15:10):12);}
   function autoWaste(){if(!st.wasteEdited)st.waste=defWaste();}
   function roofMeasure(v){
-    if(hasClaude){ $('imp').hidden=false; v.append($('imp')); }
+    $('imp').hidden=false; v.append($('imp'));
     const mat=card('Material',null,seg('Material',[['metal','Metal'],['shingle','Shingles']],()=>st.mat,x=>{st.mat=x;autoWaste();}));
     if(st.mat==='metal') mat.append(pick('Panel',PANELS,()=>st.panel,x=>st.panel=x,refresh));
     const m=card('Roof',null,seg('How to measure',[['simple','Simple'],['trace','Trace'],['report','Report']],()=>st.method,x=>{st.method=x;autoWaste();}));
@@ -659,7 +812,11 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
         num('Eaves',()=>q.eave,x=>q.eave=x,'ft',up),num('Rakes',()=>q.rake,x=>q.rake=x,'ft',up),
         num('Ridges',()=>q.ridge,x=>q.ridge=x,'ft',up),num('Hips',()=>q.hip,x=>q.hip=x,'ft',up),
         num('Valleys',()=>q.valley,x=>q.valley=x,'ft',up),num('Flashing',()=>q.flash,x=>q.flash=x,'ft',up)),
-        el('p','hint',hasClaude?'Import a report above, or type the totals here. Report totals give square feet and materials. For a panel cut list and layout, use Trace.':'Type the totals from the report. They give square feet and materials. For a panel cut list and layout, use Trace.'));
+        el('p','hint',st.model?'Totals from the report. The roof shape below sets the panels; these set the trim.':'Import an EagleView PDF above, or type the totals here. Typed totals give square feet and materials. For a panel cut list and layout, import the PDF or use Trace.'));
+      if(st.model){ const by={}; for(const fc of st.model.faces) by[fc.pitch]=(by[fc.pitch]||0)+1;
+        const rm=el('button','pill','Remove roof shape'); twoTap(rm,'Remove roof shape','Tap again to remove it',()=>{st.model=null;autoWaste();save();render();});
+        const note=el('p','hint'); note.append(el('strong',null,'Roof shape from the report: '),st.model.faces.length+' faces ('+Object.keys(by).sort((a,b)=>a-b).map(p=>by[p]+' at '+p+'/12').join(', ')+'), read from the pitch diagram. Panel list, cut list and layout use it.');
+        m.append(note,grid('row',rm)); }
     }
     v.append(mat,m,btn('See materials',()=>go('materials'),null,'arrow'));
     if(st.method==='trace') secStatus();
@@ -678,7 +835,11 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
     let g, R=null;
     if(st.method==='report'){
       const q=st.rep; g={area:+q.area||0,pitch:+q.pitch||0,eave:+q.eave||0,rake:+q.rake||0,ridge:+q.ridge||0,hips:+q.hip||0,valleys:+q.valley||0,wall:+q.flash||0};
-      if(!(g.area>0)) return {err:'Enter the total roof area from the report, or import the report.'};
+      if(!(g.area>0)&&!st.model) return {err:'Enter the total roof area from the report, or import the report.'};
+      if(st.model&&st.model.faces&&st.model.faces.length){
+        const key=JSON.stringify([st.model,q,covFt,over]); if(key!==roofKey){roofKey=key;roofR=facetRoof(st.model,q,covFt,over);} R=roofR;
+        if(R.faces.length) g={area:R.area,pitch:R.pitch,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:R.valleys,wall:R.wall}; else R=null;
+      }
     } else {
       if(st.method==='simple'&&!(st.L>0&&st.W>0)) return {err:'Enter the roof length and width.'};
       const secs=st.method==='simple'?simpleSecs():st.sections, key=JSON.stringify([secs,covFt,over]);
@@ -737,7 +898,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
       let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
       for(const q of R.secs) if(q.ok) for(const [x,y] of q.V){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
       const k=Math.min(92/(x1-x0||1),72/(y1-y0||1)), ox=(100-(x1-x0)*k)/2, oy=(80-(y1-y0)*k)/2, P=([x,y])=>[(x-x0)*k+ox,(y-y0)*k+oy];
-      for(const fc of R.faces){const o=[...fc.rows.map(r=>fc.toP(r.s,r.a)),...fc.rows.slice().reverse().map(r=>fc.toP(r.s,r.b))].map(P);
+      for(const fc of R.faces){const o=(fc.outline||[...fc.rows.map(r=>fc.toP(r.s,r.a)),...fc.rows.slice().reverse().map(r=>fc.toP(r.s,r.b))]).map(P);
         sv('polygon',{points:pts(o),fill:'var(--pb)',stroke:'var(--accent)','stroke-width':1.2,'stroke-linejoin':'round'},s);}
     } else sv('path',{d:'M12 46 50 16l38 30M22 40v26h56V40',fill:'none',stroke:'var(--accent)','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'},s);
     box.append(s); return box;
@@ -930,7 +1091,7 @@ function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*
     const mk=sv('marker',{id:'arr',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},sv('defs',{},svg));
     sv('path',{d:'M0 0L10 5L0 10z',fill:'var(--good)'},mk);
     for(const fc of R.faces){
-      const outline=[...fc.rows.map(r=>fc.toP(r.s,r.a)),...fc.rows.slice().reverse().map(r=>fc.toP(r.s,r.b))];
+      const outline=fc.outline||[...fc.rows.map(r=>fc.toP(r.s,r.a)),...fc.rows.slice().reverse().map(r=>fc.toP(r.s,r.b))];
       if(metal) fc.panels.forEach((p,i)=>sv('polygon',{points:pts(p.poly),fill:i%2?'var(--pa)':'var(--pb)',stroke:'var(--seam)','stroke-width':.06},svg));
       else sv('polygon',{points:pts(outline),fill:'var(--pa)'},svg);
       sv('polygon',{points:pts(outline),fill:'none',stroke:'var(--ridgec)','stroke-width':.14,'stroke-linejoin':'round'},svg);
@@ -1090,7 +1251,7 @@ Outline (the roof's shape, from the LENGTH DIAGRAM picture; north is up):
     const got=[]; for(const [k,rk,label] of [['eave','eaves_ft','eaves'],['rake','rakes_ft','rakes'],['ridge','ridges_ft','ridges'],['hip','hips_ft','hips'],['valley','valleys_ft','valleys'],['flash','flashing_ft','flashing']]) if(put(q,k,r[rk])) got.push(label+' '+f(r[rk]));
     if(got.length) done.push(got.join(', ')+' ft');
     if(st.mat==='shingle'&&r.suggested_waste_pct>0&&r.suggested_waste_pct<40){st.waste=+r.suggested_waste_pct;st.wasteEdited=true;done.push('waste '+st.waste+'% (from the report)');} else autoWaste();
-    const secs=cleanOutline(d.outline,q.pitch||6);
+    st.model=null; const secs=cleanOutline(d.outline,q.pitch||6);
     if(secs){ const R=buildRoof(secs,1,0), bad=R.secs.filter(x=>!x.ok);
       if(!bad.length&&R.faces.length){ st.sections=secs; st.method='trace'; autoWaste();
         done.unshift('Traced the roof outline from the diagram ('+secs.reduce((a,x)=>a+x.edges.length,0)+' edges'+(secs.length>1?', '+secs.length+' sections':'')+'). Your panel list is on Materials.');
@@ -1168,9 +1329,38 @@ Outline (the roof's shape, from the LENGTH DIAGRAM picture; north is up):
     const esc=e=>{if(e.key==='Escape'&&ov.isConnected){ov.remove();document.removeEventListener('keydown',esc);}}; document.addEventListener('keydown',esc);
     await show(i);
   }
+  // EagleView: rebuild the roof from the pitch diagram's drawn faces, no Claude needed
+  async function readVector(){
+    try{
+      const T=evTotals(pdf.text.join('\n')); if(!(T.area>0)) return null;
+      const re=PAGE_PICKS[1], cand=[...[...pdf.sel].sort((a,b)=>a-b).filter(i=>isPick(pdf.text[i],re))];
+      for(let i=1;i<=pdf.n;i++) if(!cand.includes(i)&&isPick(pdf.text[i],re)) cand.push(i);
+      const lib=await pdfjs();
+      for(const i of cand){ const M=evModel(await evShapes(lib,await pdf.doc.getPage(i)),T); if(M&&M.err<=Math.max(15,T.area*.03)) return {T,M,page:i}; }
+    }catch(e){}
+    return null;
+  }
+  function applyVector({T,M,page}){
+    const q=st.rep, done=[];
+    put(q,'area',T.area); if(T.pitch>0) q.pitch=nearPitch(T.pitch);
+    for(const [k,tk] of [['eave','eave'],['rake','rake'],['ridge','ridge'],['hip','hip'],['valley','valley'],['flash','flash']]) put(q,k,T[tk]);
+    st.model={faces:M.faces.map(f=>({pts:f.pts.map(p=>p.map(v=>Math.round(v*1000)/1000)),pitch:f.pitch,eave:f.eave}))};
+    st.method='report'; st.sections=[blankSection(q.pitch)]; if(!st.wasteEdited||st.mat!=='shingle') autoWaste();
+    const by={}; for(const f of M.faces) by[f.pitch]=(by[f.pitch]||0)+1;
+    done.push('Rebuilt the roof from the pitch diagram on page '+page+': '+M.faces.length+' faces ('+Object.keys(by).sort((a,b)=>a-b).map(p=>by[p]+' at '+p+'/12').join(', ')+'). Your panel list is on Materials.');
+    if(T.byPitch.length>1) done.push('Area at each pitch matches the report within '+f(M.err)+' sq ft.');
+    done.push('Roof area '+f(T.area)+' ft²'+(T.pitch?', predominant pitch '+q.pitch+'/12':''));
+    const got=[['eaves',T.eave],['rakes',T.rake],['ridges',T.ridge],['hips',T.hip],['valleys',T.valley],['flashing',T.flash]].filter(x=>x[1]>0).map(x=>x[0]+' '+f(x[1]));
+    if(got.length) done.push(got.join(', ')+' ft');
+    st.trade='roof'; st.tab='measure'; save(); render();
+    const s2=$('impSt'); s2.className='st ok'; s2.textContent='Read straight from the EagleView PDF. Check these against the report:';
+    const ul=el('ul'); for(const x of done) ul.append(el('li',null,x)); s2.append(ul);
+  }
   async function readSelected(){
     if(!pdf||!pdf.sel.size) return;
-    if(!sample){ setSt(importPending?'The import is still starting up. Try again in a few seconds.':(importErr||errMsg('no_sample')),'err'); return; }
+    setSt('Reading the roof from the report\u2026');
+    const vec=await readVector(); if(vec){ applyVector(vec); return; }
+    if(!sample){ if(!hasClaude){ setSt('Couldn\u2019t find an EagleView pitch diagram with the roof\u2019s faces in this PDF. Type the totals below, or trace the roof.','err'); return; } setSt(importPending?'The import is still starting up. Try again in a few seconds.':(importErr||errMsg('no_sample')),'err'); return; }
     const pages=[...pdf.sel].sort((a,b)=>a-b), canImg=!!(caps&&caps.images);
     await send(async()=>{
       setSt('Reading page'+(pages.length>1?'s ':' ')+pages.join(', ')+'\u2026 this can take up to a minute.');
@@ -1194,7 +1384,7 @@ Outline (the roof's shape, from the LENGTH DIAGRAM picture; north is up):
     if(p){ openPdf(p); $('impFile').value=''; } else runImport(files);};
   async function initImport(){
     try{
-      if(!hasClaude) return;
+      if(!hasClaude){ $('impFile').accept='application/pdf,.pdf'; $('impBtn').textContent='Choose the PDF report'; setSt('EagleView PDFs are read right here on your phone.'); return; }
       sample=await window.claude.use('sample');
       if(!sample){ importErr=errMsg('no_sample'); setSt(importErr,'err'); return; }
       importReady=true;
