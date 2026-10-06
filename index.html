@@ -836,7 +836,7 @@ function facetRoof(model,T,cov,over){
         const note=el('p','hint'); note.append(el('strong',null,'Roof shape from the report: '),st.model.faces.length+' faces ('+Object.keys(by).sort((a,b)=>a-b).map(p=>by[p]+' at '+p+'/12').join(', ')+'), read from the pitch diagram. Panel list, cut list and layout use it.');
         m.append(note,grid('row',rm)); }
     }
-    if(st.method==='report'){ $('imp').hidden=false; v.append(mat,$('imp'),m,btn('See materials',()=>go('materials'),null,'arrow')); }
+    if(st.method==='report'||impUsed){ $('imp').hidden=false; v.append(mat,$('imp'),m,btn('See materials',()=>go('materials'),null,'arrow')); }
     else v.append(mat,m,btn('See materials',()=>go('materials'),null,'arrow'));
     if(st.method==='trace') secStatus();
   }
@@ -1399,6 +1399,7 @@ Outline (the roof's shape, from the LENGTH DIAGRAM picture; north is up):
   $('impStop').onclick=()=>{ if(ctl) ctl.abort(); };
   // ---------- PDF preview: see every page, pick the ones to read ----------
   let pdf=null;   // {doc,name,n,text:[],sel:Set}
+  let impUsed=false;   // once a report is opened, the import box stays on Measure to show what it read
   const PAGE_PICKS=[/length diagram|roof lines|lengths diagram|line lengths/i,/pitch diagram|roof pitches|pitch per facet/i,/report summary|measurement summary|roof measurements|areas per pitch/i];
   // a page counts when the phrase is its title, near the top, and it isn't the table of contents
   const isPick=(t,re)=>!/table of contents/i.test(t)&&re.test(t.slice(0,600));
@@ -1506,7 +1507,7 @@ Outline (the roof's shape, from the LENGTH DIAGRAM picture; north is up):
     }catch(e){ if(e&&e.code==='cancelled') setSt('Stopped.'); else setSt(errFull(e),'err'); }
     finally{ $('impStop').classList.add('hide'); $('impBtn').classList.remove('off'); $('impFile').value=''; if(pdf&&$('pdfGo')) syncPdfBox(); }
   }
-  $('impFile').onchange=()=>{const files=[...$('impFile').files], p=files.find(x=>x.type==='application/pdf'||/\.pdf$/i.test(x.name));
+  $('impFile').onchange=()=>{impUsed=true;const files=[...$('impFile').files], p=files.find(x=>x.type==='application/pdf'||/\.pdf$/i.test(x.name));
     if(p){ openPdf(p); $('impFile').value=''; } else runImport(files);};
   async function initImport(){
     try{
