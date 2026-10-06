@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#070C18">
-<title>Job calculator V6</title>
+<title>Job calculator V7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -661,14 +661,14 @@ function facetRoof(model,T,cov,over){
 (function(){
   const $=id=>document.getElementById(id);
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v4', APP_VERSION='V6';
+  const LS='jobcalc-v4', APP_VERSION='V7';
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
   const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
   const PANELS=[['35.25|ex','Exposed fastener 35¼"'],['36|ex','R-panel / PBR 36"'],['24|ex','5V crimp 24"'],['16|ss','Standing seam 16"'],['12|ss','Standing seam 12"'],['18|ss','Standing seam 18"']];
   const PLANKS=[[4,'5¼" plank, 4" exposure'],[5,'6¼" plank, 5" exposure'],[6,'7¼" plank, 6" exposure'],[7,'8¼" plank, 7" exposure'],[8,'9¼" plank, 8" exposure'],[10.75,'12" plank, 10¾" exposure']];
   const E=s=>s.split(' ').map(x=>{const m=x.match(/^([NESW])([\d.]+)([rw]?)$/);return {d:m[1],len:+m[2],t:m[3]==='r'?'rake':m[3]==='w'?'wall':'eave'};});
-  const DEF=()=>({trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'faces',faces:[{t:'hip',eave:40,ridge:10,slope:16,top:'ridge'},{t:'end',eave:30,ridge:0,slope:16,top:'ridge'},{t:'hip',eave:40,ridge:10,slope:16,top:'ridge'},{t:'end',eave:30,ridge:0,slope:16,top:'ridge'}],style:'gable',L:40,W:30,pitch:6,
+  const DEF=()=>({trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'faces',faces:[{t:'hip',eave:'',ridge:'',slope:'',top:'ridge'}],faceSel:'all',style:'gable',L:40,W:30,pitch:6,
     rep:{area:'',pitch:6,eave:'',rake:'',ridge:'',hip:'',valley:'',flash:''},model:null,
     sections:[{name:'Main roof',pitch:6,edges:E('E40 S30 W40 N30')}],
     over:2,waste:5,wasteEdited:false,nails:4,
@@ -853,7 +853,7 @@ function facetRoof(model,T,cov,over){
   let roofKey='', roofR=null;
   function roofCalc(){
     const metal=st.mat==='metal', [covIn,kind]=st.panel.split('|'), cov=+covIn, covFt=cov/12, ss=metal&&kind==='ss', over=(+st.over||0)/12, C=st.cov;
-    let g, R=null;
+    let g, R=null, skipNote='';
     if(st.method==='report'){
       const q=st.rep; g={area:+q.area||0,pitch:+q.pitch||0,eave:+q.eave||0,rake:+q.rake||0,ridge:+q.ridge||0,hips:+q.hip||0,valleys:+q.valley||0,wall:+q.flash||0};
       if(!(g.area>0)&&!st.model) return {err:'Enter the total roof area from the report, or import the report.'};
@@ -862,9 +862,11 @@ function facetRoof(model,T,cov,over){
         if(R.faces.length) g={area:R.area,pitch:R.pitch,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:R.valleys,wall:R.wall}; else R=null;
       }
     } else if(st.method==='faces'){
-      const key=JSON.stringify(['faces',st.faces,covFt,over]); if(key!==roofKey){roofKey=key;roofR=handRoof(st.faces,covFt,over);} R=roofR;
-      const bad=R.per.find(x=>x.err); if(bad) return {err:'Face '+bad.code+': '+bad.err};
-      if(!R.faces.length) return {err:'Add a roof face on Measure.'};
+      const sel=selFace(), items=st.faces.map((F,i)=>({F,i})).filter(x=>sel==='all'||x.i===sel);
+      const key=JSON.stringify(['faces',items,covFt,over]); if(key!==roofKey){roofKey=key;roofR=handRoof(items,covFt,over);} R=roofR;
+      if(!R.faces.length){const bad=R.per.find(x=>x.err);return {err:bad?'Face '+bad.code+': '+bad.err:'Add a roof face on Measure.'};}
+      const skipped=R.per.filter(x=>x.err&&!x.blank);
+      if(skipped.length) skipNote='Not counted yet: '+skipped.map(x=>'face '+x.code+' ('+x.err.replace(/\.$/,'').toLowerCase()+')').join('; ')+'.';
       g={area:R.area,pitch:+st.pitch||0,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:0,wall:R.wall};
     } else {
       if(st.method==='simple'&&!(st.L>0&&st.W>0)) return {err:'Enter the roof length and width.'};
@@ -911,7 +913,7 @@ function facetRoof(model,T,cov,over){
       const P=st.price, cP=totalLF*(+P.panel||0), cT=trimPcs*trimLen*(+P.trim||0), cS=screwBags*(+P.screw||0);
       if(cP+cT+cS>0) cost={total:cP+cT+cS,ss,lines:[['Panels',cP],['Trim',cT],['Screws',cS]].filter(x=>x[1]>0)};
     }
-    return {...sum,area:g.area,sqW,warn:slopeWarn(g.pitch,ss),rows:rows.filter(r=>r&&r[1]!=null),cut,R,cost,metal};
+    return {...sum,area:g.area,sqW,warn:[slopeWarn(g.pitch,ss),skipNote].filter(Boolean).join(' '),rows:rows.filter(r=>r&&r[1]!=null),cut,R,cost,metal};
   }
   const money=x=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   function byLength(R){const m=new Map();for(const fc of R.faces)for(const p of fc.panels)m.set(p.inch,(m.get(p.inch)||0)+1);return [...m].sort((a,b)=>b[0]-a[0]);}
@@ -937,16 +939,18 @@ function facetRoof(model,T,cov,over){
     else edges.push({a:pts[1],b:pts[2],t:'rake',len:S,lab:'Rake '+ftIn(Math.round(S*12))},{a:pts[2],b:pts[3],t:top,len:E,lab:(top==='wall'?'Wall ':'Ridge ')+ftIn(Math.round(E*12))},{a:pts[3],b:pts[0],t:'rake',len:S,lab:'Rake '+ftIn(Math.round(S*12))});
     return {pts,edges,E,S,R,area:F.t==='end'?E*S/2:(E+R)/2*S};
   }
-  function handRoof(faces,cov,over){
+  // which face the result tabs show: 'all' or a face's index
+  const selFace=()=>st.method==='faces'&&st.tab!=='measure'&&Number.isInteger(st.faceSel)&&st.faceSel<st.faces.length?st.faceSel:'all';
+  function handRoof(items,cov,over){
     const out={faces:[],per:[],secs:[],area:0,panels:0,lf:0,clips:0,eave:0,rake:0,ridge:0,hips:0,wall:0};
     let ridgeAll=0, hipAll=0, ridgeMax=0;
-    faces.forEach((F,i)=>{
+    items.forEach(({F,i},k)=>{
       const code=faceCode(i), name=shapeName(F.t), G=faceGeo(F);
       out.secs.push({name,ok:false,V:[],edges:[]});
-      if(G.err){out.per.push({F,code,name,err:G.err});return;}
+      if(G.err){out.per.push({F,code,name,err:G.err,blank:!(+F.eave>0)&&!(+F.slope>0)&&!(+F.ridge>0)});return;}
       const Ri=facetRoof({faces:[{pts:G.pts,pitch:0,eave:{ax:0,c:G.S,n:-1},rev:F.start==='right'}]},{},cov,over), fc=Ri.faces[0];
       if(!fc){out.per.push({F,code,name,err:'Too small to fit a panel.'});return;}
-      fc.code=code; fc.sec=i; fc.dir=null; fc.label=name; fc.area=G.area;
+      fc.code=code; fc.sec=k; fc.dir=null; fc.label=name; fc.area=G.area;
       fc.panels.forEach((p,j)=>p.code=code+(j+1));
       Ri.panels=fc.panels.length; Ri.lf=fc.panels.reduce((a,p)=>a+p.inch/12,0); Ri.area=G.area;
       Ri.secs=[{name,ok:true,msg:'',note:'',V:G.pts,edges:G.edges}];
@@ -986,21 +990,22 @@ function facetRoof(model,T,cov,over){
       const box=el('div','sub'), h=el('div','face-h');
       h.append(el('span','code',faceCode(i)),el('b',null,shapeName(F.t)));
       const dup=el('button','x','Copy'); dup.setAttribute('aria-label','Copy face '+faceCode(i)); dup.onclick=()=>{st.faces.splice(i+1,0,JSON.parse(JSON.stringify(F)));save();render();};
-      const rm=el('button','x','Remove'); rm.setAttribute('aria-label','Remove face '+faceCode(i)); rm.onclick=()=>{st.faces.splice(i,1);save();render();};
+      const rm=el('button','x','Remove'); rm.setAttribute('aria-label','Remove face '+faceCode(i)); rm.onclick=()=>{st.faces.splice(i,1);st.faceSel='all';save();render();};
       h.append(dup); if(st.faces.length>1) h.append(rm);
       const shapes=el('div','shapes'); shapes.setAttribute('role','group'); shapes.setAttribute('aria-label','Face '+faceCode(i)+' shape');
       for(const [t,name] of SHAPES){const b=el('button');b.type='button';b.setAttribute('aria-pressed',String(F.t===t));b.append(svgEl(SHAPE_ICON[t]),name);
         b.onclick=()=>{F.t=t;if(t==='hip'&&!(+F.ridge>0))F.ridge=Math.max(1,Math.round((+F.eave||0)/2));save();render();};shapes.append(b);}
       const prev=el('div','fprev'), stt=el('span','status');
       const upd=()=>{const G=faceGeo(F);prev.innerHTML='';if(G.err){stt.className='status err';stt.textContent=G.err;prev.hidden=true;}
-        else{prev.hidden=false;prev.append(facePreview(G,F.start==='right'?'right':'left'));const R=handRoof([F],(+st.panel.split('|')[0]||36)/12,(+st.over||0)/12);stt.className='status ok';stt.textContent=f(G.area)+' sq ft'+(st.mat==='metal'&&R.panels?' \u00b7 '+R.panels+' panels':'');}
+        else{prev.hidden=false;prev.append(facePreview(G,F.start==='right'?'right':'left'));const R=handRoof([{F,i}],(+st.panel.split('|')[0]||36)/12,(+st.over||0)/12);stt.className='status ok';stt.textContent=f(G.area)+' sq ft'+(st.mat==='metal'&&R.panels?' \u00b7 '+R.panels+' panels':'');}
         later(refresh);};
       const lab='Face '+faceCode(i)+' ';
       const ff=(label,get,set)=>{const d=ftField(label,get,set,upd),a=lab+label.split(',')[0].toLowerCase();d.setAttribute('aria-label',a);d.querySelectorAll('input').forEach((x,k)=>x.setAttribute('aria-label',a+', '+(k?'inches':'feet')));return d;};
       const fields=grid('grid2',ff('Eave',()=>F.eave,x=>F.eave=x),
         F.t==='hip'?ff('Ridge',()=>F.ridge,x=>F.ridge=x):F.t==='gable'?field('Top edge',selIn([['ridge','Ridge'],['wall','Against a wall']],()=>F.top||'ridge',x=>F.top=x,upd,lab+'top edge')):null);
       const start=field('Panel 1 starts at (facing the eave)',seg('Face '+faceCode(i)+' panel 1 starts at',[['left','Left end'],['right','Right end']],()=>F.start==='right'?'right':'left',x=>F.start=x));
-      box.append(h,shapes,fields,ff('Slope length, eave up to the ridge',()=>F.slope,x=>F.slope=x),start,prev,stt);
+      const see=el('button','pill','Materials for face '+faceCode(i)+' \u2192'); see.type='button'; see.onclick=()=>{st.faceSel=i;go('materials');};
+      box.append(h,shapes,fields,ff('Slope length, eave up to the ridge',()=>F.slope,x=>F.slope=x),start,prev,grid('row',stt),see);
       list.append(box); upd();
     });
     const add=el('div','addrow');
@@ -1047,9 +1052,18 @@ function facetRoof(model,T,cov,over){
   function total(label,value){const d=el('div','total');d.append(el('span',null,label),el('b',null,value));return d;}
 
   // ---------- roof tabs ----------
+  function facePicker(v){
+    if(st.method!=='faces'||st.faces.length<2) return;
+    const g=el('div','wallpick'); g.setAttribute('role','group'); g.setAttribute('aria-label','Show one face or all faces'); const cur=selFace();
+    for(const [x,t] of [['all','All faces'],...st.faces.map((F,i)=>[i,faceCode(i)+' \u00b7 '+shapeName(F.t)])]){
+      const b=el('button',null,t); b.type='button'; b.setAttribute('aria-pressed',String(cur===x)); b.onclick=()=>{st.faceSel=x;save();render();}; g.append(b);}
+    v.append(g);
+  }
+  const selLabel=()=>{const x=selFace();return x==='all'?'':'Face '+faceCode(x)+' \u00b7 '+shapeName(st.faces[x].t);};
   function roofMaterials(v){
+    facePicker(v);
     const r=roofCalc(); if(r.err){v.append(empty('Nothing to add up yet',r.err));return;}
-    v.append(hero('Roof area',r.area,'roof',f(r.area/100,1)+' squares · '+f(r.sqW,1)+' with '+f(st.waste)+'% waste',thumbRoof(r.R)));
+    v.append(hero(selLabel()||'Roof area',r.area,'roof',f(r.area/100,1)+' squares · '+f(r.sqW,1)+' with '+f(st.waste)+'% waste',thumbRoof(r.R)));
     if(r.warn) v.append(callout(r.warn));
     v.append(r.metal?tiles([['Panels',r.panels?f(r.panels):'—',r.panels?'cut to length':'trace for count','accent'],['Panel',f(r.lf),'linear ft','amber'],['Squares',f(r.sqW,1),'with waste','teal']])
       :tiles([['Bundles',f(r.bundles),'3 per square','accent'],['Squares',f(r.area/100,1),'roof area','amber'],['With waste',f(r.sqW,1),f(st.waste)+'% waste','teal']]));
@@ -1058,7 +1072,7 @@ function facetRoof(model,T,cov,over){
       v.append(card('Panels to order',f(n)+' pcs \u00b7 '+f(ins/12)+' ft',el('p','hint',PANELS.find(p=>p[0]===st.panel)[1]+', cut to length. Each length includes the '+f(st.over,2)+'" eave overhang.'),u)); }
     else if(r.metal) v.append(card('Panels to order',null,callout('This report only gives total footage, not the roof\u2019s shape, so there\u2019s no list of lengths yet.'),
       el('p','hint','Import the report\u2019s length diagram page, or trace the roof from it, and this becomes a list like \u201c4 pcs at 16\u20195\u201d\u201d.'),btn('Trace the roof',()=>{st.method='trace';autoWaste();go('measure');},'ghost')));
-    if(st.method==='faces'&&r.R&&r.R.per) v.append(card('Each face',r.R.per.length+' face'+(r.R.per.length>1?'s':''),mlist(r.R.per.filter(q=>q.G).map(q=>[q.code+' \u00b7 '+q.name,f(q.G.area)+' ft\u00b2',ftIn(Math.round(q.G.E*12))+' eave'+(q.F.t==='hip'?', '+ftIn(Math.round(q.G.R*12))+' ridge':'')+', '+ftIn(Math.round(q.G.S*12))+' slope'+(r.metal?' \u00b7 '+q.R.panels+' panels':'')]))),
+    if(st.method==='faces'&&r.R&&r.R.per&&selFace()==='all') v.append(card('Each face',r.R.per.length+' face'+(r.R.per.length>1?'s':''),mlist(r.R.per.filter(q=>q.G).map(q=>[q.code+' \u00b7 '+q.name,f(q.G.area)+' ft\u00b2',ftIn(Math.round(q.G.E*12))+' eave'+(q.F.t==='hip'?', '+ftIn(Math.round(q.G.R*12))+' ridge':'')+', '+ftIn(Math.round(q.G.S*12))+' slope'+(r.metal?' \u00b7 '+q.R.panels+' panels':'')]))),
       r.R.shared?el('p','hint','Faces share their hips and ridges, so each hip and ridge is counted once in the trim below. Lay out on the Layout tab, face by face.'):null);
     v.append(card('Material list',r.rows.length+' items',mlist(r.rows)));
     if(r.cost){const c=el('div','cost');c.append(el('span','hint','Estimated material'+(r.cost.ss?', clips not priced':'')),el('b',null,money(r.cost.total)));
@@ -1067,6 +1081,7 @@ function facetRoof(model,T,cov,over){
   }
   function traceCard(text){return card(null,null,el('p','hint',text),btn('Trace the roof',()=>{st.method='trace';autoWaste();go('measure');},'ghost'));}
   function roofCuts(v){
+    facePicker(v);
     const r=roofCalc(); if(r.err){v.append(empty('No cut list yet',r.err));return;}
     if(!r.metal){v.append(card('Shingles',null,el('p','hint','Shingles are ordered by the bundle, so there’s no cut list. Switch the material to Metal on Measure for a panel cut list.')));return;}
     if(!r.cut){v.append(traceCard('Report totals don’t give the roof’s shape, so there’s no piece-by-piece list. Trace the roof from the report’s length diagram to get every panel and its length.'));return;}
@@ -1082,6 +1097,7 @@ function facetRoof(model,T,cov,over){
     v.append(ev,btn('Copy list',()=>copy(roofText()),null,'copy'));
   }
   function roofLayout(v){
+    facePicker(v);
     const r=roofCalc(); if(r.err){v.append(empty('No layout yet',r.err));return;}
     if(!r.R){v.append(traceCard('Report totals don’t give the roof’s shape. Trace the roof to see the layout drawing.'));return;}
     if(st.method==='faces'){ for(const q of r.R.per){ if(!q.R) continue;
@@ -1284,7 +1300,7 @@ function facetRoof(model,T,cov,over){
   const rowsText=rows=>rows.map(([k,v,n])=>k+': '+v+(n?' ('+n+')':''));
   function roofText(){
     const r=roofCalc(); if(r.err) return r.err;
-    const L=[(r.metal?'METAL':'SHINGLE')+' ROOF ORDER','','SQUARE FEET: '+f(r.area)+' sq ft ('+f(r.area/100,1)+' squares, '+f(r.sqW,1)+' with '+f(st.waste)+'% waste)',''];
+    const L=[(r.metal?'METAL':'SHINGLE')+' ROOF ORDER'+(selLabel()?' \u2014 '+selLabel().toUpperCase():''),'','SQUARE FEET: '+f(r.area)+' sq ft ('+f(r.area/100,1)+' squares, '+f(r.sqW,1)+' with '+f(st.waste)+'% waste)',''];
     if(r.cut){L.push('PANELS TO ORDER ('+PANELS.find(p=>p[0]===st.panel)[1]+', cut to length)');for(const [inch,c] of r.cut.byLen)L.push(c+' pc'+(c>1?'s':'')+' at '+ftIn(+inch));L.push('');}
     L.push('MATERIAL LIST',...rowsText(r.rows));
     if(r.cost) L.push('Estimated material cost: '+money(r.cost.total));
