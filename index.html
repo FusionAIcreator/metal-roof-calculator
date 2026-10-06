@@ -3,55 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#090C10">
-<title>Job calculator V4</title>
+<meta name="theme-color" content="#070C18">
+<title>Job calculator V5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..100,500..800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 /* Layout: app shell. Header with the Roof/Siding switch and live totals; one tab of content; a floating tab bar.
    Every tab leads with its answer, details follow. */
 :root{
   color-scheme:dark;
-  --bg:#090C10; --glow:rgba(120,190,245,.10);
-  --surface:#11161C; --surface2:#171E26; --raised:#1D2530; --sheen:rgba(255,255,255,.028);
-  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
-  --fg:#EEF2F6; --muted:#8C98A5; --faint:#5F6B78;
-  --accent:#78BEF5; --accent-ink:#061420; --accent-soft:rgba(120,190,245,.14);
-  --amber:#F2B24C; --teal:#4FCFB9; --good:#5FD39A; --warn:#FF8A75; --warn-soft:rgba(255,138,117,.12);
-  --pa:#1F3349; --pb:#29425F; --seam:#4F6E93; --ridgec:#FF8A75; --hole:#090C10;
-  --thumbc:#2B3644; --glass:rgba(17,22,28,.78); --shadow:0 18px 40px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
-  --f-display:Archivo,"Arial Narrow",sans-serif;
-  --f-body:Figtree,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --bg:#070C18; --glow:rgba(43,98,160,.38); --glow2:rgba(61,220,151,.07);
+  --surface:#0F1A2D; --surface2:#0C1626; --raised:#16243D; --sheen:rgba(255,255,255,.035);
+  --line:rgba(160,190,230,.10); --line2:rgba(160,190,230,.17);
+  --fg:#EAF2FF; --muted:#8FA3BF; --faint:#5E7290;
+  --accent:#3DDC97; --accent-ink:#04210F; --accent-soft:rgba(61,220,151,.14);
+  --sky:#7CC4FF; --amber:#F2B24C; --teal:#4FCFB9; --good:#3DDC97; --warn:#FF8A75; --warn-soft:rgba(255,138,117,.12);
+  --pa:#15304A; --pb:#1C3F61; --seam:#3E6C93; --ridgec:#FF8A75; --hole:#070C18;
+  --thumbc:#1F3352; --glass:rgba(11,20,38,.84); --shadow:0 18px 40px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+  --f-display:"Space Grotesk","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-body:Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:light){
   :root:not([data-theme="dark"]){
-    color-scheme:light;
-    --bg:#F2F4F7; --glow:rgba(23,103,174,.07);
-    --surface:#FFFFFF; --surface2:#F8FAFC; --raised:#EFF3F7; --sheen:rgba(255,255,255,0);
-    --line:rgba(15,23,32,.08); --line2:rgba(15,23,32,.14);
-    --fg:#0E141B; --muted:#5B6875; --faint:#8D99A6;
-    --accent:#1767AE; --accent-ink:#FFFFFF; --accent-soft:rgba(23,103,174,.10);
-    --amber:#9A5A06; --teal:#0C7C6C; --good:#1C7A4B; --warn:#B4321F; --warn-soft:rgba(180,50,31,.08);
-    --pa:#DCE7F4; --pb:#C4D6EB; --seam:#7C93B8; --ridgec:#B4321F; --hole:#FFFFFF;
-    --thumbc:#FFFFFF; --glass:rgba(255,255,255,.82); --shadow:0 14px 34px rgba(16,24,32,.14),0 2px 6px rgba(16,24,32,.08);
+  color-scheme:light;
+  --bg:#EDF2F8; --glow:rgba(43,122,201,.10); --glow2:rgba(14,159,110,.06);
+  --surface:#FFFFFF; --surface2:#F6F9FC; --raised:#EAF0F7; --sheen:rgba(255,255,255,0);
+  --line:rgba(11,19,36,.08); --line2:rgba(11,19,36,.14);
+  --fg:#0B1324; --muted:#55667E; --faint:#8696AC;
+  --accent:#0E9F6E; --accent-ink:#FFFFFF; --accent-soft:rgba(14,159,110,.11);
+  --sky:#1F6FB5; --amber:#9A5A06; --teal:#0C7C6C; --good:#0E8A5F; --warn:#B4321F; --warn-soft:rgba(180,50,31,.08);
+  --pa:#DCEBF6; --pb:#C2DCEF; --seam:#6E93B5; --ridgec:#C4452F; --hole:#FFFFFF;
+  --thumbc:#FFFFFF; --glass:rgba(255,255,255,.86); --shadow:0 14px 34px rgba(11,19,36,.13),0 2px 6px rgba(11,19,36,.07);
   }
 }
 :root[data-theme="light"]{
-  color-scheme:light; --thumbc:#FFFFFF;
-  --bg:#F2F4F7; --glow:rgba(23,103,174,.07);
-  --surface:#FFFFFF; --surface2:#F8FAFC; --raised:#EFF3F7; --sheen:rgba(255,255,255,0);
-  --line:rgba(15,23,32,.08); --line2:rgba(15,23,32,.14);
-  --fg:#0E141B; --muted:#5B6875; --faint:#8D99A6;
-  --accent:#1767AE; --accent-ink:#FFFFFF; --accent-soft:rgba(23,103,174,.10);
-  --amber:#9A5A06; --teal:#0C7C6C; --good:#1C7A4B; --warn:#B4321F; --warn-soft:rgba(180,50,31,.08);
-  --pa:#DCE7F4; --pb:#C4D6EB; --seam:#7C93B8; --ridgec:#B4321F; --hole:#FFFFFF;
-  --glass:rgba(255,255,255,.82); --shadow:0 14px 34px rgba(16,24,32,.14),0 2px 6px rgba(16,24,32,.08);
+  color-scheme:light;
+  --bg:#EDF2F8; --glow:rgba(43,122,201,.10); --glow2:rgba(14,159,110,.06);
+  --surface:#FFFFFF; --surface2:#F6F9FC; --raised:#EAF0F7; --sheen:rgba(255,255,255,0);
+  --line:rgba(11,19,36,.08); --line2:rgba(11,19,36,.14);
+  --fg:#0B1324; --muted:#55667E; --faint:#8696AC;
+  --accent:#0E9F6E; --accent-ink:#FFFFFF; --accent-soft:rgba(14,159,110,.11);
+  --sky:#1F6FB5; --amber:#9A5A06; --teal:#0C7C6C; --good:#0E8A5F; --warn:#B4321F; --warn-soft:rgba(180,50,31,.08);
+  --pa:#DCEBF6; --pb:#C2DCEF; --seam:#6E93B5; --ridgec:#C4452F; --hole:#FFFFFF;
+  --thumbc:#FFFFFF; --glass:rgba(255,255,255,.86); --shadow:0 14px 34px rgba(11,19,36,.13),0 2px 6px rgba(11,19,36,.07);
 }
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--bg)}
-body{margin:0;min-height:100vh;background:radial-gradient(120% 60% at 50% -10%,var(--glow),transparent 60%) no-repeat,var(--bg);color:var(--fg);font:400 17px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;background:radial-gradient(110% 55% at 85% -8%,var(--glow),transparent 62%) no-repeat,radial-gradient(80% 40% at 0% 30%,var(--glow2),transparent 70%) no-repeat,var(--bg);background-attachment:fixed;color:var(--fg);font:400 17px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -63,13 +63,13 @@ button{cursor:pointer}
 /* header */
 .hd{display:grid;gap:14px;padding-block:10px 4px}
 .hd-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:.01em;color:var(--muted)}
+.brand{display:flex;align-items:center;gap:10px;font:700 16px var(--f-display);letter-spacing:.01em;color:var(--fg)}
 .brand svg{width:30px;height:30px;flex:none}
 .icons{display:flex;gap:8px}
 .ibtn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line2);background:var(--surface);display:grid;place-items:center;color:var(--fg);transition:transform .12s}
 .ibtn:active{transform:scale(.94)}
 .ibtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.title{margin:2px 0 0;font:800 38px/1 var(--f-display);font-stretch:85%;letter-spacing:-.01em;text-wrap:balance}
+.title{margin:2px 0 0;font:700 36px/1.05 var(--f-display);letter-spacing:-.02em;text-wrap:balance}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:baseline;gap:5px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:14px;color:var(--muted)}
 .chip b{font:700 16px/1 var(--f-display);font-stretch:90%;color:var(--fg);font-variant-numeric:tabular-nums}
@@ -78,13 +78,14 @@ button{cursor:pointer}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:16px;background:var(--raised);border:1px solid var(--line)}
 .seg button{min-height:46px;border:0;border-radius:12px;background:none;color:var(--muted);font-weight:600;font-size:16px;padding:6px;transition:background .15s,color .15s}
 .seg button[aria-pressed="true"]{background:var(--thumbc);color:var(--fg);box-shadow:0 1px 0 var(--line2) inset,0 4px 14px rgba(0,0,0,.18)}
+.seg button[aria-pressed="true"].shp{color:var(--accent)}
 .seg.big button{min-height:52px;font-size:17px}
 .seg.big button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
 
 /* content */
 .view{display:grid;gap:14px;margin-top:16px;animation:rise .24s ease-out}
 @keyframes rise{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
-.card{background:linear-gradient(180deg,var(--sheen),transparent 40%),var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;display:grid;gap:14px;min-width:0}
+.card{background:linear-gradient(180deg,var(--sheen),transparent 40%),var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px;display:grid;gap:14px;min-width:0}
 .card-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .card-h h2{margin:0;font:700 19px/1.2 var(--f-body)}
 .card-h span{font-size:14px;color:var(--muted)}
@@ -119,8 +120,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .link.danger{color:var(--warn)}
 
 /* hero */
-.hero{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:20px}
-.hero .big{margin:4px 0 0;white-space:nowrap;font:800 clamp(44px,13.5vw,64px)/.95 var(--f-display);font-stretch:80%;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hero{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:20px;background:linear-gradient(135deg,rgba(124,196,255,.10),transparent 55%),var(--surface)}
+.hero .big{margin:4px 0 0;white-space:nowrap;font:700 clamp(42px,12.5vw,60px)/.95 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .hero .big small{font:600 18px var(--f-body);color:var(--muted);margin-left:6px;letter-spacing:0}
 .hero .sub2{margin:8px 0 0;font-size:15px;color:var(--muted)}
 .thumb{width:104px;height:88px;border-radius:16px;background:var(--raised);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden}
@@ -130,7 +131,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .tile .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .tile .v{font:800 28px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .tile .s{font-size:12px;color:var(--muted)}
-.t-accent .v{color:var(--accent)} .t-amber .v{color:var(--amber)} .t-teal .v{color:var(--teal)}
+.t-accent .v{color:var(--accent)} .t-amber .v{color:var(--sky)} .t-teal .v{color:var(--teal)}
 .callout{margin:0;display:flex;gap:10px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:var(--warn-soft);color:var(--warn);font-weight:600;font-size:15px}
 
 /* lists */
@@ -145,16 +146,16 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .order li{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:baseline;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
 .order li:first-child{border-top:0}
 .order .oq{font-size:15px;color:var(--muted);min-width:4.6em}
-.order .oq b{font:800 26px/1 var(--f-display);font-stretch:85%;color:var(--fg);margin-right:4px;font-variant-numeric:tabular-nums}
+.order .oq b{font:700 24px/1 var(--f-display);color:var(--accent);margin-right:4px;font-variant-numeric:tabular-nums}
 .order .oat{font-size:15px;color:var(--muted)}
-.order .ol{font:600 21px/1 var(--f-mono);color:var(--accent)}
+.order .ol{font:700 22px/1 var(--f-display);color:var(--fg);text-align:right;font-variant-numeric:tabular-nums}
 .cost{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .cost b{font:800 36px/1 var(--f-display);font-stretch:85%;color:var(--good)}
 .bars{display:grid;gap:8px;margin:0;padding:0;list-style:none}
 .bars li{display:grid;grid-template-columns:76px minmax(0,1fr) 58px;gap:12px;align-items:center}
 .bars .l{font:600 17px/1 var(--f-mono);font-variant-numeric:tabular-nums}
 .bars .track{height:10px;border-radius:6px;background:var(--raised);overflow:hidden}
-.bars .fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--teal)))}
+.bars .fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--sky))}
 .bars .c{text-align:right;font:800 20px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums}
 .bars .c small{font:500 13px var(--f-body);color:var(--muted);margin-left:2px}
 .total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:12px;font-weight:700}
@@ -195,6 +196,19 @@ details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
 .status.err{color:var(--warn);font-weight:600}
 .status.ok{color:var(--good)}
 
+/* face editor */
+.face-h{display:flex;align-items:center;gap:10px}
+.face-h b{font:700 18px/1.1 var(--f-display);flex:1}
+.shapes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.shapes button{display:grid;justify-items:center;gap:4px;min-height:74px;padding:8px 4px;border-radius:14px;border:1px solid var(--line2);background:var(--raised);color:var(--muted);font-size:13px;font-weight:600}
+.shapes button svg{width:40px;height:28px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.shapes button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.fprev{display:grid;grid-template-columns:minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px}
+.fprev svg{width:100%;height:auto;max-height:170px;display:block;font-family:var(--f-display);font-weight:700}
+.fprev text{fill:var(--sky)}
+.addrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.addrow .pill{padding:8px 6px;font-size:14px}
+
 /* empty state */
 .empty{text-align:center;justify-items:center;padding:34px 22px}
 .empty svg{width:54px;height:54px;fill:none;stroke:var(--accent);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
@@ -203,8 +217,9 @@ details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
 
 /* drawings */
 .viewer{background:var(--surface2);border-radius:16px;overflow:auto;-webkit-overflow-scrolling:touch;max-height:66vh;border:1px solid var(--line)}
-.viewer svg{display:block;width:calc(100% * var(--z,1));height:auto;font-family:var(--f-display);font-weight:700;font-stretch:85%}
+.viewer svg{display:block;width:calc(100% * var(--z,1));height:auto;font-family:var(--f-display);font-weight:700}
 .viewer svg text{fill:var(--fg)}
+.viewer svg text.dim{fill:var(--sky)}
 .zoom{display:flex;gap:8px;align-items:center}
 .zoom .pill{min-width:48px;font-size:19px;padding:4px 12px}
 .zoom span{margin-left:auto;font-size:13px;color:var(--muted)}
@@ -644,14 +659,14 @@ function facetRoof(model,T,cov,over){
 (function(){
   const $=id=>document.getElementById(id);
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v4', APP_VERSION='V4';
+  const LS='jobcalc-v4', APP_VERSION='V5';
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
   const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
   const PANELS=[['35.25|ex','Exposed fastener 35¼"'],['36|ex','R-panel / PBR 36"'],['24|ex','5V crimp 24"'],['16|ss','Standing seam 16"'],['12|ss','Standing seam 12"'],['18|ss','Standing seam 18"']];
   const PLANKS=[[4,'5¼" plank, 4" exposure'],[5,'6¼" plank, 5" exposure'],[6,'7¼" plank, 6" exposure'],[7,'8¼" plank, 7" exposure'],[8,'9¼" plank, 8" exposure'],[10.75,'12" plank, 10¾" exposure']];
   const E=s=>s.split(' ').map(x=>{const m=x.match(/^([NESW])([\d.]+)([rw]?)$/);return {d:m[1],len:+m[2],t:m[3]==='r'?'rake':m[3]==='w'?'wall':'eave'};});
-  const DEF=()=>({trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'simple',style:'gable',L:40,W:30,pitch:6,
+  const DEF=()=>({trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'faces',faces:[{t:'hip',eave:40,ridge:10,slope:16,top:'ridge'},{t:'end',eave:30,ridge:0,slope:16,top:'ridge'},{t:'hip',eave:40,ridge:10,slope:16,top:'ridge'},{t:'end',eave:30,ridge:0,slope:16,top:'ridge'}],style:'gable',L:40,W:30,pitch:6,
     rep:{area:'',pitch:6,eave:'',rake:'',ridge:'',hip:'',valley:'',flash:''},model:null,
     sections:[{name:'Main roof',pitch:6,edges:E('E40 S30 W40 N30')}],
     over:2,waste:5,wasteEdited:false,nails:4,
@@ -788,11 +803,14 @@ function facetRoof(model,T,cov,over){
   function defWaste(){return st.mat==='metal'?(st.method==='report'&&!st.model?10:5):(st.method==='simple'?(st.style==='hip'?15:10):12);}
   function autoWaste(){if(!st.wasteEdited)st.waste=defWaste();}
   function roofMeasure(v){
-    $('imp').hidden=false; v.append($('imp'));
     const mat=card('Material',null,seg('Material',[['metal','Metal'],['shingle','Shingles']],()=>st.mat,x=>{st.mat=x;autoWaste();}));
     if(st.mat==='metal') mat.append(pick('Panel',PANELS,()=>st.panel,x=>st.panel=x,refresh));
-    const m=card('Roof',null,seg('How to measure',[['simple','Simple'],['trace','Trace'],['report','Report']],()=>st.method,x=>{st.method=x;autoWaste();}));
-    if(st.method==='simple'){
+    const m=card('Roof',null,seg('How to measure',[['faces','Faces'],['simple','Simple'],['trace','Trace'],['report','Report']],()=>st.method,x=>{st.method=x;autoWaste();}));
+    if(st.method==='faces'){
+      m.append(el('p','hint','Measure each roof face on the roof: the eave, the ridge, and the slope length from the eave straight up to the ridge. Add the faces one at a time; each gets its own list and drawing.'),
+        pick('Pitch',PITCH_OPTS,()=>st.pitch,x=>st.pitch=+x,refresh));
+      faceEditors(m);
+    } else if(st.method==='simple'){
       m.append(el('p','hint','A plain gable or hip roof on a rectangle. Measure to the drip edge.'),
         seg('Roof style',[['gable','Gable'],['hip','Hip']],()=>st.style,x=>{st.style=x;autoWaste();}),
         grid('grid2',num('Length along ridge',()=>st.L,x=>st.L=x,'ft',()=>later(refresh)),num('Width',()=>st.W,x=>st.W=x,'ft',()=>later(refresh))),
@@ -818,7 +836,8 @@ function facetRoof(model,T,cov,over){
         const note=el('p','hint'); note.append(el('strong',null,'Roof shape from the report: '),st.model.faces.length+' faces ('+Object.keys(by).sort((a,b)=>a-b).map(p=>by[p]+' at '+p+'/12').join(', ')+'), read from the pitch diagram. Panel list, cut list and layout use it.');
         m.append(note,grid('row',rm)); }
     }
-    v.append(mat,m,btn('See materials',()=>go('materials'),null,'arrow'));
+    if(st.method==='report'){ $('imp').hidden=false; v.append(mat,$('imp'),m,btn('See materials',()=>go('materials'),null,'arrow')); }
+    else v.append(mat,m,btn('See materials',()=>go('materials'),null,'arrow'));
     if(st.method==='trace') secStatus();
   }
 
@@ -840,6 +859,11 @@ function facetRoof(model,T,cov,over){
         const key=JSON.stringify([st.model,q,covFt,over]); if(key!==roofKey){roofKey=key;roofR=facetRoof(st.model,q,covFt,over);} R=roofR;
         if(R.faces.length) g={area:R.area,pitch:R.pitch,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:R.valleys,wall:R.wall}; else R=null;
       }
+    } else if(st.method==='faces'){
+      const key=JSON.stringify(['faces',st.faces,covFt,over]); if(key!==roofKey){roofKey=key;roofR=handRoof(st.faces,covFt,over);} R=roofR;
+      const bad=R.per.find(x=>x.err); if(bad) return {err:'Face '+bad.code+': '+bad.err};
+      if(!R.faces.length) return {err:'Add a roof face on Measure.'};
+      g={area:R.area,pitch:+st.pitch||0,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:0,wall:R.wall};
     } else {
       if(st.method==='simple'&&!(st.L>0&&st.W>0)) return {err:'Enter the roof length and width.'};
       const secs=st.method==='simple'?simpleSecs():st.sections, key=JSON.stringify([secs,covFt,over]);
@@ -889,7 +913,96 @@ function facetRoof(model,T,cov,over){
   }
   const money=x=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   function byLength(R){const m=new Map();for(const fc of R.faces)for(const p of fc.panels)m.set(p.inch,(m.get(p.inch)||0)+1);return [...m].sort((a,b)=>b[0]-a[0]);}
-  const engineItems=R=>({byLen:byLength(R),faces:R.faces.filter(fc=>fc.panels.length).map(fc=>({code:fc.code,dir:fc.dir,name:R.secs.length>1?R.secs[fc.sec].name:'',pieces:fc.panels}))});
+  const engineItems=R=>({byLen:byLength(R),faces:R.faces.filter(fc=>fc.panels.length).map(fc=>({code:fc.code,dir:fc.dir,name:fc.label||(R.secs.length>1?R.secs[fc.sec].name:''),pieces:fc.panels}))});
+
+  // ---------- by face: each face measured on the roof (eave, ridge, slope length) ----------
+  const SHAPES=[['hip','Hip side'],['end','Hip end'],['gable','Gable side']];
+  const SHAPE_ICON={hip:'<svg viewBox="0 0 40 28" aria-hidden="true"><path d="M3 25h34L27 4H13z"/></svg>',end:'<svg viewBox="0 0 40 28" aria-hidden="true"><path d="M3 25h34L20 3z"/></svg>',gable:'<svg viewBox="0 0 40 28" aria-hidden="true"><path d="M4 25h32V4H4z"/></svg>'};
+  const shapeName=t=>(SHAPES.find(x=>x[0]===t)||SHAPES[0])[1];
+  const faceCode=i=>i<26?String.fromCharCode(65+i):String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26);
+  // true shape of the face, eave along the bottom (y = slope length), x from the left end of the eave
+  function faceGeo(F){
+    const E=+F.eave||0, S=+F.slope||0, R=F.t==='hip'?+F.ridge||0:F.t==='gable'?E:0;
+    if(!(E>0)) return {err:'Enter the eave length.'};
+    if(!(S>0)) return {err:'Enter the slope length (eave up to the ridge).'};
+    if(F.t==='hip'&&!(R>0)) return {err:'Enter the ridge length, or pick Hip end for a triangle.'};
+    if(F.t==='hip'&&R>E+1e-6) return {err:'On a hip side the ridge is shorter than the eave. Check the two lengths.'};
+    const a=(E-R)/2, hip=Math.hypot(a,S), top=F.t==='gable'&&F.top==='wall'?'wall':'ridge';
+    const pts=F.t==='end'?[[0,S],[E,S],[E/2,0]]:[[0,S],[E,S],[E-a,0],[a,0]];
+    const edges=[{a:pts[0],b:pts[1],t:'eave',len:E,lab:'Eave '+ftIn(Math.round(E*12))}];
+    if(F.t==='end') edges.push({a:pts[1],b:pts[2],t:'hip',len:hip,lab:'Hip '+ftIn(Math.round(hip*12))},{a:pts[2],b:pts[0],t:'hip',len:hip,lab:'Hip '+ftIn(Math.round(hip*12))});
+    else if(F.t==='hip') edges.push({a:pts[1],b:pts[2],t:'hip',len:hip,lab:'Hip '+ftIn(Math.round(hip*12))},{a:pts[2],b:pts[3],t:'ridge',len:R,lab:'Ridge '+ftIn(Math.round(R*12))},{a:pts[3],b:pts[0],t:'hip',len:hip,lab:'Hip '+ftIn(Math.round(hip*12))});
+    else edges.push({a:pts[1],b:pts[2],t:'rake',len:S,lab:'Rake '+ftIn(Math.round(S*12))},{a:pts[2],b:pts[3],t:top,len:E,lab:(top==='wall'?'Wall ':'Ridge ')+ftIn(Math.round(E*12))},{a:pts[3],b:pts[0],t:'rake',len:S,lab:'Rake '+ftIn(Math.round(S*12))});
+    return {pts,edges,E,S,R,area:F.t==='end'?E*S/2:(E+R)/2*S};
+  }
+  function handRoof(faces,cov,over){
+    const out={faces:[],per:[],secs:[],area:0,panels:0,lf:0,clips:0,eave:0,rake:0,ridge:0,hips:0,wall:0};
+    let ridgeAll=0, hipAll=0, ridgeMax=0;
+    faces.forEach((F,i)=>{
+      const code=faceCode(i), name=shapeName(F.t), G=faceGeo(F);
+      out.secs.push({name,ok:false,V:[],edges:[]});
+      if(G.err){out.per.push({F,code,name,err:G.err});return;}
+      const Ri=facetRoof({faces:[{pts:G.pts,pitch:0,eave:{ax:0,c:G.S,n:-1}}]},{},cov,over), fc=Ri.faces[0];
+      if(!fc){out.per.push({F,code,name,err:'Too small to fit a panel.'});return;}
+      fc.code=code; fc.sec=i; fc.dir=null; fc.label=name; fc.area=G.area;
+      fc.panels.forEach((p,j)=>p.code=code+(j+1));
+      Ri.panels=fc.panels.length; Ri.lf=fc.panels.reduce((a,p)=>a+p.inch/12,0); Ri.area=G.area;
+      Ri.secs=[{name,ok:true,msg:'',note:'',V:G.pts,edges:G.edges}];
+      const len=t=>G.edges.filter(e=>e.t===t).reduce((a,e)=>a+e.len,0);
+      out.eave+=len('eave'); out.rake+=len('rake'); out.wall+=len('wall'); ridgeAll+=len('ridge'); hipAll+=len('hip'); ridgeMax=Math.max(ridgeMax,len('ridge'));
+      out.per.push({F,code,name,G,R:Ri,fc});
+      out.faces.push(fc); out.area+=G.area; out.panels+=Ri.panels; out.lf+=Ri.lf; out.clips+=fc.panels.reduce((a,p)=>a+Math.ceil(p.inch/24)+1,0);
+    });
+    // a hip or ridge line is shared by the two faces either side of it, so with several faces it is counted once
+    const shared=out.faces.length>1?2:1; out.ridge=Math.max(ridgeAll/shared,ridgeMax); out.hips=hipAll/shared; out.shared=shared>1;
+    return out;
+  }
+  function facePreview(G){
+    const W=G.E, H=G.S, k=Math.max(W,H*1.6), fs=k*.055, m=fs*2.4;
+    const svg=sv('svg',{viewBox:(-m)+' '+(-m)+' '+(W+2*m)+' '+(H+2*m),role:'img','aria-label':'Face shape with its measurements'});
+    sv('polygon',{points:pts(G.pts),fill:'var(--pa)',stroke:'var(--accent)','stroke-width':fs*.18,'stroke-linejoin':'round'},svg);
+    dimLabels(svg,G.edges,G.pts,fs);
+    sv('line',{x1:W*.5,y1:H,x2:W*.5,y2:0,stroke:'var(--sky)','stroke-width':fs*.08,'stroke-dasharray':(fs*.4)+' '+(fs*.3)},svg);
+    const t=sv('text',{x:W*.5+fs*.5,y:H*.5,'font-size':fs*.9,'dominant-baseline':'central'},svg); t.textContent='Slope '+ftIn(Math.round(H*12));
+    return svg;
+  }
+  // a measurement on the outside of each edge, turned to run along it
+  function dimLabels(svg,edges,P,fs,cls){
+    const cx=P.reduce((a,p)=>a+p[0],0)/P.length, cy=P.reduce((a,p)=>a+p[1],0)/P.length;
+    for(const e of edges){ if(!e.lab) continue;
+      const dx=e.b[0]-e.a[0], dy=e.b[1]-e.a[1], L=Math.hypot(dx,dy)||1; let nx=-dy/L, ny=dx/L;
+      const mx=(e.a[0]+e.b[0])/2, my=(e.a[1]+e.b[1])/2; if((mx-cx)*nx+(my-cy)*ny<0){nx=-nx;ny=-ny;}
+      let ang=Math.atan2(dy,dx)*180/Math.PI; if(ang>90)ang-=180; if(ang<=-90)ang+=180;
+      const x=mx+nx*fs*.95, y=my+ny*fs*.95, t=sv('text',{x:x.toFixed(2),y:y.toFixed(2),'font-size':fs.toFixed(2),'text-anchor':'middle','dominant-baseline':'central',transform:'rotate('+ang.toFixed(1)+' '+x.toFixed(2)+' '+y.toFixed(2)+')'},svg);
+      if(cls) t.setAttribute('class',cls); t.textContent=e.lab; }
+  }
+  function faceEditors(host){
+    const list=el('div','erows');
+    st.faces.forEach((F,i)=>{
+      const box=el('div','sub'), h=el('div','face-h');
+      h.append(el('span','code',faceCode(i)),el('b',null,shapeName(F.t)));
+      const dup=el('button','x','Copy'); dup.setAttribute('aria-label','Copy face '+faceCode(i)); dup.onclick=()=>{st.faces.splice(i+1,0,JSON.parse(JSON.stringify(F)));save();render();};
+      const rm=el('button','x','Remove'); rm.setAttribute('aria-label','Remove face '+faceCode(i)); rm.onclick=()=>{st.faces.splice(i,1);save();render();};
+      h.append(dup); if(st.faces.length>1) h.append(rm);
+      const shapes=el('div','shapes'); shapes.setAttribute('role','group'); shapes.setAttribute('aria-label','Face '+faceCode(i)+' shape');
+      for(const [t,name] of SHAPES){const b=el('button');b.type='button';b.setAttribute('aria-pressed',String(F.t===t));b.append(svgEl(SHAPE_ICON[t]),name);
+        b.onclick=()=>{F.t=t;if(t==='hip'&&!(+F.ridge>0))F.ridge=Math.max(1,Math.round((+F.eave||0)/2));save();render();};shapes.append(b);}
+      const prev=el('div','fprev'), stt=el('span','status');
+      const upd=()=>{const G=faceGeo(F);prev.innerHTML='';if(G.err){stt.className='status err';stt.textContent=G.err;prev.hidden=true;}
+        else{prev.hidden=false;prev.append(facePreview(G));const R=handRoof([F],(+st.panel.split('|')[0]||36)/12,(+st.over||0)/12);stt.className='status ok';stt.textContent=f(G.area)+' sq ft'+(st.mat==='metal'&&R.panels?' \u00b7 '+R.panels+' panels':'');}
+        later(refresh);};
+      const lab='Face '+faceCode(i)+' ';
+      const ff=(label,get,set)=>{const d=ftField(label,get,set,upd),a=lab+label.split(',')[0].toLowerCase();d.setAttribute('aria-label',a);d.querySelectorAll('input').forEach((x,k)=>x.setAttribute('aria-label',a+', '+(k?'inches':'feet')));return d;};
+      const fields=grid('grid2',ff('Eave',()=>F.eave,x=>F.eave=x),
+        F.t==='hip'?ff('Ridge',()=>F.ridge,x=>F.ridge=x):F.t==='gable'?field('Top edge',selIn([['ridge','Ridge'],['wall','Against a wall']],()=>F.top||'ridge',x=>F.top=x,upd,lab+'top edge')):null);
+      box.append(h,shapes,fields,ff('Slope length, eave up to the ridge',()=>F.slope,x=>F.slope=x),prev,stt);
+      list.append(box); upd();
+    });
+    const add=el('div','addrow');
+    for(const [t,name] of SHAPES){const b=el('button','pill','+ '+name);b.type='button';b.onclick=()=>{const l=st.faces[st.faces.length-1];st.faces.push({t,eave:l?l.eave:30,ridge:t==='hip'?(l&&+l.ridge>0?l.ridge:15):0,slope:l?l.slope:15,top:'ridge'});save();render();};add.append(b);}
+    host.append(list,add);
+  }
+  function faceSize(fc){const P=fc.outline||[];return Math.max(...P.map(p=>p[0]))-Math.min(...P.map(p=>p[0]));}
 
   // ---------- thumbnails ----------
   function thumbRoof(R){
@@ -940,6 +1053,8 @@ function facetRoof(model,T,cov,over){
       v.append(card('Panels to order',f(n)+' pcs \u00b7 '+f(ins/12)+' ft',el('p','hint',PANELS.find(p=>p[0]===st.panel)[1]+', cut to length. Each length includes the '+f(st.over,2)+'" eave overhang.'),u)); }
     else if(r.metal) v.append(card('Panels to order',null,callout('This report only gives total footage, not the roof\u2019s shape, so there\u2019s no list of lengths yet.'),
       el('p','hint','Import the report\u2019s length diagram page, or trace the roof from it, and this becomes a list like \u201c4 pcs at 16\u20195\u201d\u201d.'),btn('Trace the roof',()=>{st.method='trace';autoWaste();go('measure');},'ghost')));
+    if(st.method==='faces'&&r.R&&r.R.per) v.append(card('Each face',r.R.per.length+' face'+(r.R.per.length>1?'s':''),mlist(r.R.per.filter(q=>q.G).map(q=>[q.code+' \u00b7 '+q.name,f(q.G.area)+' ft\u00b2',ftIn(Math.round(q.G.E*12))+' eave'+(q.F.t==='hip'?', '+ftIn(Math.round(q.G.R*12))+' ridge':'')+', '+ftIn(Math.round(q.G.S*12))+' slope'+(r.metal?' \u00b7 '+q.R.panels+' panels':'')]))),
+      r.R.shared?el('p','hint','Faces share their hips and ridges, so each hip and ridge is counted once in the trim below. Lay out on the Layout tab, face by face.'):null);
     v.append(card('Material list',r.rows.length+' items',mlist(r.rows)));
     if(r.cost){const c=el('div','cost');c.append(el('span','hint','Estimated material'+(r.cost.ss?', clips not priced':'')),el('b',null,money(r.cost.total)));
       v.append(card('Cost',null,mlist(r.cost.lines.map(([k,x])=>[k,money(x)])),c));}
@@ -955,7 +1070,7 @@ function facetRoof(model,T,cov,over){
     const ev=card('Every piece','by roof face',el('p','hint','Codes match the Layout drawing. Hip and valley panels are cut on an angle from the long point; the last panel on a face is ripped to the width shown.'));
     r.cut.faces.forEach((fc,i)=>{
       const d=el('details','fold'); if(i===0) d.open=true;
-      const s=el('summary'), h=el('span','fh'); h.append(el('span','code',fc.code),(fc.name?fc.name+', ':'')+'faces '+fc.dir); s.append(h,el('span','hint',fc.pieces.length+' pcs')); d.append(s);
+      const s=el('summary'), h=el('span','fh'); h.append(el('span','code',fc.code),fc.dir?(fc.name?fc.name+', ':'')+'faces '+fc.dir:fc.name); s.append(h,el('span','hint',fc.pieces.length+' pcs')); d.append(s);
       const ol=el('ol','cuts'); for(const p of fc.pieces){const li=el('li');li.append(el('b',null,p.code),el('span',null,ftIn(p.inch)));if(p.rip)li.append(el('small',null,'rip to '+p.rip+'"'));ol.append(li);}
       const inn=el('div','inner'); inn.append(ol); d.append(inn); ev.append(d);
     });
@@ -964,6 +1079,16 @@ function facetRoof(model,T,cov,over){
   function roofLayout(v){
     const r=roofCalc(); if(r.err){v.append(empty('No layout yet',r.err));return;}
     if(!r.R){v.append(traceCard('Report totals don’t give the roof’s shape. Trace the roof to see the layout drawing.'));return;}
+    if(st.method==='faces'){ for(const q of r.R.per){ if(!q.R) continue;
+        const c=card(q.code+' \u00b7 '+q.name,r.metal?q.R.panels+' panels':f(q.G.area)+' sq ft'); drawRoof(c,q.R,r.metal,true);
+        const grp=new Map(); for(const e of q.G.edges){const k=e.lab.split(' ')[0]+'|'+Math.round(e.len*12);grp.set(k,(grp.get(k)||0)+1);}
+        const lines=[...grp].map(([k,n])=>{const [nm,inch]=k.split('|');return [nm+(n>1?' \u00d7'+n:''),ftIn(+inch)];});
+        const rows=[['Area',f(q.G.area)+' sq ft']].concat(lines);
+        if(r.metal){ const u=el('ul','order'); for(const [inch,c2] of byLength(q.R)){const li=el('li'),qq=el('span','oq');qq.append(el('b',null,String(c2)),' pc'+(c2>1?'s':''));li.append(qq,el('span','oat','at'),el('span','ol',ftIn(+inch)));u.append(li);}
+          c.append(el('h3','eyebrow','This face'),mlist(rows),el('h3','eyebrow','Panels for this face'),u); }
+        else c.append(el('h3','eyebrow','This face'),mlist(rows));
+        v.append(c); }
+      return; }
     const c=card(r.metal?'Panel layout':'Roof plan',r.metal?f(r.panels)+' panels':null); drawRoof(c,r.R,r.metal); v.append(c);
   }
 
@@ -1084,10 +1209,10 @@ function facetRoof(model,T,cov,over){
     zi.onclick=()=>set(z*1.6); zo.onclick=()=>set(z/1.6); zf.onclick=()=>set(1);
     requestAnimationFrame(()=>set(window.innerWidth<700?startZoom:1));
   }
-  function drawRoof(host,R,metal){
+  function drawRoof(host,R,metal,dims){
     let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
     for(const s of R.secs) if(s.ok) for(const [x,y] of s.V){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
-    const m=2, svg=sv('svg',{viewBox:(x0-m)+' '+(y0-m)+' '+(x1-x0+2*m)+' '+(y1-y0+2*m),role:'img','aria-label':metal?'Roof plan with every panel and its cut length':'Roof plan'});
+    const fsD=Math.max(.7,Math.min(1.6,Math.max(x1-x0,y1-y0)*.045)), m=dims?fsD*2.4+.6:2, svg=sv('svg',{viewBox:(x0-m)+' '+(y0-m)+' '+(x1-x0+2*m)+' '+(y1-y0+2*m),role:'img','aria-label':metal?'Roof plan with every panel and its cut length':'Roof plan'});
     const mk=sv('marker',{id:'arr',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},sv('defs',{},svg));
     sv('path',{d:'M0 0L10 5L0 10z',fill:'var(--good)'},mk);
     for(const fc of R.faces){
@@ -1097,7 +1222,7 @@ function facetRoof(model,T,cov,over){
       sv('polygon',{points:pts(outline),fill:'none',stroke:'var(--ridgec)','stroke-width':.14,'stroke-linejoin':'round'},svg);
     }
     for(const s of R.secs) if(s.ok) for(const e of s.edges){
-      const c=e.t==='rake'?{stroke:'var(--good)','stroke-dasharray':'.7 .4'}:e.t==='wall'?{stroke:'var(--amber)'}:{stroke:'var(--fg)'};
+      const c=e.t==='rake'?{stroke:'var(--good)','stroke-dasharray':'.7 .4'}:e.t==='wall'?{stroke:'var(--amber)'}:e.t==='hip'||e.t==='ridge'?{stroke:'var(--ridgec)'}:{stroke:'var(--fg)'};
       sv('line',Object.assign({x1:e.a[0],y1:e.a[1],x2:e.b[0],y2:e.b[1],'stroke-width':.24,'stroke-linecap':'round'},c),svg);
     }
     for(const fc of R.faces){
@@ -1116,10 +1241,11 @@ function facetRoof(model,T,cov,over){
         sv('text',{x,y,'font-size':1.4,'text-anchor':'middle','dominant-baseline':'central'},svg).textContent=fc.code;
       }
     }
-    const cx=x1+m*.55, cy=y1+m*.2; sv('line',{x1:cx,y1:cy,x2:cx,y2:cy-1.6,stroke:'var(--fg)','stroke-width':.14},svg);
-    sv('text',{x:cx,y:cy-2.2,'font-size':1,'text-anchor':'middle'},svg).textContent='N';
+    if(dims) for(const s of R.secs) if(s.ok) dimLabels(svg,s.edges,s.V,fsD,'dim');
+    const cx=x1+m*.55, cy=y1+m*.2; if(!dims) sv('line',{x1:cx,y1:cy,x2:cx,y2:cy-1.6,stroke:'var(--fg)','stroke-width':.14},svg);
+    if(!dims) sv('text',{x:cx,y:cy-2.2,'font-size':1,'text-anchor':'middle'},svg).textContent='N';
     host.append(el('p','hint',metal?'Each strip is one panel with its code and cut length. Panel 1 on each face starts at the green arrow.':'Roof faces, north up.'));
-    viewer(host,svg,metal?2.2:1,5);
+    viewer(host,svg,metal?(dims?1.5:2.2):1,5);
     const key=el('div','key');
     for(const [c,t] of [['var(--ridgec)','Ridge, hip, valley'],['var(--fg)','Eave'],['var(--good)','Rake'],['var(--amber)','Wall']]){const s=el('span'),i=el('i');i.style.background=c;s.append(i,t);key.append(s);}
     host.append(key);
@@ -1157,7 +1283,7 @@ function facetRoof(model,T,cov,over){
     if(r.cut){L.push('PANELS TO ORDER ('+PANELS.find(p=>p[0]===st.panel)[1]+', cut to length)');for(const [inch,c] of r.cut.byLen)L.push(c+' pc'+(c>1?'s':'')+' at '+ftIn(+inch));L.push('');}
     L.push('MATERIAL LIST',...rowsText(r.rows));
     if(r.cost) L.push('Estimated material cost: '+money(r.cost.total));
-    if(r.cut){L.push('','EVERY PIECE, BY ROOF FACE');for(const fc of r.cut.faces)L.push(fc.code+' ('+(fc.name?fc.name+', ':'')+'faces '+fc.dir+'): '+fc.pieces.map(p=>p.code+' '+ftIn(p.inch)+(p.rip?' rip '+p.rip+'"':'')).join(', '));}
+    if(r.cut){L.push('','EVERY PIECE, BY ROOF FACE');for(const fc of r.cut.faces)L.push(fc.code+' ('+(fc.dir?(fc.name?fc.name+', ':'')+'faces '+fc.dir:fc.name)+'): '+fc.pieces.map(p=>p.code+' '+ftIn(p.inch)+(p.rip?' rip '+p.rip+'"':'')).join(', '));}
     return L.join('\n');
   }
   function sideText(){
