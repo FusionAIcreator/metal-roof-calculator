@@ -1,6 +1,6 @@
 # Job calculator
 
-Current version: **V7**. Each published update raises the version (V7, V8, …); it shows in the page title and next to the app name.
+Current version: **V8**. Each published update raises the version (V8, V9, …); it shows in the page title and next to the app name.
 
 Phone-friendly takeoff calculator for metal or shingle roofs and HardiePlank siding. Switch between **Roof** and **Siding** at the top; the bottom tab bar has four tabs that work for both:
 
@@ -9,7 +9,7 @@ Phone-friendly takeoff calculator for metal or shingle roofs and HardiePlank sid
 - **Cut list:** every length and how many, plus every piece.
 - **Layout:** a drawing with every panel or plank labeled.
 
-Live totals sit under the switch on every tab. The copy button puts everything in plain text for your supplier. Waste, prices and product sizes are behind the settings button.
+Live totals sit under the switch on every tab. **Print layout** on the Layout tab saves a PDF to print: a page for each drawing (the whole roof, each face, or each wall) on white paper with every panel code and length, then the order list and the full cut list. The copy button puts everything in plain text for your supplier. Waste, prices and product sizes are behind the settings button.
 
 ## Roof
 - Deep Slate look: midnight blue with mint, light or dark to match the phone.

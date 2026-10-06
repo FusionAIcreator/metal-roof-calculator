@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#070C18">
-<title>Job calculator V7</title>
+<title>Job calculator V8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -661,7 +661,7 @@ function facetRoof(model,T,cov,over){
 (function(){
   const $=id=>document.getElementById(id);
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v4', APP_VERSION='V7';
+  const LS='jobcalc-v4', APP_VERSION='V8';
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
   const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
@@ -699,6 +699,7 @@ function facetRoof(model,T,cov,over){
     copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></svg>',
     gear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>',
     arrow:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    print:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14.5h10V21H7z"/></svg>',
     ruler:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="m7 13 2 2M9.5 10.5l1.5 1.5M12 8l2 2M14.5 5.5l1.5 1.5"/></svg>',
     warn:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px"><path d="M12 4 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>',
     logo:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M6 17 16 9l10 8" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20.5h12M10 24h12" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round"/></svg>'};
@@ -1109,8 +1110,8 @@ function facetRoof(model,T,cov,over){
           c.append(el('h3','eyebrow','This face'),mlist(rows),el('h3','eyebrow','Panels for this face'),u); }
         else c.append(el('h3','eyebrow','This face'),mlist(rows));
         v.append(c); }
-      return; }
-    const c=card(r.metal?'Panel layout':'Roof plan',r.metal?f(r.panels)+' panels':null); drawRoof(c,r.R,r.metal); v.append(c);
+      v.append(printBtn()); return; }
+    const c=card(r.metal?'Panel layout':'Roof plan',r.metal?f(r.panels)+' panels':null); drawRoof(c,r.R,r.metal); v.append(c,printBtn());
   }
 
   // ---------- siding tabs ----------
@@ -1170,7 +1171,92 @@ function facetRoof(model,T,cov,over){
       walls.forEach((w,i)=>{const b=el('button',null,w.name);b.setAttribute('aria-pressed',String(i===st.wallSel));b.onclick=()=>{st.wallSel=i;save();render();};p.append(b);});v.append(p);}
     const w=walls[st.wallSel], c=card(w.name,w.courses.length+' courses');
     c.append(el('p','hint','Every course and plank, with each piece’s length. Course numbers on the left; 1 is the bottom.'));
-    drawWall(c,w,+st.exp); v.append(c);
+    drawWall(c,w,+st.exp); v.append(c,printBtn());
+  }
+
+  // ---------- print: the layout as a PDF (drawing pages, then the panel list and cut list) ----------
+  const PRINT_INK={pa:'#EEF3F8',pb:'#DCE6F1',seam:'#8DA3BF',ridgec:'#C4452F',fg:'#111111',good:'#1C7A4B',amber:'#9A5A06',accent:'#0E9F6E',sky:'#1F4F8A',hole:'#FFFFFF',muted:'#555555',faint:'#888888',line:'#CCCCCC',line2:'#AAAAAA',raised:'#F2F2F2',surface:'#FFFFFF',surface2:'#FFFFFF','accent-ink':'#FFFFFF',teal:'#0C7C6C',warn:'#B4321F'};
+  let dlP=null; const getDownloads=()=>dlP||(dlP=window.claude&&typeof window.claude.use==='function'?window.claude.use('downloads').catch(()=>null):Promise.resolve(null));
+  function printBtn(){const b=btn('Print layout',printLayout,'ghost','print');b.setAttribute('aria-label','Print layout: save it as a PDF');return b;}
+  function svgImage(svg,w,h){
+    const cl=svg.cloneNode(true); cl.removeAttribute('style'); cl.setAttribute('xmlns',SVGNS); cl.setAttribute('width',w); cl.setAttribute('height',h);
+    const css=document.createElementNS(SVGNS,'style'); css.textContent='text{fill:#111;font-family:Arial,Helvetica,sans-serif;font-weight:700}text.dim{fill:#1F4F8A}'; cl.insertBefore(css,cl.firstChild);
+    const src=new XMLSerializer().serializeToString(cl).replace(/var\(--([a-z0-9-]+)\)/g,(m,k)=>PRINT_INK[k]||'#555555');
+    return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src);});
+  }
+  const sheet=(land)=>{const c=document.createElement('canvas');c.width=land?1650:1275;c.height=land?1275:1650;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);return c;};
+  function pageHead(c,title,sub){const x=c.getContext('2d');x.fillStyle='#111';x.font='700 40px Arial,Helvetica,sans-serif';x.fillText(title,80,100);
+    x.fillStyle='#555';x.font='26px Arial,Helvetica,sans-serif';x.fillText(sub,80,142);x.fillStyle='#bbb';x.fillRect(80,165,c.width-160,2);}
+  async function drawingPage(svg,title,sub){
+    const vb=svg.viewBox.baseVal, land=vb.width>=vb.height*.9, c=sheet(land), x=c.getContext('2d');
+    pageHead(c,title,sub);
+    const aw=c.width-160, ah=c.height-200-110, k=Math.min(aw/vb.width,ah/vb.height), w=Math.round(vb.width*k), h=Math.round(vb.height*k);
+    const im=await svgImage(svg,w,h); x.drawImage(im,80+(aw-w)/2,195,w,h); return c;
+  }
+  function textPages(lines,sub){
+    const out=[]; let c=null, x=null, y=0; const W=1275-180;
+    const page=()=>{c=sheet(false);x=c.getContext('2d');pageHead(c,(st.trade==='roof'?'Panel list and cut list':'Plank list and cut list'),sub);y=215;out.push(c);};
+    page();
+    const isQty=t=>/^\d+ (pcs? at|@) /.test(t||'');
+    for(let li=0;li<lines.length;li++){
+      const raw=lines[li];
+      if(isQty(raw)){                                                         // an order list: three columns, read down
+        const run=[]; while(li<lines.length&&isQty(lines[li])) run.push(lines[li++]); li--;
+        const rows=Math.ceil(run.length/3), cw=W/3;
+        for(let r0=0;r0<rows;r0++){ if(y>1650-110)page(); x.font='22px Arial,Helvetica,sans-serif'; x.fillStyle='#111';
+          for(let k=0;k<3;k++){const t=run[k*rows+r0]; if(t) x.fillText(t,90+k*cw,y);} y+=31; }
+        continue;
+      }
+      const hd=(raw||'').split('(')[0], head=!!raw&&hd.trim().length>2&&hd===hd.toUpperCase()&&/[A-Z]/.test(hd); x.font=(head?'700 24px ':'22px ')+'Arial,Helvetica,sans-serif';
+      const words=raw.split(' '); let line='';
+      const flush=t=>{if(y>1650-110)page();x.font=(head?'700 24px ':'22px ')+'Arial,Helvetica,sans-serif';x.fillStyle='#111';x.fillText(t,90,y);y+=31;};
+      if(!raw){y+=14;continue;}
+      for(const wd of words){const t=line?line+' '+wd:wd;if(x.measureText(t).width>W&&line){flush(line);line='    '+wd;}else line=t;}
+      flush(line);
+    }
+    return out;
+  }
+  async function makePdf(cs){
+    const enc=new TextEncoder(), parts=[], offs=[]; let len=0;
+    const push=b=>{if(typeof b==='string')b=enc.encode(b);parts.push(b);len+=b.length;};
+    const obj=(id,body)=>{offs[id]=len;push(id+' 0 obj\n'+body+'\nendobj\n');};
+    push(new Uint8Array([37,80,68,70,45,49,46,52,10,37,226,227,207,211,10]));        // %PDF-1.4 + binary marker
+    obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+    obj(2,'<< /Type /Pages /Kids ['+cs.map((_,i)=>(3+3*i)+' 0 R').join(' ')+'] /Count '+cs.length+' >>');
+    for(let i=0;i<cs.length;i++){
+      const c=cs[i], land=c.width>c.height, pw=land?792:612, ph=land?612:792, P=3+3*i;
+      const jpg=new Uint8Array(await (await new Promise(r=>c.toBlob(r,'image/jpeg',.9))).arrayBuffer());
+      obj(P,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pw+' '+ph+'] /Resources << /XObject << /Im0 '+(P+2)+' 0 R >> >> /Contents '+(P+1)+' 0 R >>');
+      const cmd='q '+pw+' 0 0 '+ph+' 0 0 cm /Im0 Do Q'; obj(P+1,'<< /Length '+cmd.length+' >>\nstream\n'+cmd+'\nendstream');
+      offs[P+2]=len; push((P+2)+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+c.width+' /Height '+c.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n'); push(jpg); push('\nendstream\nendobj\n');
+    }
+    const n=3+3*cs.length, xref=len; let t='xref\n0 '+n+'\n0000000000 65535 f \n'; for(let i=1;i<n;i++) t+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+    push(t+'trailer\n<< /Size '+n+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
+    return new Blob(parts,{type:'application/pdf'});
+  }
+  let printing=false;
+  async function printLayout(){
+    if(printing) return; printing=true; toast('Making the PDF\u2026');
+    try{
+      const roof=st.trade==='roof', day=new Date(), date=day.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+      const r=roof?roofCalc():sideCalc(); if(r.err){toast(r.err);return;}
+      const sub=(roof?f(r.area)+' sq ft'+(r.panels?' \u00b7 '+f(r.panels)+' panels \u00b7 '+f(r.lf)+' ft of panel':'')+(r.metal?' \u00b7 '+PANELS.find(p=>p[0]===st.panel)[1]:''):f(r.S.net)+' sq ft \u00b7 '+f(r.buy)+' planks')+' \u00b7 '+date;
+      const pages=[];
+      if(roof){ for(const c of document.querySelectorAll('#res .card')){ const svg=c.querySelector('.viewer svg'); if(!svg) continue;
+          const h=c.querySelector('.card-h h2'), a=c.querySelector('.card-h span');
+          pages.push(await drawingPage(svg,(selLabel()&&!/·/.test(h.textContent)?selLabel()+' \u2014 ':'')+h.textContent+(a?' \u00b7 '+a.textContent:''),sub)); } }
+      else { const tmp=el('div'); for(const w of r.S.walls.filter(w=>w.courses.length)){ const c=el('div'); drawWall(c,w,+st.exp); tmp.append(c);
+          pages.push(await drawingPage(c.querySelector('svg'),w.name+' \u00b7 '+w.courses.length+' courses',sub)); } }
+      if(!pages.length){toast('Nothing to print yet');return;}
+      pages.push(...textPages((roof?roofText():sideText()).split('\n'),sub));
+      pages.forEach((c,i)=>{const x=c.getContext('2d');x.fillStyle='#777';x.font='20px Arial,Helvetica,sans-serif';x.fillText('Job calculator '+APP_VERSION+'   \u00b7   Page '+(i+1)+' of '+pages.length,80,c.height-55);});
+      const blob=await makePdf(pages), name=(roof?'Roof':'Siding')+' layout '+day.toISOString().slice(0,10)+'.pdf';
+      const dl=await getDownloads();
+      if(dl){ try{ await dl.save({filename:name,data:blob}); toast('Saved. Open the PDF to print it.'); }
+        catch(e){ if(!e||e.code!=='declined') toast('Couldn\u2019t save the PDF here.'); } }
+      else { const u=URL.createObjectURL(blob), a=document.createElement('a'); a.href=u; a.download=name; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),60000); toast('PDF ready. Open it to print.'); }
+    }catch(e){ toast('Couldn\u2019t make the PDF.'); }
+    finally{ printing=false; }
   }
   const DIRS=[['N','↑ N'],['E','→ E'],['S','↓ S'],['W','← W']], TURN={E:'S',S:'W',W:'N',N:'E'};
   function sections(host){
@@ -1543,7 +1629,7 @@ Outline (the roof's shape, from the LENGTH DIAGRAM picture; north is up):
     finally{ importPending=false; }
   }
   window.addEventListener('pagehide',save);
-  load(); render(); initImport();
+  load(); render(); initImport(); getDownloads();
 })();
 </script>
 </body>
