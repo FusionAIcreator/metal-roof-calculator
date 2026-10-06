@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#070C18">
-<title>Job calculator V5</title>
+<title>Job calculator V6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -206,6 +206,7 @@ details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
 .fprev{display:grid;grid-template-columns:minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px}
 .fprev svg{width:100%;height:auto;max-height:170px;display:block;font-family:var(--f-display);font-weight:700}
 .fprev text{fill:var(--sky)}
+.fprev text.st1{fill:var(--accent)}
 .addrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .addrow .pill{padding:8px 6px;font-size:14px}
 
@@ -629,9 +630,10 @@ function facetRoof(model,T,cov,over){
       for(let k=0;k<F.pts.length;k++){const a=F.pts[k],b=F.pts[(k+1)%F.pts.length],sa=sOf(a),sb=sOf(b); if((sa<=s&&sb>=s)||(sb<=s&&sa>=s)){ if(Math.abs(sb-sa)<1e-9){us.push(uOf(a),uOf(b));} else {const t=(s-sa)/(sb-sa);us.push(uOf(a)+t*(uOf(b)-uOf(a)));}}}
       if(us.length>=2) rows.push({j,s,a:Math.max(0,Math.min(...us)),b:Math.max(...us)}); }
     if(rows.length<2) return;
-    const face={sec:0,pf,g,rows,dir:g.ax===0?(g.n>0?'north':'south'):(g.n>0?'west':'east'),panels:[],toP,lines:{ridge:0,hip:0,valley:0}};
+    const face={rev:!!F.rev,sec:0,pf,g,rows,dir:g.ax===0?(g.n>0?'north':'south'):(g.n>0?'west':'east'),panels:[],toP,lines:{ridge:0,hip:0,valley:0}};
+    const rev=!!F.rev;                                                       // panel 1 at the high end instead of the low end
     for(let k=0;sA+k*cov<sB-.125;k++){
-      const lo=sA+k*cov, hi=Math.min(sB,lo+cov), piece=clip(F.pts,sax,lo,hi); if(piece.length<3) continue;
+      const lo=rev?Math.max(sA,sB-(k+1)*cov):sA+k*cov, hi=rev?sB-k*cov:Math.min(sB,lo+cov), piece=clip(F.pts,sax,lo,hi); if(piece.length<3) continue;
       const us=piece.map(uOf), umin=Math.max(0,Math.min(...us)), umax=Math.max(...us);
       const eaveEnd=umin<.05, len=(umax-umin)*pf+(eaveEnd?over:0), inch=Math.ceil(len*12-1e-6);
       face.panels.push({lo,hi,umin,umax,inch,rip:hi-lo<cov-1e-3?Math.round((hi-lo)*12*4)/4:0,poly:piece,eave:eaveEnd});
@@ -659,7 +661,7 @@ function facetRoof(model,T,cov,over){
 (function(){
   const $=id=>document.getElementById(id);
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v4', APP_VERSION='V5';
+  const LS='jobcalc-v4', APP_VERSION='V6';
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
   const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
@@ -942,7 +944,7 @@ function facetRoof(model,T,cov,over){
       const code=faceCode(i), name=shapeName(F.t), G=faceGeo(F);
       out.secs.push({name,ok:false,V:[],edges:[]});
       if(G.err){out.per.push({F,code,name,err:G.err});return;}
-      const Ri=facetRoof({faces:[{pts:G.pts,pitch:0,eave:{ax:0,c:G.S,n:-1}}]},{},cov,over), fc=Ri.faces[0];
+      const Ri=facetRoof({faces:[{pts:G.pts,pitch:0,eave:{ax:0,c:G.S,n:-1},rev:F.start==='right'}]},{},cov,over), fc=Ri.faces[0];
       if(!fc){out.per.push({F,code,name,err:'Too small to fit a panel.'});return;}
       fc.code=code; fc.sec=i; fc.dir=null; fc.label=name; fc.area=G.area;
       fc.panels.forEach((p,j)=>p.code=code+(j+1));
@@ -957,13 +959,15 @@ function facetRoof(model,T,cov,over){
     const shared=out.faces.length>1?2:1; out.ridge=Math.max(ridgeAll/shared,ridgeMax); out.hips=hipAll/shared; out.shared=shared>1;
     return out;
   }
-  function facePreview(G){
+  function facePreview(G,start){
     const W=G.E, H=G.S, k=Math.max(W,H*1.6), fs=k*.055, m=fs*2.4;
     const svg=sv('svg',{viewBox:(-m)+' '+(-m)+' '+(W+2*m)+' '+(H+2*m),role:'img','aria-label':'Face shape with its measurements'});
     sv('polygon',{points:pts(G.pts),fill:'var(--pa)',stroke:'var(--accent)','stroke-width':fs*.18,'stroke-linejoin':'round'},svg);
     dimLabels(svg,G.edges,G.pts,fs);
     sv('line',{x1:W*.5,y1:H,x2:W*.5,y2:0,stroke:'var(--sky)','stroke-width':fs*.08,'stroke-dasharray':(fs*.4)+' '+(fs*.3)},svg);
     const t=sv('text',{x:W*.5+fs*.5,y:H*.5,'font-size':fs*.9,'dominant-baseline':'central'},svg); t.textContent='Slope '+ftIn(Math.round(H*12));
+    if(start){const r=start==='right',x0=r?W:0,dx=r?-1:1;sv('path',{d:'M'+(x0+dx*fs*.3)+' '+(H+fs*1.0)+'h'+(dx*fs*2.2)+'m'+(-dx*fs*.7)+' '+(-fs*.5)+'l'+(dx*fs*.7)+' '+(fs*.5)+'l'+(-dx*fs*.7)+' '+(fs*.5),fill:'none',stroke:'var(--accent)','stroke-width':fs*.2,'stroke-linecap':'round','stroke-linejoin':'round'},svg);
+      sv('text',{x:x0+dx*fs*2.9,y:H+fs*1.0,'font-size':fs*.8,'text-anchor':r?'end':'start','dominant-baseline':'central',class:'st1'},svg).textContent='Panel 1';}
     return svg;
   }
   // a measurement on the outside of each edge, turned to run along it
@@ -989,13 +993,14 @@ function facetRoof(model,T,cov,over){
         b.onclick=()=>{F.t=t;if(t==='hip'&&!(+F.ridge>0))F.ridge=Math.max(1,Math.round((+F.eave||0)/2));save();render();};shapes.append(b);}
       const prev=el('div','fprev'), stt=el('span','status');
       const upd=()=>{const G=faceGeo(F);prev.innerHTML='';if(G.err){stt.className='status err';stt.textContent=G.err;prev.hidden=true;}
-        else{prev.hidden=false;prev.append(facePreview(G));const R=handRoof([F],(+st.panel.split('|')[0]||36)/12,(+st.over||0)/12);stt.className='status ok';stt.textContent=f(G.area)+' sq ft'+(st.mat==='metal'&&R.panels?' \u00b7 '+R.panels+' panels':'');}
+        else{prev.hidden=false;prev.append(facePreview(G,F.start==='right'?'right':'left'));const R=handRoof([F],(+st.panel.split('|')[0]||36)/12,(+st.over||0)/12);stt.className='status ok';stt.textContent=f(G.area)+' sq ft'+(st.mat==='metal'&&R.panels?' \u00b7 '+R.panels+' panels':'');}
         later(refresh);};
       const lab='Face '+faceCode(i)+' ';
       const ff=(label,get,set)=>{const d=ftField(label,get,set,upd),a=lab+label.split(',')[0].toLowerCase();d.setAttribute('aria-label',a);d.querySelectorAll('input').forEach((x,k)=>x.setAttribute('aria-label',a+', '+(k?'inches':'feet')));return d;};
       const fields=grid('grid2',ff('Eave',()=>F.eave,x=>F.eave=x),
         F.t==='hip'?ff('Ridge',()=>F.ridge,x=>F.ridge=x):F.t==='gable'?field('Top edge',selIn([['ridge','Ridge'],['wall','Against a wall']],()=>F.top||'ridge',x=>F.top=x,upd,lab+'top edge')):null);
-      box.append(h,shapes,fields,ff('Slope length, eave up to the ridge',()=>F.slope,x=>F.slope=x),prev,stt);
+      const start=field('Panel 1 starts at (facing the eave)',seg('Face '+faceCode(i)+' panel 1 starts at',[['left','Left end'],['right','Right end']],()=>F.start==='right'?'right':'left',x=>F.start=x));
+      box.append(h,shapes,fields,ff('Slope length, eave up to the ridge',()=>F.slope,x=>F.slope=x),start,prev,stt);
       list.append(box); upd();
     });
     const add=el('div','addrow');
@@ -1234,7 +1239,7 @@ function facetRoof(model,T,cov,over){
           if(fc.g.ax===0) t.setAttribute('transform','rotate(-90 '+x.toFixed(2)+' '+y.toFixed(2)+')');
           t.textContent=label;
         }
-        if(fc.panels.length){const p=fc.panels[0],u=p.umin+.45,a=fc.toP(p.lo+.15,u),b=fc.toP(p.lo+1.9,u);
+        if(fc.panels.length){const p=fc.panels[0],u=p.umin+.45,a=fc.toP(fc.rev?p.hi-.15:p.lo+.15,u),b=fc.toP(fc.rev?p.hi-1.9:p.lo+1.9,u);
           sv('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'var(--good)','stroke-width':.2,'marker-end':'url(#arr)'},svg);}
       } else {
         const r=fc.rows.reduce((a,q)=>q.b-q.a>a.b-a.a?q:a),[x,y]=fc.toP(r.s,(r.a+r.b)/2);
