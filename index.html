@@ -3,474 +3,1434 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Job calculator</title>
+<meta name="theme-color" content="#070C18">
+<title>Job calculator V9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
+/* Layout: app shell. Header with the Roof/Siding switch and live totals; one tab of content; a floating tab bar.
+   Every tab leads with its answer, details follow. */
 :root{
-  --bg:#E4E7E3; --surface:#F6F7F4; --ink:#1B2220; --muted:#5A6460; --line:#C7CDC8;
-  --accent:#2459A6; --good:#2C7148; --good-soft:#D8EBDF; --amber:#9A6412; --amber-soft:#F1E3C8;
-  --warn:#B42318; --haz1:#E0A02A; --haz2:#1B2220;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+  --bg:#070C18; --glow:rgba(43,98,160,.38); --glow2:rgba(61,220,151,.07);
+  --surface:#0F1A2D; --surface2:#0C1626; --raised:#16243D; --sheen:rgba(255,255,255,.035);
+  --line:rgba(160,190,230,.10); --line2:rgba(160,190,230,.17);
+  --fg:#EAF2FF; --muted:#8FA3BF; --faint:#5E7290;
+  --accent:#3DDC97; --accent-ink:#04210F; --accent-soft:rgba(61,220,151,.14);
+  --sky:#7CC4FF; --amber:#F2B24C; --teal:#4FCFB9; --good:#3DDC97; --warn:#FF8A75; --warn-soft:rgba(255,138,117,.12);
+  --pa:#15304A; --pb:#1C3F61; --seam:#3E6C93; --ridgec:#FF8A75; --hole:#070C18;
+  --thumbc:#1F3352; --glass:rgba(11,20,38,.84); --shadow:0 18px 40px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+  --f-display:"Space Grotesk","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-body:Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#131715; --surface:#1D2320; --ink:#EDF0EB; --muted:#A0AAA5; --line:#333B37;
-    --accent:#78AEEB; --good:#63C18A; --good-soft:#1C3325; --amber:#E3A843; --amber-soft:#3A2F1C;
-    --warn:#F2776B; --haz1:#E3A843; --haz2:#131715;
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+  color-scheme:light;
+  --bg:#EDF2F8; --glow:rgba(43,122,201,.10); --glow2:rgba(14,159,110,.06);
+  --surface:#FFFFFF; --surface2:#F6F9FC; --raised:#EAF0F7; --sheen:rgba(255,255,255,0);
+  --line:rgba(11,19,36,.08); --line2:rgba(11,19,36,.14);
+  --fg:#0B1324; --muted:#55667E; --faint:#8696AC;
+  --accent:#0E9F6E; --accent-ink:#FFFFFF; --accent-soft:rgba(14,159,110,.11);
+  --sky:#1F6FB5; --amber:#9A5A06; --teal:#0C7C6C; --good:#0E8A5F; --warn:#B4321F; --warn-soft:rgba(180,50,31,.08);
+  --pa:#DCEBF6; --pb:#C2DCEF; --seam:#6E93B5; --ridgec:#C4452F; --hole:#FFFFFF;
+  --thumbc:#FFFFFF; --glass:rgba(255,255,255,.86); --shadow:0 14px 34px rgba(11,19,36,.13),0 2px 6px rgba(11,19,36,.07);
   }
 }
-:root[data-theme="dark"]{
-  --bg:#131715; --surface:#1D2320; --ink:#EDF0EB; --muted:#A0AAA5; --line:#333B37;
-  --accent:#78AEEB; --good:#63C18A; --good-soft:#1C3325; --amber:#E3A843; --amber-soft:#3A2F1C;
-  --warn:#F2776B; --haz1:#E3A843; --haz2:#131715;
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#EDF2F8; --glow:rgba(43,122,201,.10); --glow2:rgba(14,159,110,.06);
+  --surface:#FFFFFF; --surface2:#F6F9FC; --raised:#EAF0F7; --sheen:rgba(255,255,255,0);
+  --line:rgba(11,19,36,.08); --line2:rgba(11,19,36,.14);
+  --fg:#0B1324; --muted:#55667E; --faint:#8696AC;
+  --accent:#0E9F6E; --accent-ink:#FFFFFF; --accent-soft:rgba(14,159,110,.11);
+  --sky:#1F6FB5; --amber:#9A5A06; --teal:#0C7C6C; --good:#0E8A5F; --warn:#B4321F; --warn-soft:rgba(180,50,31,.08);
+  --pa:#DCEBF6; --pb:#C2DCEF; --seam:#6E93B5; --ridgec:#C4452F; --hole:#FFFFFF;
+  --thumbc:#FFFFFF; --glass:rgba(255,255,255,.86); --shadow:0 14px 34px rgba(11,19,36,.13),0 2px 6px rgba(11,19,36,.07);
 }
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 Barlow,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-button,input,select,textarea{font:inherit;color:inherit}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;background:radial-gradient(110% 55% at 85% -8%,var(--glow),transparent 62%) no-repeat,radial-gradient(80% 40% at 0% 30%,var(--glow2),transparent 70%) no-repeat,var(--bg);background-attachment:fixed;color:var(--fg);font:400 17px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.wrap{max-width:480px;margin:0 auto;padding:18px 16px 110px}
-.cond{font-family:"Barlow Condensed","Arial Narrow",Barlow,sans-serif}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
-.top h1{margin:0;font:700 40px/0.95 "Barlow Condensed","Arial Narrow",sans-serif}
-.lede{margin:4px 0 16px;color:var(--muted)}
-h2{font:600 22px/1.1 "Barlow Condensed",sans-serif;margin:22px 0 8px}
-.panel{background:var(--surface);border-radius:10px;padding:14px}
-.muted{color:var(--muted)}
-.btn{border:0;border-radius:10px;padding:14px 12px;font-weight:600;font-size:17px;background:var(--ink);color:var(--surface)}
-.btn.alt{background:var(--surface);color:var(--ink);border:1.5px solid var(--ink)}
-.btn-sm{border:1.5px solid var(--line);background:none;border-radius:8px;padding:7px 12px;font-size:15px;font-weight:500}
-.link{background:none;border:0;padding:4px;color:var(--muted);text-decoration:underline;font-size:14px}
-.field{display:block;margin-bottom:12px}
-.field>span{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
-.field input,.field select,.field textarea,.inp{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);font-size:17px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1.5px solid var(--line);background:none;border-radius:999px;padding:7px 13px;font-size:15px}
-.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
-.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1.5px solid var(--ink);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:none;padding:10px 6px;font-weight:600}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
-.dock{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
-.dock-in{max-width:480px;margin:0 auto;display:grid;gap:10px}
-dialog{border:0;border-radius:14px;padding:0;width:min(440px,calc(100% - 24px));background:var(--surface);color:var(--ink);max-height:calc(100% - 40px)}
-dialog::backdrop{background:rgba(10,14,12,.55)}
-.dlg{padding:18px}
-.dlg h3{margin:0 0 14px;font:600 26px/1.1 "Barlow Condensed",sans-serif}
-.dlg-actions{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:8px}
-.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:5}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.box{flex:0 0 24px;width:24px;height:24px;border:2px solid var(--muted);border-radius:6px;display:grid;place-items:center}
-.box svg{width:16px;height:16px;opacity:0}
-[aria-checked="true"] .box,[aria-pressed="true"] > .box{background:var(--good);border-color:var(--good)}
-[aria-checked="true"] .box svg,[aria-pressed="true"] > .box svg{opacity:1}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.hide,[hidden]{display:none!important}
+.num{font-variant-numeric:tabular-nums}
 
-.tabs{margin-bottom:14px}
-.fi{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.unit{position:relative}
-.unit input{padding-right:40px}
-.unit::after{content:attr(data-u);position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
-.out{background:var(--ink);color:var(--surface);border-radius:12px;padding:16px;margin:8px 0 12px}
-.out .main{font:700 60px/0.95 "Barlow Condensed",sans-serif;margin:0}
-.out .main small{font-size:24px;font-weight:600;opacity:.75;margin-left:6px}
-.out .lbl{margin:2px 0 12px;opacity:.85;font-size:15px}
-.out dl{display:grid;grid-template-columns:1fr auto;gap:7px 12px;margin:0;border-top:1px solid rgba(128,128,128,.4);padding-top:10px}
-.out dt{opacity:.85}
-.out dd{margin:0;font:600 20px/1.2 "Barlow Condensed",sans-serif;text-align:right}
-.out dd small{font-family:Barlow,sans-serif;font-size:13px;font-weight:400;opacity:.75;margin-left:4px}
-.out .cut{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:rgba(128,128,128,.18);font:600 20px/1.25 "Barlow Condensed",sans-serif}
-.out .cut span{display:block;font:400 13px/1.3 Barlow,sans-serif;opacity:.8}
-.note{font-size:14px;color:var(--muted);margin:0 0 10px}
-.pane[hidden],.hide,[hidden]{display:none!important}
-.mode{margin-bottom:14px}
-.wrap{padding-bottom:40px}
-.grp{font:600 18px/1.1 "Barlow Condensed",sans-serif;margin:16px 0 8px}
-details{background:var(--surface);border-radius:10px;padding:12px 14px;margin:12px 0}
-details summary{cursor:pointer;font-weight:600}
-details[open] summary{margin-bottom:12px}
-.auto{font-size:13px;color:var(--muted);margin:-8px 0 12px}
+.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:8px calc(120px + env(safe-area-inset-bottom,0px))}
+
+/* header */
+.hd{display:grid;gap:14px;padding-block:10px 4px}
+.hd-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font:700 16px var(--f-display);letter-spacing:.01em;color:var(--fg)}
+.brand svg{width:30px;height:30px;flex:none}
+.icons{display:flex;gap:8px}
+.ibtn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line2);background:var(--surface);display:grid;place-items:center;color:var(--fg);transition:transform .12s}
+.ibtn:active{transform:scale(.94)}
+.ibtn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.title{margin:2px 0 0;font:700 36px/1.05 var(--f-display);letter-spacing:-.02em;text-wrap:balance}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:baseline;gap:5px;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:14px;color:var(--muted)}
+.chip b{font:700 16px/1 var(--f-display);font-stretch:90%;color:var(--fg);font-variant-numeric:tabular-nums}
+
+/* segmented controls */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:16px;background:var(--raised);border:1px solid var(--line)}
+.seg button{min-height:46px;border:0;border-radius:12px;background:none;color:var(--muted);font-weight:600;font-size:16px;padding:6px;transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--thumbc);color:var(--fg);box-shadow:0 1px 0 var(--line2) inset,0 4px 14px rgba(0,0,0,.18)}
+.seg button[aria-pressed="true"].shp{color:var(--accent)}
+.seg.big button{min-height:52px;font-size:17px}
+.seg.big button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+
+/* content */
+.view{display:grid;gap:14px;margin-top:16px;animation:rise .24s ease-out}
+@keyframes rise{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:linear-gradient(180deg,var(--sheen),transparent 40%),var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px;display:grid;gap:14px;min-width:0}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.card-h h2{margin:0;font:700 19px/1.2 var(--f-body)}
+.card-h span{font-size:14px;color:var(--muted)}
+.eyebrow{margin:0;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hint{margin:0;font-size:15px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+
+.field{display:grid;gap:7px;min-width:0}
+.field>span{font-size:14px;font-weight:600;color:var(--muted)}
+.inp{width:100%;min-height:54px;padding:12px 14px;border:1px solid var(--line2);border-radius:14px;background:var(--raised);font-size:19px;font-variant-numeric:tabular-nums;transition:border-color .15s,box-shadow .15s}
+.inp:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 4px var(--accent-soft)}
 select.inp{appearance:auto}
-.imp{background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:14px;border:1.5px dashed var(--muted)}
-.imp p{margin:0 0 10px;font-size:15px}
-.imp .btn{width:100%;font-size:16px;padding:12px}
-.imp .st{margin:10px 0 0;font-size:14px;color:var(--muted)}
+.unit{position:relative}
+.unit .inp{padding-right:44px}
+.unit::after{content:attr(data-u);position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none}
+.fi{display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:0}
+.fi .unit .inp{padding-left:12px;padding-right:30px}
+.fi .unit::after{right:10px;font-size:14px}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.mini>span{font-size:12px}
+.mini .inp{min-height:48px;padding:8px 10px;font-size:17px}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;border:0;border-radius:18px;padding:14px;font-weight:700;font-size:18px;background:var(--accent);color:var(--accent-ink);box-shadow:0 1px 0 rgba(255,255,255,.25) inset;transition:transform .12s}
+.btn:active{transform:scale(.985)}
+.btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn.ghost{background:var(--raised);color:var(--fg);border:1px solid var(--line2);box-shadow:none;font-weight:600}
+.pill{min-height:44px;border:1px solid var(--line2);background:var(--raised);border-radius:12px;padding:8px 14px;font-size:15px;font-weight:600}
+.link{border:0;background:none;color:var(--muted);font-size:15px;font-weight:600;min-height:44px;padding:0 4px}
+.link.danger{color:var(--warn)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:20px;background:linear-gradient(135deg,rgba(124,196,255,.10),transparent 55%),var(--surface)}
+.hero .big{margin:4px 0 0;white-space:nowrap;font:700 clamp(42px,12.5vw,60px)/.95 var(--f-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hero .big small{font:600 18px var(--f-body);color:var(--muted);margin-left:6px;letter-spacing:0}
+.hero .sub2{margin:8px 0 0;font-size:15px;color:var(--muted)}
+.thumb{width:104px;height:88px;border-radius:16px;background:var(--raised);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden}
+.thumb svg{width:84%;height:84%}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:4px;min-width:0}
+.tile .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font:800 28px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile .s{font-size:12px;color:var(--muted)}
+.t-accent .v{color:var(--accent)} .t-amber .v{color:var(--sky)} .t-teal .v{color:var(--teal)}
+.callout{margin:0;display:flex;gap:10px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:var(--warn-soft);color:var(--warn);font-weight:600;font-size:15px}
+
+/* lists */
+.mlist{display:grid;margin:0;padding:0;list-style:none}
+.mlist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:13px 0;border-top:1px solid var(--line)}
+.mlist li:first-child{border-top:0;padding-top:2px}
+.mlist .n{font-weight:600}
+.mlist .d{grid-column:1;font-size:14px;color:var(--muted)}
+.mlist .q{grid-row:1/span 2;grid-column:2;text-align:right;font:800 24px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums}
+.mlist .q small{display:block;font:500 12px var(--f-body);color:var(--muted);margin-top:3px}
+.order{list-style:none;margin:0;padding:0;display:grid}
+.order li{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:baseline;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.order li:first-child{border-top:0}
+.order .oq{font-size:15px;color:var(--muted);min-width:4.6em}
+.order .oq b{font:700 24px/1 var(--f-display);color:var(--accent);margin-right:4px;font-variant-numeric:tabular-nums}
+.order .oat{font-size:15px;color:var(--muted)}
+.order .ol{font:700 22px/1 var(--f-display);color:var(--fg);text-align:right;font-variant-numeric:tabular-nums}
+.cost{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cost b{font:800 36px/1 var(--f-display);font-stretch:85%;color:var(--good)}
+.bars{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.bars li{display:grid;grid-template-columns:76px minmax(0,1fr) 58px;gap:12px;align-items:center}
+.bars .l{font:600 17px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.bars .track{height:10px;border-radius:6px;background:var(--raised);overflow:hidden}
+.bars .fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--sky))}
+.bars .c{text-align:right;font:800 20px/1 var(--f-display);font-stretch:85%;font-variant-numeric:tabular-nums}
+.bars .c small{font:500 13px var(--f-body);color:var(--muted);margin-left:2px}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:12px;font-weight:700}
+.total b{font:800 22px/1 var(--f-display);font-stretch:85%;color:var(--accent)}
+details.fold{border-top:1px solid var(--line);padding-top:4px}
+details.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:50px;font-weight:600}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .2s}
+details.fold[open]>summary::after{transform:rotate(-135deg) translateY(-1px)}
+details.fold .inner{display:grid;gap:10px;padding-bottom:6px}
+.cuts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.cuts li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:0 6px;background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.cuts b{font:500 13px var(--f-mono);color:var(--muted)}
+.cuts span{font:600 16px/1.2 var(--f-mono)}
+.cuts small{flex-basis:100%;font-size:12px;color:var(--amber)}
+.fh{margin:8px 0 0;font-weight:600;display:flex;align-items:center;gap:8px}
+.code{display:inline-grid;place-items:center;min-width:30px;height:26px;padding:0 7px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-size:14px;font-weight:700}
+.courses{display:grid;margin:0;padding:0;list-style:none}
+.courses li{display:grid;grid-template-columns:40px 1fr;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.courses i{font-style:normal;color:var(--muted);font-size:14px;font-weight:600}
+.courses span{font:500 15px/1.5 var(--f-mono)}
+
+/* editors */
+.sub{background:var(--surface2);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:12px}
+.sub-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sub-h b{font:700 18px/1.1 var(--f-body)}
+.erows{display:grid;gap:8px;counter-reset:edge}
+.erow{display:grid;grid-template-columns:18px repeat(3,minmax(0,1fr)) 30px;gap:6px 8px;align-items:center;counter-increment:edge;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.erow>select:first-child{grid-column:2}
+.erow>select:nth-child(3){grid-column:3/5}
+.erow .fi{grid-column:2/4;grid-row:2}
+.erow .ep{grid-column:4/6;grid-row:2}
+.erow::before{content:counter(edge);font-size:13px;color:var(--faint);text-align:right;font-variant-numeric:tabular-nums}
+.erow .inp{min-height:48px;padding:8px;font-size:16px;border-radius:12px}
+.x{border:0;background:none;color:var(--muted);font-size:15px;font-weight:600;min-height:44px;padding:0 6px}
+.erow .x{font-size:22px;padding:0}
+.status{font-size:14px;color:var(--muted)}
+.status.err{color:var(--warn);font-weight:600}
+.status.ok{color:var(--good)}
+
+/* face editor */
+.face-h{display:flex;align-items:center;gap:10px}
+.face-h b{font:700 18px/1.1 var(--f-display);flex:1}
+.shapes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.shapes button{display:grid;justify-items:center;gap:4px;min-height:74px;padding:8px 4px;border-radius:14px;border:1px solid var(--line2);background:var(--raised);color:var(--muted);font-size:13px;font-weight:600}
+.shapes button svg{width:40px;height:28px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.shapes button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.fprev{display:grid;grid-template-columns:minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px}
+.fprev svg{width:100%;height:auto;max-height:170px;display:block;font-family:var(--f-display);font-weight:700}
+.fprev text{fill:var(--sky)}
+.fprev text.st1{fill:var(--accent)}
+.addrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.addrow .pill{padding:8px 6px;font-size:14px}
+
+/* empty state */
+.empty{text-align:center;justify-items:center;padding:34px 22px}
+.empty svg{width:54px;height:54px;fill:none;stroke:var(--accent);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.empty h2{margin:0;font:700 20px var(--f-body)}
+.empty p{margin:0;color:var(--muted);max-width:32ch}
+
+/* drawings */
+.viewer{background:var(--surface2);border-radius:16px;overflow:auto;-webkit-overflow-scrolling:touch;max-height:66vh;border:1px solid var(--line)}
+.viewer svg{display:block;width:calc(100% * var(--z,1));height:auto;font-family:var(--f-display);font-weight:700}
+.viewer svg text{fill:var(--fg)}
+.viewer svg text.dim{fill:var(--sky)}
+.zoom{display:flex;gap:8px;align-items:center}
+.zoom .pill{min-width:48px;font-size:19px;padding:4px 12px}
+.zoom span{margin-left:auto;font-size:13px;color:var(--muted)}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.key i{display:inline-block;width:16px;height:4px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.wallpick{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.wallpick button{flex:none;min-height:40px;padding:6px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--raised);color:var(--muted);font-weight:600;font-size:15px}
+.wallpick button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* import */
+.imp{border-style:dashed}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.filebtn{cursor:pointer}
+.filebtn.off{opacity:.45;pointer-events:none}
+#impFile:focus-visible + .filebtn{outline:2px solid var(--accent);outline-offset:3px}
+.imp .st{font-size:15px;color:var(--muted)}
+.imp .st:empty{display:none}
 .imp .st.err{color:var(--warn)}
 .imp .st.ok{color:var(--good)}
-.imp ul{margin:6px 0 0;padding-left:18px;font-size:14px}
-.stop{margin-top:8px}
-.copy{width:100%;margin:0 0 12px}
-.out .cost{margin:12px 0 0;padding-top:10px;border-top:1px solid rgba(128,128,128,.4);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.out .cost b{font:700 32px/1 "Barlow Condensed",sans-serif}
-.out .cost span{opacity:.85;font-size:15px}
+.imp ul{margin:6px 0 0;padding-left:20px}
+.ver{padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.04em}
+.pdfbox{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:14px}
+.pdfhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pdfhead b{font-weight:700;overflow-wrap:anywhere}
+.pages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pg{display:grid;gap:6px;min-width:0}
+.pgimg{display:block;width:100%;padding:0;border:2px solid var(--line2);border-radius:10px;background:#fff;overflow:hidden;aspect-ratio:8.5/11;position:relative}
+.pgimg canvas{display:block;width:100%;height:auto}
+.pgimg .pn{position:absolute;left:6px;top:6px;padding:1px 7px;border-radius:7px;background:rgba(9,12,16,.75);color:#fff;font-size:12px;font-weight:700}
+.pg.on .pgimg{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.use{min-height:40px;border-radius:10px;border:1px solid var(--line2);background:var(--raised);color:var(--muted);font-size:14px;font-weight:600}
+.pg.on .use,.use.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.pgview{position:fixed;inset:0;z-index:25;background:var(--bg);display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding-top:env(safe-area-inset-top,0px)}
+.pgview-h,.pgview-f{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px}
+.pgview-f{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.pgview-h b{font:800 22px/1 var(--f-display);font-stretch:85%}
+.pgscroll{overflow:auto;-webkit-overflow-scrolling:touch;background:var(--surface2)}
+.pgscroll canvas{display:block;width:calc(100% * var(--z,1));height:auto;background:#fff}
 
-.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
-.filebtn{display:block;text-align:center;width:100%;font-size:16px;padding:12px;cursor:pointer}
-.filebtn.off{opacity:.45;pointer-events:none}
-#impFile:focus-visible + .filebtn{outline:3px solid var(--accent);outline-offset:2px}
+/* tab bar */
+.tabbar{position:fixed;z-index:10;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:536px;margin:0 auto;height:70px;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border-radius:26px;background:var(--glass);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line2);box-shadow:var(--shadow)}
+.tabbar button{border:0;background:none;border-radius:20px;color:var(--muted);display:grid;justify-items:center;align-content:center;gap:3px;font-size:12px;font-weight:600;transition:color .15s,background .2s}
+.tabbar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
 
+/* settings sheet */
+.scrim{position:fixed;inset:0;z-index:20;background:rgba(4,7,10,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;max-height:86vh;overflow:auto;background:var(--surface);border:1px solid var(--line2);border-bottom:0;border-radius:26px 26px 0 0;padding:10px 18px calc(24px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;animation:up .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line2);margin:0 auto 4px}
+.sheet-h{display:flex;align-items:center;justify-content:space-between}
+.sheet-h h2{margin:0;font:800 26px/1 var(--f-display);font-stretch:85%}
+
+.toast{position:fixed;left:50%;bottom:calc(98px + env(safe-area-inset-bottom,0px));z-index:30;transform:translateX(-50%) translateY(14px);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.copyout{width:100%;min-height:200px;font:14px/1.4 var(--f-mono)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top"><h1>Job calculator</h1></div>
-  <p class="lede">Roofing and Hardie siding takeoffs. Round up and check against the plans and the manufacturer's specs.</p>
-  <div class="seg tabs" role="group" aria-label="Calculator">
-    <button data-tab="roof" aria-pressed="true">Roofing</button>
-    <button data-tab="siding" aria-pressed="false">Hardie siding</button>
-  </div>
-
-  <div class="imp" id="imp">
-    <p><strong>Import a HOVER or EagleView report.</strong> Pick the PDF, or screenshots of the measurement summary. Claude reads it and fills in the numbers.</p>
-    <input type="file" id="impFile" class="vh" multiple accept="application/pdf,.pdf,image/png,image/jpeg,image/webp">
-    <label class="btn filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
-    <button class="btn-sm stop hide" id="impStop">Stop</button>
-    <div class="st" id="impSt" aria-live="polite">Getting import ready…</div>
-  </div>
-
-  <!-- ROOFING -->
-  <section class="pane" id="p-roof">
-    <div class="seg mode" role="group" aria-label="Material">
-      <button data-mat="metal" aria-pressed="true">Metal</button>
-      <button data-mat="shingle" aria-pressed="false">Shingles</button>
-    </div>
-    <div id="metalIn">
-      <div class="two">
-        <label class="field"><span>Panel</span><select class="inp" id="mPanel">
-          <option value="35.25|ex" selected>Exposed fastener 35¼"</option>
-          <option value="36|ex">R-panel / PBR (36")</option>
-          <option value="24|ex">5V crimp (24")</option>
-          <option value="16|ss">Standing seam 16"</option>
-          <option value="12|ss">Standing seam 12"</option>
-          <option value="18|ss">Standing seam 18"</option>
-        </select></label>
-        <label class="field"><span>Overhang past eave</span><div class="unit" data-u="in"><input class="inp" id="mOver" type="number" inputmode="decimal" step="any" value="2"></div></label>
-      </div>
-      <div class="three">
-        <label class="field"><span>Panel $/ft</span><div class="unit" data-u=""><input class="inp" id="prPanel" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
-        <label class="field"><span>Trim $/ft</span><div class="unit" data-u=""><input class="inp" id="prTrim" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
-        <label class="field"><span>Screws $/bag</span><div class="unit" data-u=""><input class="inp" id="prScrew" type="number" inputmode="decimal" step="any" min="0" value="0"></div></label>
-      </div>
-      <p class="auto">Enter your supplier prices to get an estimated cost.</p>
-    </div>
-
-    <div class="seg mode" role="group" aria-label="Measurements">
-      <button data-src="report" aria-pressed="false">From report</button>
-      <button data-src="footprint" aria-pressed="true">Footprint</button>
-    </div>
-
-    <div id="fpIn">
-      <div class="seg mode" role="group" aria-label="Roof style">
-        <button data-style="gable" aria-pressed="true">Gable</button>
-        <button data-style="hip" aria-pressed="false">Hip</button>
-      </div>
-      <div class="two">
-        <label class="field"><span>Length (along ridge)</span><div class="unit" data-u="ft"><input class="inp" id="rL" type="number" inputmode="decimal" step="any" value="40"></div></label>
-        <label class="field"><span>Width</span><div class="unit" data-u="ft"><input class="inp" id="rW" type="number" inputmode="decimal" step="any" value="30"></div></label>
-      </div>
-      <p class="auto">Measure to the drip edge so overhangs are included.</p>
-      <div class="two">
-        <label class="field"><span>Pitch</span><select class="inp pitch" id="rP"></select></label>
-        <label class="field"><span>Extra area (porch, dormers)</span><div class="unit" data-u="ft²"><input class="inp" id="rX" type="number" inputmode="decimal" step="any" value="0"></div></label>
-      </div>
-    </div>
-
-    <div id="repIn" hidden>
-      <div class="two">
-        <label class="field"><span>Total roof area</span><div class="unit" data-u="ft²"><input class="inp" id="qA" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Main pitch</span><select class="inp pitch" id="qP"></select></label>
-      </div>
-      <div class="three">
-        <label class="field"><span>Eaves</span><div class="unit" data-u="ft"><input class="inp" id="qE" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Rakes</span><div class="unit" data-u="ft"><input class="inp" id="qR" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Ridges</span><div class="unit" data-u="ft"><input class="inp" id="qRi" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Hips</span><div class="unit" data-u="ft"><input class="inp" id="qH" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Valleys</span><div class="unit" data-u="ft"><input class="inp" id="qV" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-      </div>
-    </div>
-
-    <div class="two">
-      <label class="field"><span>Waste</span><div class="unit" data-u="%"><input class="inp" id="rWaste" type="number" inputmode="decimal" step="any" value="5"></div></label>
-      <label class="field" id="nailWrap"><span>Nails per shingle</span><select class="inp" id="rN"><option value="4">4 (standard)</option><option value="6">6 (high wind)</option></select></label>
-    </div>
-
-    <div class="out" aria-live="polite">
-      <p class="main" id="rOut">0</p><p class="lbl" id="rLbl"></p>
-      <div id="rCut"></div>
-      <dl id="rList"></dl>
-      <div id="rCost"></div>
-    </div>
-    <button class="btn alt copy" data-copy="p-roof">Copy order list</button>
-    <p class="note" id="rNote"></p>
-
-    <details>
-      <summary>Product coverage</summary>
-      <p class="note">Set these to match what you buy.</p>
-      <div class="two">
-        <label class="field sh"><span>Starter, ft per bundle</span><input class="inp" id="cStart" type="number" inputmode="decimal" step="any" value="110"></label>
-        <label class="field sh"><span>Ridge cap, ft per bundle</span><input class="inp" id="cRidge" type="number" inputmode="decimal" step="any" value="25"></label>
-        <label class="field mt"><span>Trim, usable ft per piece</span><input class="inp" id="cTrim" type="number" inputmode="decimal" step="any" value="10"></label>
-        <label class="field mt"><span>Screws per square</span><input class="inp" id="cScrew" type="number" inputmode="numeric" step="1" value="80"></label>
-        <label class="field"><span>Underlayment, squares per roll</span><input class="inp" id="cUnder" type="number" inputmode="decimal" step="any" value="10"></label>
-        <label class="field"><span>Ice and water, ft per roll</span><input class="inp" id="cIce" type="number" inputmode="decimal" step="any" value="66"></label>
-        <label class="field"><span>Ice and water rows at eaves</span><input class="inp" id="cIceRows" type="number" inputmode="numeric" step="1" min="0" value="1"></label>
-        <label class="field sh"><span>Nails per box</span><input class="inp" id="cNails" type="number" inputmode="numeric" step="1" value="7200"></label>
-      </div>
-    </details>
-  </section>
-
-  <!-- SIDING -->
-  <section class="pane" id="p-siding" hidden>
-    <div class="seg mode" role="group" aria-label="Measurements">
-      <button data-ssrc="report" aria-pressed="false">From report</button>
-      <button data-ssrc="walls" aria-pressed="true">Walls</button>
-    </div>
-
-    <div id="sWallsIn">
-      <div class="two">
-        <label class="field"><span>Total wall length</span><div class="unit" data-u="ft"><input class="inp" id="sL" type="number" inputmode="decimal" step="any" value="140"></div></label>
-        <label class="field"><span>Wall height</span><div class="unit" data-u="ft"><input class="inp" id="sH" type="number" inputmode="decimal" step="any" value="9"></div></label>
-      </div>
-      <p class="auto">Add up every wall you're siding. Height is to the soffit.</p>
-      <div class="three">
-        <label class="field"><span>Gables</span><input class="inp" id="gN" type="number" inputmode="numeric" step="1" min="0" value="2"></label>
-        <label class="field"><span>Gable width</span><div class="unit" data-u="ft"><input class="inp" id="gW" type="number" inputmode="decimal" step="any" value="30"></div></label>
-        <label class="field"><span>Gable height</span><div class="unit" data-u="ft"><input class="inp" id="gH" type="number" inputmode="decimal" step="any" value="7.5"></div></label>
-      </div>
-      <p class="grp">Openings and corners</p>
-      <div class="three">
-        <label class="field"><span>Windows</span><input class="inp" id="oW" type="number" inputmode="numeric" step="1" min="0" value="10"></label>
-        <label class="field"><span>Doors</span><input class="inp" id="oD" type="number" inputmode="numeric" step="1" min="0" value="2"></label>
-        <label class="field"><span>Garage doors</span><input class="inp" id="oG" type="number" inputmode="numeric" step="1" min="0" value="0"></label>
-        <label class="field"><span>Avg window</span><div class="unit" data-u="ft²"><input class="inp" id="oWs" type="number" inputmode="decimal" step="any" value="15"></div></label>
-        <label class="field"><span>Garage size</span><select class="inp" id="oGs"><option value="9x7">9×7</option><option value="16x7" selected>16×7</option></select></label>
-        <label class="field"><span>Outside corners</span><input class="inp" id="sC" type="number" inputmode="numeric" step="1" min="0" value="4"></label>
-      </div>
-    </div>
-
-    <div id="sRepIn" hidden>
-      <label class="field"><span>Siding area (openings already taken out)</span><div class="unit" data-u="ft²"><input class="inp" id="tA" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-      <div class="three">
-        <label class="field"><span>Outside corners</span><div class="unit" data-u="ft"><input class="inp" id="tOC" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Inside corners</span><div class="unit" data-u="ft"><input class="inp" id="tIC" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-        <label class="field"><span>Opening trim</span><div class="unit" data-u="ft"><input class="inp" id="tOT" type="number" inputmode="decimal" step="any" placeholder="0"></div></label>
-      </div>
-    </div>
-
-    <p class="grp">Plank</p>
-    <div class="two">
-      <label class="field"><span>HardiePlank width</span><select class="inp" id="pX">
-        <option value="4">5¼" (4" exp.)</option>
-        <option value="5">6¼" (5" exp.)</option>
-        <option value="6">7¼" (6" exp.)</option>
-        <option value="7" selected>8¼" (7" exp.)</option>
-        <option value="8">9¼" (8" exp.)</option>
-        <option value="10.75">12" (10¾" exp.)</option>
-      </select></label>
-      <label class="field"><span>Waste</span><div class="unit" data-u="%"><input class="inp" id="sWaste" type="number" inputmode="decimal" step="any" value="10"></div></label>
-    </div>
-
-    <div class="out" aria-live="polite">
-      <p class="main" id="sOut">0<small>planks</small></p><p class="lbl">12 ft HardiePlank, waste included</p>
-      <dl id="sList"></dl>
-    </div>
-    <button class="btn alt copy" data-copy="p-siding">Copy order list</button>
-    <p class="note">Trim is 12 ft boards: 2 boards per outside corner run, 1 per inside corner run, plus opening trim with 10% extra. Nails assume blind nailing at every stud on 16" centers plus trim.</p>
-  </section>
-</div>
-
+<div class="app" id="app"></div>
+<nav class="tabbar" id="tabbar" aria-label="Sections">
+  <button data-tab="measure"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="m7 13 2 2M9.5 10.5l1.5 1.5M12 8l2 2M14.5 5.5l1.5 1.5"/></svg>Measure</button>
+  <button data-tab="materials"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3.5l8 4v9l-8 4-8-4z"/><path d="m4 7.5 8 4 8-4M12 11.5v9"/></svg>Materials</button>
+  <button data-tab="cuts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h11M4 18h7"/><circle cx="18.5" cy="16.5" r="2.5"/></svg>Cut list</button>
+  <button data-tab="layout"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19 12 5l9 14z"/><path d="M8.2 19 12 12.6 15.8 19M12 5v14"/></svg>Layout</button>
+</nav>
 <div class="toast" id="toast" role="status"></div>
+
+<!-- report import lives outside the views so the file input survives re-renders -->
+<div class="card imp" id="imp" hidden>
+  <p class="hint" style="color:var(--fg)"><strong>Import a HOVER or EagleView report.</strong> Pick the PDF, then choose which pages to read. EagleView roofs are rebuilt face by face straight from the PDF.</p>
+  <input type="file" id="impFile" class="vh" multiple accept="application/pdf,.pdf,image/png,image/jpeg,image/webp">
+  <label class="btn ghost filebtn" for="impFile" id="impBtn">Choose report or screenshots</label>
+  <button class="pill hide" id="impStop">Stop</button>
+  <div class="st" id="impSt" aria-live="polite">Getting import ready…</div>
+  <div id="pdfBox" class="pdfbox" hidden></div>
+</div>
 <script>
-function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1800);}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
-function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function pday(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d,12);}
-function today(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),12);}
-function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
-function weekStart(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate(),12);const dow=(x.getDay()+6)%7;return addDays(x,-dow);}
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1900);}
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
-const CHECK_SVG='<svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
-document.addEventListener('click',e=>{const b=e.target.closest('[data-close]');if(b)b.closest('dialog').close();});
+
+// ---------- roof layout engine: outline -> faces -> panels ----------
+// Sections are walked edge by edge (N/E/S/W + length + eave|rake|wall). With one pitch per section,
+// the roof over a rectilinear outline is its straight skeleton, which for right-angle outlines is the
+// L-infinity distance to the eaves: a point belongs to the eave whose wavefront reaches it first.
+const LDIR={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]};
+function buildRoof(sections,cov,over){
+  const R={secs:[],faces:[],area:0,eave:0,rake:0,wall:0,ridge:0,hips:0,valleys:0,panels:0,lf:0,clips:0,pitch:null};
+  const H=cov/24;                                    // scan spacing: 24 lines per panel width
+  (sections||[]).forEach((sec,si)=>{
+    const S={name:sec.name||('Section '+(si+1)),ok:false,msg:'',note:''}; R.secs.push(S);
+    const p=+sec.pitch||0, pf=Math.sqrt(1+(p/12)**2);
+    const E=(sec.edges||[]).filter(e=>LDIR[e.d]&&+e.len>0);
+    if(E.length<4){S.msg='Needs at least 4 edges.';return;}
+    // each edge may carry its own pitch (the face that slopes down to it); otherwise the section's
+    const PE=E.map(e=>+e.pitch>0?+e.pitch:p), PF=PE.map(q=>Math.sqrt(1+(q/12)**2));
+    const L=E.map((e,i)=>e.t==='rake'?e.len/PF[i]:+e.len);   // rakes are entered along the slope, like the reports show them
+    let gx=0,gy=0; E.forEach((e,i)=>{gx+=LDIR[e.d][0]*L[i];gy+=LDIR[e.d][1]*L[i];});
+    const gap=(g,pos,neg)=>Math.abs(g)<.05?'':f2(Math.abs(g))+' ft '+(g>0?pos:neg);
+    if(Math.abs(gx)>1.5||Math.abs(gy)>1.5){S.msg='Doesn’t close: the last edge ends '+[gap(gx,'east','west'),gap(gy,'south','north')].filter(Boolean).join(' and ')+' of the start.';return;}
+    const fixed=[];                                   // report lengths are rounded, so absorb a small gap in the last edge on that axis
+    for(const ax of [0,1]){const g=ax?gy:gx; if(Math.abs(g)<1e-6)continue;
+      let i=E.length-1; while(i>=0&&LDIR[E[i].d][ax]===0)i--;
+      if(i<0){S.msg='Doesn’t close.';return;}
+      L[i]-=g*LDIR[E[i].d][ax]; if(L[i]<.05){S.msg='Doesn’t close.';return;}
+      if(Math.abs(g)>=.05) fixed.push('edge '+(sec.edges.indexOf(E[i])+1)+' '+(g*LDIR[E[i].d][ax]<0?'+':'−')+f2(Math.abs(g))+' ft');
+    }
+    if(fixed.length) S.note='Adjusted '+fixed.join(', ')+' so the outline closes.';
+    const V=[[+sec.x||0,+sec.y||0]];
+    E.forEach((e,i)=>{const q=V[V.length-1];V.push([q[0]+LDIR[e.d][0]*L[i],q[1]+LDIR[e.d][1]*L[i]]);});
+    V.pop();
+    const inside=pt=>{let c=false;for(let i=0,j=V.length-1;i<V.length;j=i++){const a=V[i],b=V[j];if((a[1]>pt[1])!==(b[1]>pt[1])&&pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+    let area2=0; for(let i=0,j=V.length-1;i<V.length;j=i++) area2+=(V[j][0]+V[i][0])*(V[j][1]-V[i][1]);
+    const orient=area2>0?1:-1;                        // which side of each edge is inside
+    const edges=E.map((e,i)=>{const a=V[i],b=V[(i+1)%V.length],d=LDIR[e.d],ax=d[0]?0:1;
+      const nrm=[-d[1]*orient,d[0]*orient];           // interior normal
+      const mid=[(a[0]+b[0])/2+nrm[0]*1e-3,(a[1]+b[1])/2+nrm[1]*1e-3];
+      if(!inside(mid)){nrm[0]*=-1;nrm[1]*=-1;}
+      return {a,b,t:e.t||'eave',ax,nrm,len:L[i],p:PE[i],pf:PF[i]};});
+    for(const e of edges){ if(e.t==='eave')R.eave+=e.len; else if(e.t==='rake')R.rake+=e.len*e.pf; else R.wall+=e.len; }
+    // coplanar eaves (same line, same side) are one roof plane
+    const G=[];
+    // a plane grows past a reflex corner as fast as its neighbour's front moves, so remember the neighbour's slope at each end
+    const kOf=(e,own)=>Math.max(1e-3,(e&&e.t==='eave'?e.p:own)/12);
+    edges.forEach((e,i)=>{ if(e.t!=='eave')return;
+      const c=e.ax===0?e.a[1]:e.a[0], n=e.ax===0?e.nrm[1]:e.nrm[0], lo=Math.min(e.a[e.ax],e.b[e.ax]), hi=Math.max(e.a[e.ax],e.b[e.ax]);
+      const prev=edges[(i-1+edges.length)%edges.length], next=edges[(i+1)%edges.length], aLo=e.a[e.ax]<=e.b[e.ax];
+      const kLo=kOf(aLo?prev:next,e.p), kHi=kOf(aLo?next:prev,e.p);
+      let g=G.find(g=>g.ax===e.ax&&Math.abs(g.c-c)<1e-6&&g.n===n&&g.p===e.p); if(!g){g={ax:e.ax,c,n,p:e.p,k:Math.max(1e-3,e.p/12),pf:e.pf,segs:[]};G.push(g);} g.segs.push([lo,hi,kLo,kHi]); });
+    if(!G.length){S.msg='Needs at least one eave.';return;}
+    const toS=(g,P)=>g.ax===0?P[0]:P[1], toU=(g,P)=>((g.ax===0?P[1]:P[0])-g.c)*g.n;
+    const toP=(g,s,u)=>g.ax===0?[s,g.c+g.n*u]:[g.c+g.n*u,s];
+    function owner(P){
+      if(!inside(P)) return -1;
+      let best=-1,bv=Infinity,bd=Infinity;
+      for(let k=0;k<G.length;k++){const g=G[k],u=toU(g,P); if(u<-1e-9)continue; const s=toS(g,P);
+        let v=Infinity,dd=Infinity; for(const [lo,hi,kl,kh] of g.segs){const d=Math.max(0,lo-s,s-hi),w=Math.max(u*g.k,s<lo?(lo-s)*kl:s>hi?(s-hi)*kh:0); if(w<v||(w===v&&d<dd)){v=w;dd=d;}}
+        if(v<bv-1e-9||(Math.abs(v-bv)<=1e-9&&dd<bd)){best=k;bv=v;bd=dd;}}
+      return best;
+    }
+    const proj=(g,ax)=>V.map(q=>ax==='s'?toS(g,q):toU(g,q));
+    const hAt=P=>{let v=Infinity;for(const g of G){const u=toU(g,P);if(u<-1e-9)continue;const s=toS(g,P);for(const [lo,hi,kl,kh] of g.segs)v=Math.min(v,Math.max(u*g.k,s<lo?(lo-s)*kl:s>hi?(s-hi)*kh:0));}return v;};
+    const xs=V.map(q=>q[0]),ys=V.map(q=>q[1]); let hTop=0;
+    for(let x=Math.min(...xs);x<=Math.max(...xs);x+=.5)for(let y=Math.min(...ys);y<=Math.max(...ys);y+=.5){const P=[x,y];if(inside(P))hTop=Math.max(hTop,hAt(P));}
+    G.forEach((g,k)=>{
+      const us=proj(g,'u'), umax=Math.min(Math.max(...us),hTop/g.k+.75), ss=proj(g,'s'), s0=Math.min(...ss), s1=Math.max(...ss);
+      const mine=(s,u)=>owner(toP(g,s,u))===k;
+      function line(s){
+        const out=[],du=1/4; let inA=null, prev=1e-6, pin=mine(s,prev); if(pin)inA=prev;
+        const edge=(lo,hi,want)=>{for(let i=0;i<22;i++){const m=(lo+hi)/2; if(mine(s,m)===want)hi=m; else lo=m;}return hi;};
+        for(let u=du;u<umax+du;u+=du){const uu=Math.min(u,umax-1e-6),cur=mine(s,uu);
+          if(cur!==pin){const x=edge(prev,uu,cur); if(cur)inA=x; else {out.push([inA,x]);inA=null;} pin=cur;}
+          prev=uu; if(uu>=umax-1e-6)break;}
+        if(inA!=null) out.push([inA,prev]);
+        return out.filter(([a,b])=>b-a>1e-4);
+      }
+      // find where this plane starts and ends across the eave direction
+      const has=s=>line(s).length>0;
+      let a0=null,a1=null; const ok=[];
+      const C=cov/3; for(let s=s0+1e-6;s<s1;s+=C){ if(has(s)){ if(a0==null)a0=s; a1=s; } }
+      if(a0==null) return;
+      const refine=(out,inn)=>{for(let i=0;i<24;i++){const m=(out+inn)/2; if(has(m))inn=m; else out=m;}return inn;};
+      { const o=Math.max(s0+1e-6,a0-C); a0=has(o)?o:refine(o,a0); }
+      { const o=Math.min(s1-1e-6,a1+C); a1=has(o)?o:refine(o,a1); }
+      // fine scan aligned to panel edges, then join intervals into connected pieces
+      const comps=[]; let last=[];
+      const n=Math.max(1,Math.ceil((a1-a0)/H-1e-9));
+      for(let j=0;j<=n;j++){ const s=j===n?a1:a0+j*H, ivs=line(s), now=[];
+        for(const [a,b] of ivs){ const pc=last.find(q=>q.a<b+1.5*H&&a<q.b+1.5*H);
+          let c=pc?pc.c:null; if(!c){c={rows:[]};comps.push(c);}
+          const r=c.rows[c.rows.length-1]; if(r&&r.j===j){r.a=Math.min(r.a,a);r.b=Math.max(r.b,b);} else c.rows.push({j,s,a,b});
+          now.push({a,b,c}); }
+        last=now; }
+      for(const c of comps){ if(c.rows.length<2) continue;
+        const pf=g.pf;                                // this face's own slope
+        const face={sec:si,pf,g,rows:c.rows,dir:g.ax===0?(g.n>0?'north':'south'):(g.n>0?'west':'east'),panels:[],toP:(s,u)=>toP(g,s,u)};
+        const rows=c.rows, j0=rows[0].j, sA=rows[0].s, sB=rows[rows.length-1].s;
+        // corners that fall between scan lines: extend the two neighbouring slopes to where they meet
+        const peak=(side,sign)=>{const out=[];for(let i=1;i+2<rows.length;i++){const l=(rows[i][side]-rows[i-1][side])/(rows[i].s-rows[i-1].s), r=(rows[i+2][side]-rows[i+1][side])/(rows[i+2].s-rows[i+1].s);
+          if(sign*l>1e-6&&sign*r<-1e-6){const t=(rows[i+1][side]-rows[i][side]-r*(rows[i+1].s-rows[i].s))/(l-r); if(t>0&&t<rows[i+1].s-rows[i].s) out.push({s:rows[i].s+t,v:rows[i][side]+l*t});}}return out;};
+        const tops=peak('b',1), bots=peak('a',-1);
+        for(let k2=0;sA+k2*cov<sB-.125;k2++){
+          const lo=sA+k2*cov, hi=Math.min(sB,lo+cov), R2=rows.filter(r=>r.s>=lo-1e-6&&r.s<=hi+1e-6);
+          if(!R2.length) continue;
+          let umin=Math.min(...R2.map(r=>r.a)), umax2=Math.max(...R2.map(r=>r.b));
+          for(const t of tops) if(t.s>lo&&t.s<hi) umax2=Math.max(umax2,t.v);
+          for(const t of bots) if(t.s>lo&&t.s<hi) umin=Math.min(umin,t.v);
+          const eaveEnd=umin<.01, len=(umax2-umin)*pf+(eaveEnd?over:0), inch=Math.ceil(len*12-1e-6);
+          const poly=[...R2.map(r=>toP(g,r.s,r.a)),...R2.slice().reverse().map(r=>toP(g,r.s,r.b))];
+          face.panels.push({lo,hi,umin,umax:umax2,inch,rip:hi-lo<cov-1e-3?Math.round((hi-lo)*12*4)/4:0,poly,eave:eaveEnd});
+        }
+        face.sliver=(sB-sA)%cov>1e-4&&(sB-sA)%cov<=.125?Math.round(((sB-sA)%cov)*48)/4:0;
+        // area and the lines between faces (each shared line is counted from both sides, so halve later)
+        let fa=0; face.lines={ridge:0,hip:0,valley:0};
+        const onOutline=P=>edges.some(e=>{const ax=e.ax,o=1-ax,lo2=Math.min(e.a[ax],e.b[ax]),hi2=Math.max(e.a[ax],e.b[ax]);return Math.abs(P[o]-e.a[o])<.02&&P[ax]>lo2-.02&&P[ax]<hi2+.02;});
+        for(let i=0;i+1<rows.length;i++){const r=rows[i],q=rows[i+1],ds=q.s-r.s;
+          fa+=ds*((r.b-r.a)+(q.b-q.a))/2;
+          const segLen=(d1,d2)=>Math.sqrt(ds*ds+((d2-d1)*pf)**2);
+          const mid=(side)=>toP(g,(r.s+q.s)/2,(r[side]+q[side])/2);
+          if((r.a>.01||q.a>.01)&&!onOutline(mid('a'))) face.lines.valley+=segLen(r.a,q.a);
+          if(!onOutline(mid('b'))){ if(Math.abs(q.b-r.b)<.5*ds) face.lines.ridge+=segLen(r.b,q.b); else face.lines.hip+=segLen(r.b,q.b);} }
+        face.area=fa*pf;
+        face.cx=(sA+sB)/2;
+        R.faces.push(face);
+      }
+    });
+    S.ok=true; S.V=V; S.edges=edges; S.pitch=p;
+    for(const g of G) R.pitch=R.pitch==null?g.p:Math.min(R.pitch,g.p);
+  });
+  // codes A, B, C… in reading order (top to bottom, then left to right)
+  const cen=fc=>{const P=fc.rows.map(r=>fc.toP(r.s,(r.a+r.b)/2));return [P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];};
+  R.faces.forEach(fc=>fc.c=cen(fc));
+  R.faces.sort((x,y)=>x.sec-y.sec||Math.round(x.c[1])-Math.round(y.c[1])||x.c[0]-y.c[0]);
+  R.faces.forEach((fc,i)=>{fc.code=i<26?String.fromCharCode(65+i):String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26);
+    fc.panels.forEach((p,j)=>{p.code=fc.code+(j+1); R.panels++; R.lf+=p.inch/12; R.clips+=Math.ceil(p.inch/24)+1;});
+    R.area+=fc.area; R.ridge+=fc.lines.ridge/2; R.hips+=fc.lines.hip/2; R.valleys+=fc.lines.valley/2;});
+  return R;
+}
+function f2(x){return (Math.round(x*10)/10).toString();}
+function ftIn(inch){return Math.floor(inch/12)+"'"+(inch%12)+'"';}
+
+// ---------- siding engine: walls -> courses -> plank pieces ----------
+// Inches throughout. Each wall is a rectangle with an optional gable on top; openings are placed
+// by their distance from the wall's left edge and from the bottom of the siding.
+function buildSiding(walls,expIn,plankIn){
+  const S={walls:[],gross:0,open:0,net:0,pieces:[],planks:0,starter:0,openTrim:0,err:[]};
+  const q=x=>Math.round(x*4)/4;                                   // cut to the 1/4"
+  (walls||[]).forEach((w,wi)=>{
+    const W=(+w.w||0)*12, H=(+w.h||0)*12, P=(+w.peak||0)*12, T=H+P;
+    const name=w.name||('Wall '+(wi+1)), out={name,W,H,P,courses:[],open:[],ok:false,msg:''};
+    S.walls.push(out);
+    if(!(W>0&&H>0)){out.msg='Enter the wall width and height.';return;}
+    const ops=(w.open||[]).map((o,oi)=>{const x0=(+o.x||0)*12,y0=o.t==='door'?0:(+o.y||0)*12;
+      return {t:o.t==='door'?'door':'window',x0,x1:x0+(+o.w||0)*12,y0,y1:y0+(+o.h||0)*12,code:(o.t==='door'?'D':'W')+(oi+1)};}).filter(o=>o.x1>o.x0&&o.y1>o.y0);
+    for(const o of ops){ if(o.x0<0||o.x1>W+.01||o.y1>T+.01) out.msg='An opening sits past the edge of '+name+'. Check its position.'; }
+    out.open=ops;
+    const gross=W*H+W*P/2, oa=ops.reduce((a,o)=>a+(Math.min(o.x1,W)-Math.max(o.x0,0))*(o.y1-o.y0),0);
+    S.gross+=gross/144; S.open+=oa/144; S.starter+=W;
+    for(const o of ops) S.openTrim+=o.t==='door'?(o.x1-o.x0)+2*(o.y1-o.y0):2*(o.x1-o.x0)+2*(o.y1-o.y0);
+    const n=Math.ceil(T/expIn-1e-6);
+    for(let i=0;i<n;i++){
+      const y0=i*expIn, y1=Math.min(T,(i+1)*expIn);
+      // width of the wall at the bottom of this course (the long point for gable courses)
+      let a=0,b=W,angled=false;
+      if(y0>=H-1e-6){ if(!(P>0)) break; const g=W*(1-(y0-H)/P); a=(W-g)/2; b=(W+g)/2; angled=true; }
+      else if(y1>H+1e-6&&P>0) angled=true;
+      if(b-a<1) continue;
+      const gaps=[], notch=[];
+      for(const o of ops){ if(o.y0<y1-1e-6&&o.y1>y0+1e-6){ (o.y0<=y0+.5&&o.y1>=y1-.5?gaps:notch).push(o); } }
+      gaps.sort((p,r)=>p.x0-r.x0);
+      const segs=[]; let x=a;
+      for(const o of gaps){ const g0=Math.max(a,o.x0), g1=Math.min(b,o.x1); if(g1<=x) continue; if(g0>x) segs.push([x,g0]); x=Math.max(x,g1); }
+      if(x<b) segs.push([x,b]);
+      const course={i:i+1,y0,y1,pieces:[],rip:y1-y0<expIn-.01&&!angled?q(y1-y0):0};   // top course ripped to fit under the soffit
+      for(const [s0,s1] of segs){
+        if(s1-s0<.5) continue;
+        // stagger joints: every other course starts with a half plank, unless that leaves a sliver at the end
+        const L=s1-s0, plan=stag=>{const out=[];let r=L;if(stag&&r>plankIn){out.push(plankIn/2);r-=plankIn/2;}while(r>.01){const l=Math.min(plankIn,r);out.push(l);r-=l;}return out;};
+        let lens=plan(i%2===1); if(lens.length>1&&lens[lens.length-1]<24) lens=plan(false);
+        if(lens.length>1&&lens[lens.length-1]<24){const k=lens.length-1,d=24-lens[k];lens[k-1]-=d;lens[k]=24;}   // no piece shorter than 2 ft
+        let cut=s0;
+        for(const len of lens){
+          const x0=cut,x1=cut+len, nt=notch.filter(o=>o.x0<x1&&o.x1>x0).map(o=>o.code);
+          const p={wall:wi,course:i+1,x0,x1,len:q(len),full:Math.abs(len-plankIn)<.01,
+            ends:angled&&((Math.abs(x0-a)<.01)||(Math.abs(x1-b)<.01))?'angle':'',notch:nt};
+          course.pieces.push(p); S.pieces.push(p); cut=x1;
+        }
+      }
+      if(course.pieces.length) out.courses.push(course);
+    }
+    out.ok=!out.msg;
+  });
+  S.net=Math.max(0,S.gross-S.open);
+  // planks to buy: full pieces take a plank each; cut pieces are packed into planks, longest first
+  const cuts=S.pieces.filter(p=>!p.full).map(p=>p.len).sort((a,b)=>b-a), bins=[];
+  for(const l of cuts){ const k=bins.findIndex(r=>r>=l); if(k>=0) bins[k]-=l; else bins.push(plankIn-l); }
+  S.planks=S.pieces.filter(p=>p.full).length+bins.length;
+  return S;
+}
+function ftIn4(inch){const t=Math.round(inch*4)/4,f=Math.floor(t/12+1e-9),r=t-f*12,w=Math.floor(r+1e-9),fr=Math.round((r-w)*4);return f+"'"+w+(fr?['','¼','½','¾'][fr]:'')+'"';}
+
+// ---------- EagleView vector reader: the roof's faces straight from the PDF ----------
+// EagleView draws the pitch diagram as one filled outline per roof face, with an arrow (pointing downhill) and the pitch
+// digits as small filled shapes inside each face. The report's text gives the total area and the area at each pitch,
+// which fix the scale and tell which digit shape is which pitch. No reading of pictures is needed.
+function evTotals(text){
+  const num=re=>{const m=text.match(re);return m?+m[1].replace(/,/g,''):null;};
+  const T={area:num(/Total Roof Area\s*=\s*([\d,.]+)/i)||num(/Total Area \(All Pitches\)\s*=\s*([\d,.]+)/i),
+    ridge:num(/(?<!\/)Ridges\s*=\s*([\d,.]+)\s*ft/i),hip:num(/(?<!\/)Hips\s*=\s*([\d,.]+)\s*ft/i),valley:num(/Valleys\s*=\s*([\d,.]+)\s*ft/i),
+    rake:num(/Rakes\S*\s*=\s*([\d,.]+)\s*ft/i),eave:num(/Eaves(?:\/Starter)?\S*\s*=\s*([\d,.]+)\s*ft/i),
+    flash:num(/(?:^|[^p])Flashing\s*=\s*([\d,.]+)\s*ft/i),step:num(/Step flashing\s*=\s*([\d,.]+)\s*ft/i),
+    pitch:num(/Predominant Pitch\s*=\s*([\d.]+)\s*\/\s*12/i),waste:null,byPitch:[]};
+  // "Areas per Pitch" reads as labels then values: 4/12 5/12 1663.0 698.2 70.4% 29.6%
+  const i=text.search(/Areas per Pitch/i);
+  if(i>=0){ const seg=text.slice(i,i+400).split(/The table above/i)[0];
+    const ps=[...seg.matchAll(/([\d.]+)\s*\/\s*12/g)].map(m=>+m[1]), as=[...seg.replace(/[\d.]+\s*\/\s*12/g,' ').matchAll(/([\d,]+\.\d+)(?!\s*%)/g)].map(m=>+m[1].replace(/,/g,''));
+    if(ps.length&&as.length>=ps.length) T.byPitch=ps.map((p,k)=>({p,area:as[k]})); }
+  return T;
+}
+async function evShapes(lib,page){
+  const ops=await page.getOperatorList(), nm={}; for(const k in lib.OPS) nm[lib.OPS[k]]=k;
+  const mul=(m,n)=>[m[0]*n[0]+m[2]*n[1],m[1]*n[0]+m[3]*n[1],m[0]*n[2]+m[2]*n[3],m[1]*n[2]+m[3]*n[3],m[0]*n[4]+m[2]*n[5]+m[4],m[1]*n[4]+m[3]*n[5]+m[5]];
+  let ctm=[1,0,0,1,0,0], stack=[], fill=null, last=null; const faces=[], marks=[];
+  ops.fnArray.forEach((f,i)=>{const a=ops.argsArray[i], n=nm[f];
+    if(n==='save')stack.push(ctm.slice()); else if(n==='restore')ctm=stack.pop()||ctm; else if(n==='transform')ctm=mul(ctm,a);
+    else if(n==='setFillRGBColor')fill=[...a].slice(0,3).map(Number); else if(n==='setFillGray')fill=[a[0]*255,a[0]*255,a[0]*255];
+    else if(n==='constructPath'){ const pts=[]; let j=0;
+      for(const op of a[0]){ const on=nm[op];
+        if(on==='moveTo'||on==='lineTo'){pts.push([a[1][j],a[1][j+1]]);j+=2;}
+        else if(on==='curveTo'){pts.push([a[1][j+4],a[1][j+5]]);j+=6;}
+        else if(on==='curveTo2'||on==='curveTo3'){pts.push([a[1][j+2],a[1][j+3]]);j+=4;}
+        else if(on==='rectangle'){const [x,y,w,h]=a[1].slice(j,j+4);pts.push([x,y],[x+w,y],[x+w,y+h],[x,y+h]);j+=4;} }
+      last={pts:pts.map(([x,y])=>[ctm[0]*x+ctm[2]*y+ctm[4],ctm[1]*x+ctm[3]*y+ctm[5]]),sig:a[0].map(o=>nm[o][0]).join('')}; }
+    else if(last&&/^(fill|eoFill|fillStroke|eoFillStroke|closeFillStroke|closeEOFillStroke)$/.test(n)){
+      const white=fill&&fill.every(v=>v>250), light=fill&&fill.every(v=>v>150)&&!white, dark=fill&&fill.every(v=>v<70);
+      // a roof face is filled and outlined; watermark letters are only filled
+      if(light&&/Stroke/.test(n)&&last.pts.length>=3) faces.push(last.pts); else if(dark&&last.pts.length>2) marks.push(last);
+      last=null; }
+  });
+  return {faces,marks};
+}
+const evArea=V=>{let s=0;for(let i=0,j=V.length-1;i<V.length;j=i++)s+=(V[j][0]+V[i][0])*(V[j][1]-V[i][1]);return Math.abs(s)/2;};
+const evIn=(P,V)=>{let c=false;for(let i=0,j=V.length-1;i<V.length;j=i++){const a=V[i],b=V[j];if((a[1]>P[1])!==(b[1]>P[1])&&P[0]<(b[0]-a[0])*(P[1]-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+const evMid=P=>[P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];
+// Returns {faces:[{pts (plan ft, x east / y south), pitch, eave:{ax,c,n}}], note} or null.
+function evModel(shapes,T){
+  let F=shapes.faces.map(V=>{const o=V.slice(); if(o.length>3&&Math.hypot(o[0][0]-o[o.length-1][0],o[0][1]-o[o.length-1][1])<1e-6)o.pop(); return o;}).filter(V=>V.length>=3&&evArea(V)>1);
+  if(F.length<2||!(T.area>0)) return null;
+  // labels: a mark that sits in every labelled face is the arrow; the rest are pitch digits
+  const M=shapes.marks.map(m=>({sig:m.sig,pts:m.pts,c:evMid(m.pts),w:Math.max(...m.pts.map(p=>p[0]))-Math.min(...m.pts.map(p=>p[0])),h:Math.max(...m.pts.map(p=>p[1]))-Math.min(...m.pts.map(p=>p[1]))}))
+    .filter(m=>F.some(V=>evIn(m.c,V)));
+  const sigCount={}; for(const m of M) sigCount[m.sig]=(sigCount[m.sig]||0)+1;
+  const arrowSig=Object.keys(sigCount).sort((a,b)=>sigCount[b]-sigCount[a])[0];
+  const arrows=M.filter(m=>m.sig===arrowSig), digits=M.filter(m=>m.sig!==arrowSig);
+  // each arrow plus the digits next to it is one label
+  const size=arrows.length?Math.max(...arrows.map(a=>Math.max(a.w,a.h))):10;
+  const labels=arrows.map(a=>({a,d:[]}));
+  for(const d of digits){ let best=null,bd=Infinity; for(const L of labels){const dist=Math.hypot(d.c[0]-L.a.c[0],d.c[1]-L.a.c[1]); if(dist<bd){bd=dist;best=L;}} if(best&&bd<size*2.5) best.d.push(d); }
+  // give each label to a face: deepest inside first, so a label poking over a face edge goes to the face it sits in most
+  const owner=new Array(F.length).fill(null);
+  const edgeDist=(P,V)=>{let d=Infinity;for(let i=0,j=V.length-1;i<V.length;j=i++){const a=V[j],b=V[i],dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((P[0]-a[0])*dx+(P[1]-a[1])*dy)/l2));d=Math.min(d,Math.hypot(P[0]-a[0]-t*dx,P[1]-a[1]-t*dy));}return d;};
+  const pairs=[]; labels.forEach((L,li)=>{const c=evMid([L.a.c,...L.d.map(d=>d.c)]); F.forEach((V,fi)=>pairs.push({li,fi,sc:(evIn(c,V)?1:-1)*edgeDist(c,V)}));});
+  pairs.sort((x,y)=>y.sc-x.sc); const used=new Set();
+  for(const q of pairs){ if(used.has(q.li)||owner[q.fi]) continue; owner[q.fi]=labels[q.li]; used.add(q.li); }
+  // which digit shapes mean which pitch: try every pairing against the report's area at each pitch
+  const keyOf=L=>L?L.d.map(d=>d.sig).sort().join('+'):'';
+  const keys=[...new Set(owner.map(keyOf).filter(Boolean))], vals=T.byPitch.length?T.byPitch.map(x=>x.p):[T.pitch||6];
+  const pf=p=>Math.sqrt(1+(p/12)**2), plan=F.map(evArea), dflt=T.pitch||vals[0];
+  let best=null;
+  const perms=(arr,k)=>k===0?[[]]:arr.flatMap((v,i)=>perms(arr.filter((_,j)=>j!==i),k-1).map(r=>[v,...r]));
+  const tries=keys.length<=vals.length?perms(vals,keys.length):[keys.map(()=>dflt)];
+  for(const tr of tries){
+    const map={}; keys.forEach((k,i)=>map[k]=tr[i]);
+    const P=owner.map(L=>map[keyOf(L)]||dflt), sloped=P.reduce((a,p,i)=>a+plan[i]*pf(p),0), s2=T.area/sloped;
+    let err=0; if(T.byPitch.length) for(const {p,area} of T.byPitch) err+=Math.abs(P.reduce((a,q,i)=>a+(q===p?plan[i]*pf(q)*s2:0),0)-area);
+    if(!best||err<best.err) best={err,P,s2};
+  }
+  const s=Math.sqrt(best.s2);
+  // square the drawing to the compass: rotate by the main edge direction so eaves run N-S / E-W
+  // only near-square edges count, so long 45° hips and valleys don't swing it
+  let sw=0,sa=0; for(const V of F) for(let i=0;i<V.length;i++){const a=V[i],b=V[(i+1)%V.length],dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);
+    let t=Math.atan2(dy,dx); t-=Math.round(t/(Math.PI/2))*(Math.PI/2); if(Math.abs(t)<Math.PI/12){sw+=L;sa+=L*t;}}
+  const rot=sw?-sa/sw:0, cr=Math.cos(rot), sr=Math.sin(rot);
+  const toPlan=([x,y])=>{const X=(x*cr-y*sr)*s, Y=(x*sr+y*cr)*s; return [X,-Y];};          // page y is up; plan y is south
+  const faces=F.map((V,i)=>{
+    const pts=V.map(toPlan), L=owner[i];
+    let dir=null;                                                                     // downhill direction from the arrow
+    if(L){ const ap=L.a.pts.map(toPlan), c=evMid(ap), w=Math.max(...ap.map(p=>p[0]))-Math.min(...ap.map(p=>p[0])), h=Math.max(...ap.map(p=>p[1]))-Math.min(...ap.map(p=>p[1]));
+      const ax=w>=h?0:1, lo=Math.min(...ap.map(p=>p[ax])), hi=Math.max(...ap.map(p=>p[ax])), span=hi-lo;
+      const spread=end=>{const sel=ap.filter(p=>end?p[ax]>hi-span*.3:p[ax]<lo+span*.3);const o=sel.map(p=>p[1-ax]);return o.length?Math.max(...o)-Math.min(...o):0;};
+      dir=[0,0]; dir[ax]=spread(true)>=spread(false)?1:-1; }
+    // the eave: the face edge across the slope, furthest downhill; without a usable arrow, the longest outside edge
+    const cen2=evMid(pts), others=F.map((W,j)=>j===i?null:W.map(toPlan));
+    const isShared=(a,b)=>others.some(W=>W&&W.some((q,m)=>{const r=W[(m+1)%W.length];return (Math.hypot(q[0]-b[0],q[1]-b[1])<.6&&Math.hypot(r[0]-a[0],r[1]-a[1])<.6)||(Math.hypot(q[0]-a[0],q[1]-a[1])<.6&&Math.hypot(r[0]-b[0],r[1]-b[1])<.6);}));
+    const pick=useDir=>{ let e=null, score=-Infinity;
+      for(let k=0;k<pts.length;k++){const a=pts[k],b=pts[(k+1)%pts.length],dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy); if(len<.5)continue;
+        const ax=Math.abs(dx)>=Math.abs(dy)?0:1; if(Math.min(Math.abs(dx),Math.abs(dy))/len>.08)continue;
+        const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2]; let sc;
+        if(useDir){ if(dir[1-ax]===0)continue; if((mid[1-ax]-cen2[1-ax])*dir[1-ax]<=0)continue; sc=len; }
+        else sc=len-(isShared(a,b)?1000:0);
+        if(sc>score){score=sc;e={ax,c:ax===0?mid[1]:mid[0],n:Math.sign((ax===0?cen2[1]:cen2[0])-(ax===0?mid[1]:mid[0]))||1};}}
+      return e; };
+    const eave=(dir&&pick(true))||pick(false);
+    return eave?{pts,pitch:best.P[i],eave}:null;
+  }).filter(Boolean);
+  if(faces.length<F.length) return null;
+  // move to positive coordinates
+  const mx=Math.min(...faces.flatMap(f=>f.pts.map(p=>p[0]))), my=Math.min(...faces.flatMap(f=>f.pts.map(p=>p[1])));
+  for(const f of faces){ f.pts=f.pts.map(([x,y])=>[x-mx,y-my]); f.eave.c-=f.eave.ax===0?my:mx; }
+  return {faces,err:best.err};
+}
+// Panel layout over given faces (same output shape as buildRoof, so the drawing and lists work unchanged)
+function facetRoof(model,T,cov,over){
+  const R={secs:[],faces:[],area:0,eave:+T.eave||0,rake:+T.rake||0,wall:+T.flash||0,ridge:+T.ridge||0,hips:+T.hip||0,valleys:+T.valley||0,panels:0,lf:0,clips:0,pitch:null};
+  const H=cov/24, all=[];
+  const clip=(poly,ax,lo,hi)=>{const cut=(pts,keep,edge)=>{const out=[];for(let i=0;i<pts.length;i++){const a=pts[(i+pts.length-1)%pts.length],b=pts[i],ia=keep(a),ib=keep(b);
+      if(ia!==ib){const t=(edge-a[ax])/(b[ax]-a[ax]);out.push([a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])]);} if(ib)out.push(b);}return out;};
+    const p=cut(poly,q=>q[ax]>=lo-1e-9,lo); return p.length?cut(p,q=>q[ax]<=hi+1e-9,hi):p;};
+  model.faces.forEach((F,fi)=>{
+    const g={ax:F.eave.ax,c:F.eave.c,n:F.eave.n,p:F.pitch}, pf=Math.sqrt(1+(F.pitch/12)**2);
+    const sOf=P=>g.ax===0?P[0]:P[1], uOf=P=>((g.ax===0?P[1]:P[0])-g.c)*g.n, toP=(s,u)=>g.ax===0?[s,g.c+g.n*u]:[g.c+g.n*u,s];
+    const ss=F.pts.map(sOf), sA=Math.min(...ss), sB=Math.max(...ss), sax=g.ax;
+    const rows=[]; const n=Math.max(1,Math.ceil((sB-sA)/H));
+    for(let j=0;j<=n;j++){ const s=Math.min(sB-1e-6,Math.max(sA+1e-6,sA+j*H)), us=[];
+      for(let k=0;k<F.pts.length;k++){const a=F.pts[k],b=F.pts[(k+1)%F.pts.length],sa=sOf(a),sb=sOf(b); if((sa<=s&&sb>=s)||(sb<=s&&sa>=s)){ if(Math.abs(sb-sa)<1e-9){us.push(uOf(a),uOf(b));} else {const t=(s-sa)/(sb-sa);us.push(uOf(a)+t*(uOf(b)-uOf(a)));}}}
+      if(us.length>=2) rows.push({j,s,a:Math.max(0,Math.min(...us)),b:Math.max(...us)}); }
+    if(rows.length<2) return;
+    const face={rev:!!F.rev,sec:0,pf,g,rows,dir:g.ax===0?(g.n>0?'north':'south'):(g.n>0?'west':'east'),panels:[],toP,lines:{ridge:0,hip:0,valley:0}};
+    const rev=!!F.rev;                                                       // panel 1 at the high end instead of the low end
+    for(let k=0;sA+k*cov<sB-.125;k++){
+      const lo=rev?Math.max(sA,sB-(k+1)*cov):sA+k*cov, hi=rev?sB-k*cov:Math.min(sB,lo+cov), piece=clip(F.pts,sax,lo,hi); if(piece.length<3) continue;
+      const us=piece.map(uOf), umin=Math.max(0,Math.min(...us)), umax=Math.max(...us);
+      const eaveEnd=umin<.05, len=(umax-umin)*pf+(eaveEnd?over:0), inch=Math.ceil(len*12-1e-6);
+      face.panels.push({lo,hi,umin,umax,inch,rip:hi-lo<cov-1e-3?Math.round((hi-lo)*12*4)/4:0,poly:piece,eave:eaveEnd});
+    }
+    face.sliver=(sB-sA)%cov>1e-4&&(sB-sA)%cov<=.125?Math.round(((sB-sA)%cov)*48)/4:0;
+    face.area=evArea(F.pts)*pf; face.cx=(sA+sB)/2; face.outline=F.pts;
+    R.faces.push(face); all.push(...F.pts);
+    R.pitch=R.pitch==null?F.pitch:Math.min(R.pitch,F.pitch);
+  });
+  // outline for the drawing: every face edge not shared with another face
+  const edges=[];
+  model.faces.forEach((F,i)=>F.pts.forEach((a,k)=>{const b=F.pts[(k+1)%F.pts.length];
+    const shared=model.faces.some((G,j)=>j!==i&&G.pts.some((q,m)=>{const r=G.pts[(m+1)%G.pts.length];return (Math.hypot(q[0]-b[0],q[1]-b[1])<.6&&Math.hypot(r[0]-a[0],r[1]-a[1])<.6)||(Math.hypot(q[0]-a[0],q[1]-a[1])<.6&&Math.hypot(r[0]-b[0],r[1]-b[1])<.6);}));
+    if(!shared) edges.push({a,b,t:'eave',ax:Math.abs(b[0]-a[0])>=Math.abs(b[1]-a[1])?0:1});}));
+  R.secs.push({name:'Roof',ok:true,msg:'',note:'',V:all,edges});
+  const cen=fc=>{const P=fc.rows.map(r=>fc.toP(r.s,(r.a+r.b)/2));return [P.reduce((a,p)=>a+p[0],0)/P.length,P.reduce((a,p)=>a+p[1],0)/P.length];};
+  R.faces.forEach(fc=>fc.c=cen(fc));
+  R.faces.sort((x,y)=>Math.round(x.c[1])-Math.round(y.c[1])||x.c[0]-y.c[0]);
+  R.faces.forEach((fc,i)=>{fc.code=i<26?String.fromCharCode(65+i):String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26);
+    fc.panels.forEach((p,j)=>{p.code=fc.code+(j+1); R.panels++; R.lf+=p.inch/12; R.clips+=Math.ceil(p.inch/24)+1;});
+    R.area+=fc.area;});
+  return R;
+}
 
 (function(){
   const $=id=>document.getElementById(id);
-  const n=id=>{const v=parseFloat($(id).value);return isFinite(v)?v:0;};
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v3';
-  const st={tab:'roof', mat:'metal', src:'footprint', style:'gable', ssrc:'walls'};
-  const WASTE={metal:{gable:5,hip:12,report:10},shingle:{gable:10,hip:15,report:12}};
-
-  document.querySelectorAll('select.pitch').forEach(s=>{for(let p=1;p<=18;p++){const o=document.createElement('option');o.value=p;o.textContent=p+'/12';if(p===6)o.selected=true;s.append(o);}});
-
-  function ftin(ft){let inch=Math.ceil(ft*12-1e-6);return Math.floor(inch/12)+"' "+(inch%12)+'"';}
-  function rows(host,list){host.innerHTML='';for(const [k,v,sub] of list){if(v==null)continue;host.append(el('dt',null,k));const d=el('dd',null,v);if(sub)d.append(el('small',null,sub));host.append(d);}}
-  function setMain(id,num,unit){const e=$(id);e.textContent=num;if(unit)e.append(el('small',null,unit));}
-
-  // ---------- roof geometry, from either source ----------
-  function roofGeo(){
-    if(st.src==='report'){
-      return {area:n('qA'),pitch:n('qP'),eave:n('qE'),rake:n('qR'),ridge:n('qRi'),hips:n('qH'),valleys:n('qV'),gable:null};
-    }
-    const L=n('rL'),W=n('rW'),p=n('rP'),pf=Math.sqrt(1+(p/12)**2),run=W/2,rise=run*p/12;
-    const area=L*W*pf+n('rX');
-    if(st.style==='gable') return {area,pitch:p,eave:2*L,rake:4*run*pf,ridge:L,hips:0,valleys:0,gable:{L,slope:run*pf}};
-    const hip=Math.sqrt(2*run*run+rise*rise);
-    return {area,pitch:p,eave:2*(L+W),rake:0,ridge:Math.max(0,L-W),hips:4*hip,valleys:0,gable:null};
+  const LS='jobcalc-v4', APP_VERSION='V9';
+  const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
+  const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
+  const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
+  const PANELS=[['35.25|ex','Exposed fastener 35¼"'],['36|ex','R-panel / PBR 36"'],['24|ex','5V crimp 24"'],['16|ss','Standing seam 16"'],['12|ss','Standing seam 12"'],['18|ss','Standing seam 18"']];
+  const PLANKS=[[4,'5¼" plank, 4" exposure'],[5,'6¼" plank, 5" exposure'],[6,'7¼" plank, 6" exposure'],[7,'8¼" plank, 7" exposure'],[8,'9¼" plank, 8" exposure'],[10.75,'12" plank, 10¾" exposure']];
+  const E=s=>s.split(' ').map(x=>{const m=x.match(/^([NESW])([\d.]+)([rw]?)$/);return {d:m[1],len:+m[2],t:m[3]==='r'?'rake':m[3]==='w'?'wall':'eave'};});
+  const DEF=()=>({roofs:[{style:'gable',L:40,W:30,pitch:6}],trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'faces',faces:[{t:'hip',eave:'',ridge:'',slope:'',top:'ridge'}],faceSel:'all',style:'gable',L:40,W:30,pitch:6,
+    rep:{area:'',pitch:6,eave:'',rake:'',ridge:'',hip:'',valley:'',flash:''},model:null,
+    sections:[{name:'Main roof',pitch:6,edges:E('E40 S30 W40 N30')}],
+    over:2,waste:5,wasteEdited:false,nails:4,
+    price:{panel:0,trim:0,screw:0},
+    cov:{start:110,ridge:25,trim:10,screws:80,under:10,ice:66,iceRows:1,nailsBox:7200},
+    exp:7,corners:{out:4,inn:0},extra:5,
+    walls:[{name:'Front',w:40,h:9,peak:0,open:[{t:'window',w:3,h:5,x:6,y:3},{t:'door',w:3,h:7,x:18.5},{t:'window',w:3,h:5,x:31,y:3}]}]});
+  let st=DEF();
+  function save(){try{localStorage.setItem(LS,JSON.stringify(st));}catch(e){}}
+  function load(){
+    try{
+      const s=JSON.parse(localStorage.getItem(LS)||'null');
+      if(s&&typeof s==='object'){
+        st=Object.assign(DEF(),s); for(const k of ['rep','price','cov','corners'])st[k]=Object.assign(DEF()[k],s[k]||{});
+        if(!Array.isArray(s.roofs)||!s.roofs.length) st.roofs=[{style:st.style==='hip'?'hip':'gable',L:st.L,W:st.W,pitch:+st.pitch||6}];   // one roof from earlier versions
+        // the old built-in example (Fernwood Rd) is gone: clear it from saved jobs
+        const sig=x=>Array.isArray(x)?x.map(q=>(q.edges||[]).map(e=>e.d+e.len).join(' ')).join('|'):'';
+        if(sig(st.sections)==='E30 S10 E15 S23 W15 S10 W30 N12 W8 N10 N9 E8 N13|E14 S6 W14 N6') st.sections=DEF().sections;
+        if(s.view&&!s.trade){st.trade=/^side/.test(s.view)?'siding':'roof';st.tab=/Res$/.test(s.view)?'materials':'measure';}   // from the previous version
+        st.tab='measure';
+        return;
+      }
+      const old=JSON.parse(localStorage.getItem('jobcalc-v3')||'null');
+      if(old&&old.st&&Array.isArray(old.st.sections)&&old.st.sections.length){st.sections=old.st.sections;if(old.st.src==='layout')st.method='trace';if(old.st.mat)st.mat=old.st.mat;}
+    }catch(e){}
   }
 
-  function roof(){
-    const g=roofGeo(), w=1+n('rWaste')/100;
-    const sqW=g.area*w/100;
-    const isSS=st.mat==='metal'&&$('mPanel').value.endsWith('|ss');
-    const under=['Underlayment'+(isSS?' (high-temp synthetic)':''),Math.ceil(g.area*1.1/100/Math.max(.1,n('cUnder')))+' rolls'];
-    const iceLF=g.eave*Math.max(0,Math.round(n('cIceRows')))+g.valleys;
-    const ice=['Ice and water shield',Math.ceil(iceLF/Math.max(1,n('cIce')))+' rolls',f(iceLF)+' ft'];
-    const cut=$('rCut'); cut.innerHTML=''; $('rCost').innerHTML='';
-    $('rNote').textContent='';
-    if(!(g.area>0)){ setMain('rOut','0',''); $('rLbl').textContent=st.src==='report'?'Enter the report numbers or import the report.':'Enter the roof size.'; rows($('rList'),[]); return; }
+  // ---------- building blocks ----------
+  let timer=null; const later=fn=>{clearTimeout(timer);timer=setTimeout(fn,350);};
+  const ICON={
+    copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></svg>',
+    gear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>',
+    arrow:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    print:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14.5h10V21H7z"/></svg>',
+    ruler:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="m7 13 2 2M9.5 10.5l1.5 1.5M12 8l2 2M14.5 5.5l1.5 1.5"/></svg>',
+    warn:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px"><path d="M12 4 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>',
+    logo:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M6 17 16 9l10 8" fill="none" stroke="var(--accent-ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20.5h12M10 24h12" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round"/></svg>'};
+  const svgEl=html=>{const t=document.createElement('template');t.innerHTML=html;return t.content.firstChild;};
+  function field(label,input,unit,cls){const l=el('label','field'+(cls?' '+cls:''));l.append(el('span',null,label));if(unit){const u=el('div','unit');u.dataset.u=unit;u.append(input);l.append(u);}else l.append(input);return l;}
+  function numIn(get,set,after,aria){const i=el('input','inp');i.type='number';i.min='0';i.step='any';i.inputMode='decimal';const v=get();i.value=v==null?'':v;i.placeholder='0';if(aria)i.setAttribute('aria-label',aria);
+    i.oninput=()=>{set(i.value===''?'':Math.max(0,parseFloat(i.value)||0));save();if(after)after();};i.onfocus=()=>i.select();return i;}
+  function ftInIn(get,set,after,aria){
+    const w=el('div','fi'), v=+get()||0; let ft=Math.floor(v+1e-9), inch=Math.round((v-ft)*12*100)/100; if(inch>=12){ft++;inch=0;}
+    const box=(val,u,name)=>{const d=el('div','unit');d.dataset.u=u;const i=el('input','inp');i.type='number';i.min='0';i.step='any';i.inputMode='decimal';
+      i.value=val>0?val:'';i.placeholder='0';i.setAttribute('aria-label',(aria||'Length')+', '+name);i.onfocus=()=>i.select();d.append(i);w.append(d);return i;};
+    const fI=box(ft,'ft','feet'), iI=box(inch,'in','inches');
+    const total=()=>{const t=Math.max(0,parseFloat(fI.value)||0)+Math.max(0,parseFloat(iI.value)||0)/12;set(t>0?Math.round(t*1e6)/1e6:'');save();if(after)after();};
+    fI.oninput=total; iI.oninput=total;
+    iI.onchange=()=>{const n=Math.max(0,parseFloat(iI.value)||0);if(n>=12){fI.value=(Math.max(0,parseFloat(fI.value)||0)+Math.floor(n/12));iI.value=Math.round((n%12)*100)/100||'';total();}};
+    return w;
+  }
+  function ftField(label,get,set,after,cls){const d=el('div','field'+(cls?' '+cls:''));d.setAttribute('role','group');d.setAttribute('aria-label',label);d.append(el('span',null,label),ftInIn(get,set,after,label));return d;}
+  const num=(label,get,set,unit,after,cls)=>unit==='ft'?ftField(label,get,set,after,cls):field(label,numIn(get,set,after),unit,cls);
+  function selIn(opts,get,set,after,aria){const s=el('select','inp');if(aria)s.setAttribute('aria-label',aria);for(const [v,t] of opts){const o=el('option',null,t);o.value=v;if(String(get())===String(v))o.selected=true;s.append(o);}s.onchange=()=>{set(s.value);save();if(after)after();};return s;}
+  const pick=(label,opts,get,set,after)=>field(label,selIn(opts,get,set,after));
+  function txt(label,get,set,after){const i=el('input','inp');i.value=get()||'';i.oninput=()=>{set(i.value);save();if(after)after();};return field(label,i);}
+  function seg(label,opts,get,set,cls){const g=el('div','seg'+(cls?' '+cls:''));g.setAttribute('role','group');g.setAttribute('aria-label',label);
+    for(const [v,t] of opts){const b=el('button',null,t);b.type='button';b.setAttribute('aria-pressed',String(get()===v));b.onclick=()=>{set(v);save();render();};g.append(b);}return g;}
+  function card(title,aside,...kids){const c=el('section','card');if(title){const h=el('div','card-h');h.append(el('h2',null,title));if(aside)h.append(el('span',null,aside));c.append(h);}c.append(...kids.filter(Boolean));return c;}
+  function grid(cls,...kids){const g=el('div',cls);g.append(...kids.filter(Boolean));return g;}
+  function btn(label,fn,cls,icon){const b=el('button','btn'+(cls?' '+cls:''));b.type='button';b.append(label);if(icon)b.append(svgEl(ICON[icon]));b.onclick=fn;return b;}
+  function twoTap(b,label,armed,fn){b.onclick=()=>{if(!b.dataset.arm){b.dataset.arm='1';b.textContent=armed;setTimeout(()=>{delete b.dataset.arm;b.textContent=label;},3000);return;}delete b.dataset.arm;fn();};}
+  function mlist(rows){const u=el('ul','mlist');for(const [k,v,note] of rows){if(v==null)continue;const li=el('li');li.append(el('span','n',k));if(note)li.append(el('span','d',note));li.append(el('span','q',v));u.append(li);}return u;}
+  function empty(title,text){const c=el('section','card empty');c.append(svgEl(ICON.ruler),el('h2',null,title),el('p',null,text),btn('Go to Measure',()=>go('measure'),'ghost'));return c;}
+  function callout(text){const p=el('p','callout');p.append(svgEl(ICON.warn),el('span',null,text));return p;}
+  function countUp(node,to,suffix){
+    const from=+node.dataset.v||0; node.dataset.v=to;
+    const fin=()=>{node.firstChild.textContent=f(to);};
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches||Math.abs(to-from)<1){fin();return;}
+    const t0=performance.now(), d=650;
+    const step=t=>{const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3);node.firstChild.textContent=f(from+(to-from)*e);if(k<1)requestAnimationFrame(step);};
+    requestAnimationFrame(step);
+  }
+  let shownArea={roof:0,siding:0};
 
+  // ---------- shell ----------
+  const TITLES={measure:'Measure',materials:'Materials',cuts:'Cut list',layout:'Layout'};
+  function render(){
+    document.body.append($('imp')); $('imp').hidden=true;
+    const app=$('app'); app.innerHTML='';
+    const hd=el('header','hd'), row=el('div','hd-row'), brand=el('div','brand');
+    brand.append(svgEl(ICON.logo),el('span',null,'Job calculator'),el('span','ver',APP_VERSION));
+    const icons=el('div','icons'), cp=el('button','ibtn'), gs=el('button','ibtn');
+    cp.append(svgEl(ICON.copy)); cp.setAttribute('aria-label','Copy the list'); cp.onclick=()=>copy(st.trade==='roof'?roofText():sideText());
+    gs.append(svgEl(ICON.gear)); gs.setAttribute('aria-label','Settings'); gs.onclick=openSheet;
+    icons.append(cp,gs); row.append(brand,icons);
+    hd.append(row,el('h1','title',TITLES[st.tab]),seg('Trade',[['roof','Roof'],['siding','Siding']],()=>st.trade,x=>{st.trade=x;},'big'),chips());
+    app.append(hd);
+    const v=el('div','view'); v.id='res'; app.append(v);
+    ({measure:st.trade==='roof'?roofMeasure:sideMeasure,materials:st.trade==='roof'?roofMaterials:sideMaterials,
+      cuts:st.trade==='roof'?roofCuts:sideCuts,layout:st.trade==='roof'?roofLayout:sideLayout})[st.tab](v);
+    document.querySelectorAll('#tabbar button').forEach(b=>{if(b.dataset.tab===st.tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+    save();
+  }
+  function go(t){st.tab=t;render();window.scrollTo(0,0);}
+  document.querySelectorAll('#tabbar button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+  function chips(){
+    const c=el('div','chips'); c.id='chips'; const add=(v,u)=>{const s=el('span','chip');s.append(el('b',null,v),u);c.append(s);};
+    if(st.trade==='roof'){const r=roofCalc();if(r.err)return c;add(f(r.area),'sq ft');if(r.panels)add(f(r.panels),'panels');if(r.lf)add(f(r.lf),'ft of panel');if(r.bundles)add(f(r.bundles),'bundles');}
+    else{const r=sideCalc();if(r.err)return c;add(f(r.S.net),'sq ft');add(f(r.buy),'planks');add(f(r.S.walls.length),r.S.walls.length>1?'walls':'wall');}
+    return c;
+  }
+  const refresh=()=>{const o=$('chips');if(o)o.replaceWith(chips());};
+
+  // ---------- settings sheet ----------
+  function openSheet(){
+    const scrim=el('div','scrim'), sh=el('div','sheet'); sh.setAttribute('role','dialog'); sh.setAttribute('aria-modal','true'); sh.setAttribute('aria-label','Settings');
+    const close=()=>{scrim.remove();render();};
+    scrim.onclick=e=>{if(e.target===scrim)close();};
+    const h=el('div','sheet-h'), done=el('button','pill','Done'); done.onclick=close; h.append(el('h2',null,'Settings'),done);
+    sh.append(el('div','grab'),h);
+    const C=st.cov, up=()=>later(refresh);
+    if(st.trade==='roof'){
+      sh.append(el('p','eyebrow','Waste'),num('Waste',()=>st.waste,x=>{st.waste=x;st.wasteEdited=true;},'%',up));
+      if(st.mat==='metal'){
+        sh.append(el('p','eyebrow','Panels'),num('Overhang past the eave',()=>st.over,x=>st.over=x,'in',up),
+          el('p','eyebrow','Prices'),grid('grid2',num('Panel $/ft',()=>st.price.panel,x=>st.price.panel=x,null,up),num('Trim $/ft',()=>st.price.trim,x=>st.price.trim=x,null,up)),
+          grid('grid2',num('Screws $/bag',()=>st.price.screw,x=>st.price.screw=x,null,up)),
+          el('p','eyebrow','Product sizes'),grid('grid2',num('Trim piece',()=>C.trim,x=>C.trim=x,'ft',up),num('Screws per square',()=>C.screws,x=>C.screws=x,null,up)));
+      } else {
+        sh.append(el('p','eyebrow','Product sizes'),grid('grid2',num('Starter, ft per bundle',()=>C.start,x=>C.start=x,null,up),num('Ridge cap, ft per bundle',()=>C.ridge,x=>C.ridge=x,null,up)),
+          grid('grid2',pick('Nails per shingle',[[4,'4 (standard)'],[6,'6 (high wind)']],()=>st.nails,x=>st.nails=+x,up),num('Nails per box',()=>C.nailsBox,x=>C.nailsBox=x,null,up)));
+      }
+      sh.append(grid('grid2',num('Underlayment, sq per roll',()=>C.under,x=>C.under=x,null,up),num('Ice and water, ft per roll',()=>C.ice,x=>C.ice=x,null,up)),
+        grid('grid2',num('Ice and water rows at eaves',()=>C.iceRows,x=>C.iceRows=x,null,up)));
+    } else {
+      sh.append(el('p','eyebrow','Planks'),num('Extra for breakage',()=>st.extra,x=>st.extra=x,'%',up));
+    }
+    const reset=el('button','link danger','Start a new job');
+    twoTap(reset,'Start a new job','Tap again to clear every number',()=>{st=DEF();save();scrim.remove();render();window.scrollTo(0,0);toast('Cleared. Ready for a new job');});
+    sh.append(reset);
+    scrim.append(sh); document.body.append(scrim);
+    const esc=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',esc);if(scrim.isConnected)close();}}; document.addEventListener('keydown',esc);
+    done.focus();
+  }
+
+  // ---------- roof: measure ----------
+  function defWaste(){return st.mat==='metal'?(st.method==='report'&&!st.model?10:5):(st.method==='simple'?(st.roofs.some(r=>r.style==='hip')?15:10):12);}
+  function autoWaste(){if(!st.wasteEdited)st.waste=defWaste();}
+  function roofMeasure(v){
+    const mat=card('Material',null,seg('Material',[['metal','Metal'],['shingle','Shingles']],()=>st.mat,x=>{st.mat=x;autoWaste();}));
+    if(st.mat==='metal') mat.append(pick('Panel',PANELS,()=>st.panel,x=>st.panel=x,refresh));
+    const m=card('Roof',null,seg('How to measure',[['faces','Faces'],['simple','Simple'],['trace','Trace'],['report','Report']],()=>st.method,x=>{st.method=x;autoWaste();}));
+    if(st.method==='faces'){
+      m.append(el('p','hint','Measure each roof face on the roof: the eave, the ridge, and the slope length from the eave straight up to the ridge. Add the faces one at a time; each gets its own list and drawing.'),
+        pick('Pitch',PITCH_OPTS,()=>st.pitch,x=>st.pitch=+x,refresh));
+      faceEditors(m);
+    } else if(st.method==='simple'){
+      m.append(el('p','hint','Plain gable or hip roofs on rectangles, measured to the drip edge. Add as many as the job has, a hip roof and a gable roof together; the totals add them up.'));
+      st.roofs.forEach((r,i)=>{
+        const box=el('div','sub'), h=el('div','face-h'), pre=i?'Roof '+(i+1)+' ':'';
+        h.append(el('span','code',String(i+1)),el('b',null,(r.style==='hip'?'Hip':'Gable')+' roof'));
+        if(st.roofs.length>1){const rm=el('button','x','Remove');rm.setAttribute('aria-label','Remove roof '+(i+1));rm.onclick=()=>{st.roofs.splice(i,1);autoWaste();save();render();};h.append(rm);}
+        const lab=(t)=>{const d=num(t,()=>r[t==='Width'?'W':'L'],x=>r[t==='Width'?'W':'L']=x,'ft',()=>later(refresh));if(pre){const a=pre+t.toLowerCase();d.setAttribute('aria-label',a);d.querySelectorAll('input').forEach((x,k)=>x.setAttribute('aria-label',a+', '+(k?'inches':'feet')));}return d;};
+        box.append(h,seg((pre||'')+'Roof style',[['gable','Gable'],['hip','Hip']],()=>r.style,x=>{r.style=x;autoWaste();}),
+          grid('grid2',lab('Length along ridge'),lab('Width')),
+          field('Pitch',selIn(PITCH_OPTS,()=>r.pitch,x=>r.pitch=+x,refresh,pre?pre+'pitch':null)));
+        m.append(box);
+      });
+      const addR=el('div','addrow'); addR.style.gridTemplateColumns='1fr 1fr';
+      for(const [t,name] of [['gable','+ Gable roof'],['hip','+ Hip roof']]){const b=el('button','pill',name);b.type='button';b.onclick=()=>{const l=st.roofs[st.roofs.length-1];st.roofs.push({style:t,L:'',W:'',pitch:l?l.pitch:6});autoWaste();save();render();};addR.append(b);}
+      m.append(addR);
+    } else if(st.method==='trace'){
+      m.append(el('p','hint','Any roof with square corners. Start at a corner and go around the edge, using the report’s length diagram. Rake: a gable edge, entered as the rake length on the report. Wall: a lower roof’s high side against the house. If part of the roof has a different pitch, set it on the edges of that part.'));
+      sections(m);
+      const add=el('button','pill','+ Porch or lower roof');
+      add.onclick=()=>{st.sections.push({name:'Section '+(st.sections.length+1),pitch:+st.sections[0]?.pitch||6,x:0,y:0,edges:[{d:'E',len:0,t:'eave'}]});save();render();};
+      m.append(grid('row',add));
+    } else {
+      const q=st.rep, up=()=>later(refresh);
+      m.append(grid('grid2',
+        num('Total roof area',()=>q.area,x=>q.area=x,'ft²',up),pick('Pitch',PITCH_OPTS,()=>q.pitch,x=>q.pitch=+x,refresh),
+        num('Eaves',()=>q.eave,x=>q.eave=x,'ft',up),num('Rakes',()=>q.rake,x=>q.rake=x,'ft',up),
+        num('Ridges',()=>q.ridge,x=>q.ridge=x,'ft',up),num('Hips',()=>q.hip,x=>q.hip=x,'ft',up),
+        num('Valleys',()=>q.valley,x=>q.valley=x,'ft',up),num('Flashing',()=>q.flash,x=>q.flash=x,'ft',up)),
+        el('p','hint',st.model?'Totals from the report. The roof shape below sets the panels; these set the trim.':'Import an EagleView PDF above, or type the totals here. Typed totals give square feet and materials. For a panel cut list and layout, import the PDF or use Trace.'));
+      if(st.model){ const by={}; for(const fc of st.model.faces) by[fc.pitch]=(by[fc.pitch]||0)+1;
+        const rm=el('button','pill','Remove roof shape'); twoTap(rm,'Remove roof shape','Tap again to remove it',()=>{st.model=null;autoWaste();save();render();});
+        const note=el('p','hint'); note.append(el('strong',null,'Roof shape from the report: '),st.model.faces.length+' faces ('+Object.keys(by).sort((a,b)=>a-b).map(p=>by[p]+' at '+p+'/12').join(', ')+'), read from the pitch diagram. Panel list, cut list and layout use it.');
+        m.append(note,grid('row',rm)); }
+    }
+    if(st.method==='report'||impUsed){ $('imp').hidden=false; v.append(mat,$('imp'),m,btn('See materials',()=>go('materials'),null,'arrow')); }
+    else v.append(mat,m,btn('See materials',()=>go('materials'),null,'arrow'));
+    if(st.method==='trace') secStatus();
+  }
+
+  // ---------- roof: results ----------
+  // each simple roof is its own section, set side by side so they don't touch
+  function simpleSecs(){
+    let x=0; const out=[];
+    st.roofs.forEach((r,i)=>{
+      const p=+r.pitch||0, pf=Math.sqrt(1+(p/12)**2), L=+r.L||0, W=+r.W||0; if(!(L>0&&W>0)) return;
+      out.push({name:'Roof '+(i+1)+' ('+(r.style==='hip'?'hip':'gable')+')',pitch:p,x,y:0,edges:r.style==='gable'
+        ?[{d:'E',len:L,t:'eave'},{d:'S',len:W*pf,t:'rake'},{d:'W',len:L,t:'eave'},{d:'N',len:W*pf,t:'rake'}]
+        :[{d:'E',len:L,t:'eave'},{d:'S',len:W,t:'eave'},{d:'W',len:L,t:'eave'},{d:'N',len:W,t:'eave'}]});
+      x+=L+8; });
+    return out;
+  }
+  let roofKey='', roofR=null;
+  function roofCalc(){
+    const metal=st.mat==='metal', [covIn,kind]=st.panel.split('|'), cov=+covIn, covFt=cov/12, ss=metal&&kind==='ss', over=(+st.over||0)/12, C=st.cov;
+    let g, R=null, skipNote='';
+    if(st.method==='report'){
+      const q=st.rep; g={area:+q.area||0,pitch:+q.pitch||0,eave:+q.eave||0,rake:+q.rake||0,ridge:+q.ridge||0,hips:+q.hip||0,valleys:+q.valley||0,wall:+q.flash||0};
+      if(!(g.area>0)&&!st.model) return {err:'Enter the total roof area from the report, or import the report.'};
+      if(st.model&&st.model.faces&&st.model.faces.length){
+        const key=JSON.stringify([st.model,q,covFt,over]); if(key!==roofKey){roofKey=key;roofR=facetRoof(st.model,q,covFt,over);} R=roofR;
+        if(R.faces.length) g={area:R.area,pitch:R.pitch,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:R.valleys,wall:R.wall}; else R=null;
+      }
+    } else if(st.method==='faces'){
+      const sel=selFace(), items=st.faces.map((F,i)=>({F,i})).filter(x=>sel==='all'||x.i===sel);
+      const key=JSON.stringify(['faces',items,covFt,over]); if(key!==roofKey){roofKey=key;roofR=handRoof(items,covFt,over);} R=roofR;
+      if(!R.faces.length){const bad=R.per.find(x=>x.err);return {err:bad?'Face '+bad.code+': '+bad.err:'Add a roof face on Measure.'};}
+      const skipped=R.per.filter(x=>x.err&&!x.blank);
+      if(skipped.length) skipNote='Not counted yet: '+skipped.map(x=>'face '+x.code+' ('+x.err.replace(/\.$/,'').toLowerCase()+')').join('; ')+'.';
+      g={area:R.area,pitch:+st.pitch||0,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:0,wall:R.wall};
+    } else {
+      if(st.method==='simple'){ if(!simpleSecs().length) return {err:'Enter the roof length and width.'};
+        const left=st.roofs.map((r,i)=>(+r.L>0&&+r.W>0)?null:'roof '+(i+1)).filter(Boolean); if(left.length) skipNote='Not counted yet: '+left.join(', ')+' (enter its length and width).'; }
+      const secs=st.method==='simple'?simpleSecs():st.sections, key=JSON.stringify([secs,covFt,over]);
+      if(key!==roofKey){roofKey=key;roofR=buildRoof(secs,covFt,over);} R=roofR;
+      const bad=R.secs.find(x=>!x.ok);
+      if(bad) return {err:bad.name+': '+bad.msg+' Fix it on the measurements screen.'};
+      if(!R.faces.length) return {err:'Enter the roof outline.'};
+      g={area:R.area,pitch:R.pitch,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:R.valleys,wall:R.wall};
+    }
+    const w=1+(+st.waste||0)/100, sqW=g.area*w/100, rows=[];
+    const lowShingle=!metal&&g.pitch>=2&&g.pitch<4;
+    const under=['Underlayment',Math.ceil(g.area*1.1*(lowShingle?2:1)/100/Math.max(.1,+C.under||10))+' rolls',(ss?'High-temp synthetic. ':'')+(lowShingle?'2 layers for low slope. ':'')+f(C.under)+' squares per roll'];
+    const iceLF=g.eave*Math.max(0,Math.round(+C.iceRows||0))+g.valleys;
+    const ice=['Ice and water shield',Math.ceil(iceLF/Math.max(1,+C.ice||66))+' rolls',f(iceLF)+' ft at eaves and valleys'];
+    let cost=null, cut=null, sum={};
+    if(!metal){
+      const nails=Math.ceil(sqW*67)*(+st.nails||4), box=Math.max(1,+C.nailsBox||7200); sum={bundles:Math.ceil(sqW*3)};
+      rows.push(['Shingles',Math.ceil(sqW*3)+' bundles','3 bundles per square, waste included'],
+        ['Starter strip',Math.ceil((g.eave+g.rake)/Math.max(1,+C.start||110))+' bundles',f(g.eave+g.rake)+' ft of eaves and rakes'],
+        ['Ridge cap',Math.ceil((g.ridge+g.hips)/Math.max(1,+C.ridge||25))+' bundles',f(g.ridge+g.hips)+' ft of ridges and hips'],
+        ['Drip edge',Math.ceil((g.eave+g.rake)*1.05/10)+' pcs','10 ft pieces'],
+        ['Headwall flashing',g.wall?Math.ceil(g.wall*1.05/10)+' pcs':null,f(g.wall)+' ft'],
+        under,ice,['Coil nails',Math.max(1,Math.ceil(nails/box))+' box'+(nails>box?'es':''),'about '+f(nails)+' nails']);
+    } else {
+      const trimLen=Math.max(1,+C.trim||10); let trimPcs=0;
+      const pcs=(k,lf,what)=>{if(!(lf>0))return [k,null];const n=Math.ceil(lf*1.05/trimLen);trimPcs+=n;return [k,n+' pcs',f(lf)+' ft'+(what?', '+what:'')];};
+      let panels, totalLF, clips=0, screwBags=0;
+      if(R){panels=R.panels;totalLF=R.lf;clips=ss?R.clips:0;cut=engineItems(R);}
+      else {totalLF=g.area*w/covFt;clips=ss?Math.ceil(totalLF/2)+Math.ceil(g.eave/covFt):0;}
+      const name=PANELS.find(p=>p[0]===st.panel)[1]; sum={panels:R?panels:0,lf:totalLF};
+      rows.push(R?['Panels',panels+' pcs',name+', '+f(totalLF)+' ft, cut to length (lengths listed above)']:['Panels',f(Math.ceil(totalLF/10)*10)+' ft',name+', waste included']);
+      rows.push(pcs('Eave trim',g.eave),pcs('Rake trim',g.rake),pcs('Ridge cap',g.ridge),pcs('Hip cap',g.hips),pcs('Valley flashing',g.valleys),pcs('Headwall flashing',g.wall));
+      if(ss){
+        rows.push(pcs('Z-closure',2*g.ridge+2*g.hips),['Panel clips','about '+f(clips),'24" apart'],['Pancake screws','about '+f(clips),'1 per clip']);
+      } else {
+        const screws=Math.ceil(sqW*(+C.screws||80)); screwBags=Math.ceil(screws/250);
+        rows.push(['Inside closures',Math.ceil(g.eave/covFt)+' pcs','at the eaves'],
+          ['Outside closures',(g.ridge+g.hips)?Math.ceil(2*(g.ridge+g.hips)/covFt)+' pcs':null,'at ridges and hips'],
+          ['Panel screws',screwBags+' bags','about '+f(screws)+', 250 per bag']);
+      }
+      rows.push(under,ice);
+      for(const r of rows) if(r[0].includes('trim')||r[0].includes('cap')||r[0].includes('flashing')||r[0]==='Z-closure') if(r[1]) r[2]+=', '+f(trimLen)+' ft pieces';
+      const P=st.price, cP=totalLF*(+P.panel||0), cT=trimPcs*trimLen*(+P.trim||0), cS=screwBags*(+P.screw||0);
+      if(cP+cT+cS>0) cost={total:cP+cT+cS,ss,lines:[['Panels',cP],['Trim',cT],['Screws',cS]].filter(x=>x[1]>0)};
+    }
+    return {...sum,area:g.area,sqW,warn:[slopeWarn(g.pitch,ss),skipNote].filter(Boolean).join(' '),rows:rows.filter(r=>r&&r[1]!=null),cut,R,cost,metal};
+  }
+  const money=x=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  function byLength(R){const m=new Map();for(const fc of R.faces)for(const p of fc.panels)m.set(p.inch,(m.get(p.inch)||0)+1);return [...m].sort((a,b)=>b[0]-a[0]);}
+  const engineItems=R=>({byLen:byLength(R),faces:R.faces.filter(fc=>fc.panels.length).map(fc=>({code:fc.code,dir:fc.dir,name:fc.label||(R.secs.length>1?R.secs[fc.sec].name:''),pieces:fc.panels}))});
+
+  // ---------- by face: each face measured on the roof (eave, ridge, slope length) ----------
+  const SHAPES=[['hip','Hip side'],['end','Hip end'],['gable','Gable side']];
+  const SHAPE_ICON={hip:'<svg viewBox="0 0 40 28" aria-hidden="true"><path d="M3 25h34L27 4H13z"/></svg>',end:'<svg viewBox="0 0 40 28" aria-hidden="true"><path d="M3 25h34L20 3z"/></svg>',gable:'<svg viewBox="0 0 40 28" aria-hidden="true"><path d="M4 25h32V4H4z"/></svg>'};
+  const shapeName=t=>(SHAPES.find(x=>x[0]===t)||SHAPES[0])[1];
+  const faceCode=i=>i<26?String.fromCharCode(65+i):String.fromCharCode(64+Math.floor(i/26))+String.fromCharCode(65+i%26);
+  // true shape of the face, eave along the bottom (y = slope length), x from the left end of the eave
+  function faceGeo(F){
+    const E=+F.eave||0, S=+F.slope||0, R=F.t==='hip'?+F.ridge||0:F.t==='gable'?E:0;
+    if(!(E>0)) return {err:'Enter the eave length.'};
+    if(!(S>0)) return {err:'Enter the slope length (eave up to the ridge).'};
+    if(F.t==='hip'&&!(R>0)) return {err:'Enter the ridge length, or pick Hip end for a triangle.'};
+    if(F.t==='hip'&&R>E+1e-6) return {err:'On a hip side the ridge is shorter than the eave. Check the two lengths.'};
+    const a=(E-R)/2, hip=Math.hypot(a,S), top=F.t==='gable'&&F.top==='wall'?'wall':'ridge';
+    const pts=F.t==='end'?[[0,S],[E,S],[E/2,0]]:[[0,S],[E,S],[E-a,0],[a,0]];
+    const edges=[{a:pts[0],b:pts[1],t:'eave',len:E,lab:'Eave '+ftIn(Math.round(E*12))}];
+    if(F.t==='end') edges.push({a:pts[1],b:pts[2],t:'hip',len:hip,lab:'Hip '+ftIn(Math.round(hip*12))},{a:pts[2],b:pts[0],t:'hip',len:hip,lab:'Hip '+ftIn(Math.round(hip*12))});
+    else if(F.t==='hip') edges.push({a:pts[1],b:pts[2],t:'hip',len:hip,lab:'Hip '+ftIn(Math.round(hip*12))},{a:pts[2],b:pts[3],t:'ridge',len:R,lab:'Ridge '+ftIn(Math.round(R*12))},{a:pts[3],b:pts[0],t:'hip',len:hip,lab:'Hip '+ftIn(Math.round(hip*12))});
+    else edges.push({a:pts[1],b:pts[2],t:'rake',len:S,lab:'Rake '+ftIn(Math.round(S*12))},{a:pts[2],b:pts[3],t:top,len:E,lab:(top==='wall'?'Wall ':'Ridge ')+ftIn(Math.round(E*12))},{a:pts[3],b:pts[0],t:'rake',len:S,lab:'Rake '+ftIn(Math.round(S*12))});
+    return {pts,edges,E,S,R,area:F.t==='end'?E*S/2:(E+R)/2*S};
+  }
+  // which face the result tabs show: 'all' or a face's index
+  const selFace=()=>st.method==='faces'&&st.tab!=='measure'&&Number.isInteger(st.faceSel)&&st.faceSel<st.faces.length?st.faceSel:'all';
+  function handRoof(items,cov,over){
+    const out={faces:[],per:[],secs:[],area:0,panels:0,lf:0,clips:0,eave:0,rake:0,ridge:0,hips:0,wall:0};
+    let ridgeAll=0, hipAll=0, ridgeMax=0;
+    items.forEach(({F,i},k)=>{
+      const code=faceCode(i), name=shapeName(F.t), G=faceGeo(F);
+      out.secs.push({name,ok:false,V:[],edges:[]});
+      if(G.err){out.per.push({F,code,name,err:G.err,blank:!(+F.eave>0)&&!(+F.slope>0)&&!(+F.ridge>0)});return;}
+      const Ri=facetRoof({faces:[{pts:G.pts,pitch:0,eave:{ax:0,c:G.S,n:-1},rev:F.start==='right'}]},{},cov,over), fc=Ri.faces[0];
+      if(!fc){out.per.push({F,code,name,err:'Too small to fit a panel.'});return;}
+      fc.code=code; fc.sec=k; fc.dir=null; fc.label=name; fc.area=G.area;
+      fc.panels.forEach((p,j)=>p.code=code+(j+1));
+      Ri.panels=fc.panels.length; Ri.lf=fc.panels.reduce((a,p)=>a+p.inch/12,0); Ri.area=G.area;
+      Ri.secs=[{name,ok:true,msg:'',note:'',V:G.pts,edges:G.edges}];
+      const len=t=>G.edges.filter(e=>e.t===t).reduce((a,e)=>a+e.len,0);
+      out.eave+=len('eave'); out.rake+=len('rake'); out.wall+=len('wall'); ridgeAll+=len('ridge'); hipAll+=len('hip'); ridgeMax=Math.max(ridgeMax,len('ridge'));
+      out.per.push({F,code,name,G,R:Ri,fc});
+      out.faces.push(fc); out.area+=G.area; out.panels+=Ri.panels; out.lf+=Ri.lf; out.clips+=fc.panels.reduce((a,p)=>a+Math.ceil(p.inch/24)+1,0);
+    });
+    // a hip or ridge line is shared by the two faces either side of it, so with several faces it is counted once
+    const shared=out.faces.length>1?2:1; out.ridge=Math.max(ridgeAll/shared,ridgeMax); out.hips=hipAll/shared; out.shared=shared>1;
+    return out;
+  }
+  function facePreview(G,start){
+    const W=G.E, H=G.S, k=Math.max(W,H*1.6), fs=k*.055, m=fs*2.4;
+    const svg=sv('svg',{viewBox:(-m)+' '+(-m)+' '+(W+2*m)+' '+(H+2*m),role:'img','aria-label':'Face shape with its measurements'});
+    sv('polygon',{points:pts(G.pts),fill:'var(--pa)',stroke:'var(--accent)','stroke-width':fs*.18,'stroke-linejoin':'round'},svg);
+    dimLabels(svg,G.edges,G.pts,fs);
+    sv('line',{x1:W*.5,y1:H,x2:W*.5,y2:0,stroke:'var(--sky)','stroke-width':fs*.08,'stroke-dasharray':(fs*.4)+' '+(fs*.3)},svg);
+    const t=sv('text',{x:W*.5+fs*.5,y:H*.5,'font-size':fs*.9,'dominant-baseline':'central'},svg); t.textContent='Slope '+ftIn(Math.round(H*12));
+    if(start){const r=start==='right',x0=r?W:0,dx=r?-1:1;sv('path',{d:'M'+(x0+dx*fs*.3)+' '+(H+fs*1.0)+'h'+(dx*fs*2.2)+'m'+(-dx*fs*.7)+' '+(-fs*.5)+'l'+(dx*fs*.7)+' '+(fs*.5)+'l'+(-dx*fs*.7)+' '+(fs*.5),fill:'none',stroke:'var(--accent)','stroke-width':fs*.2,'stroke-linecap':'round','stroke-linejoin':'round'},svg);
+      sv('text',{x:x0+dx*fs*2.9,y:H+fs*1.0,'font-size':fs*.8,'text-anchor':r?'end':'start','dominant-baseline':'central',class:'st1'},svg).textContent='Panel 1';}
+    return svg;
+  }
+  // a measurement on the outside of each edge, turned to run along it
+  function dimLabels(svg,edges,P,fs,cls){
+    const cx=P.reduce((a,p)=>a+p[0],0)/P.length, cy=P.reduce((a,p)=>a+p[1],0)/P.length;
+    for(const e of edges){ if(!e.lab) continue;
+      const dx=e.b[0]-e.a[0], dy=e.b[1]-e.a[1], L=Math.hypot(dx,dy)||1; let nx=-dy/L, ny=dx/L;
+      const mx=(e.a[0]+e.b[0])/2, my=(e.a[1]+e.b[1])/2; if((mx-cx)*nx+(my-cy)*ny<0){nx=-nx;ny=-ny;}
+      let ang=Math.atan2(dy,dx)*180/Math.PI; if(ang>90)ang-=180; if(ang<=-90)ang+=180;
+      const x=mx+nx*fs*.95, y=my+ny*fs*.95, t=sv('text',{x:x.toFixed(2),y:y.toFixed(2),'font-size':fs.toFixed(2),'text-anchor':'middle','dominant-baseline':'central',transform:'rotate('+ang.toFixed(1)+' '+x.toFixed(2)+' '+y.toFixed(2)+')'},svg);
+      if(cls) t.setAttribute('class',cls); t.textContent=e.lab; }
+  }
+  function faceEditors(host){
+    const list=el('div','erows');
+    st.faces.forEach((F,i)=>{
+      const box=el('div','sub'), h=el('div','face-h');
+      h.append(el('span','code',faceCode(i)),el('b',null,shapeName(F.t)));
+      const dup=el('button','x','Copy'); dup.setAttribute('aria-label','Copy face '+faceCode(i)); dup.onclick=()=>{st.faces.splice(i+1,0,JSON.parse(JSON.stringify(F)));save();render();};
+      const rm=el('button','x','Remove'); rm.setAttribute('aria-label','Remove face '+faceCode(i)); rm.onclick=()=>{st.faces.splice(i,1);st.faceSel='all';save();render();};
+      h.append(dup); if(st.faces.length>1) h.append(rm);
+      const shapes=el('div','shapes'); shapes.setAttribute('role','group'); shapes.setAttribute('aria-label','Face '+faceCode(i)+' shape');
+      for(const [t,name] of SHAPES){const b=el('button');b.type='button';b.setAttribute('aria-pressed',String(F.t===t));b.append(svgEl(SHAPE_ICON[t]),name);
+        b.onclick=()=>{F.t=t;if(t==='hip'&&!(+F.ridge>0))F.ridge=Math.max(1,Math.round((+F.eave||0)/2));save();render();};shapes.append(b);}
+      const prev=el('div','fprev'), stt=el('span','status');
+      const upd=()=>{const G=faceGeo(F);prev.innerHTML='';if(G.err){stt.className='status err';stt.textContent=G.err;prev.hidden=true;}
+        else{prev.hidden=false;prev.append(facePreview(G,F.start==='right'?'right':'left'));const R=handRoof([{F,i}],(+st.panel.split('|')[0]||36)/12,(+st.over||0)/12);stt.className='status ok';stt.textContent=f(G.area)+' sq ft'+(st.mat==='metal'&&R.panels?' \u00b7 '+R.panels+' panels':'');}
+        later(refresh);};
+      const lab='Face '+faceCode(i)+' ';
+      const ff=(label,get,set)=>{const d=ftField(label,get,set,upd),a=lab+label.split(',')[0].toLowerCase();d.setAttribute('aria-label',a);d.querySelectorAll('input').forEach((x,k)=>x.setAttribute('aria-label',a+', '+(k?'inches':'feet')));return d;};
+      const fields=grid('grid2',ff('Eave',()=>F.eave,x=>F.eave=x),
+        F.t==='hip'?ff('Ridge',()=>F.ridge,x=>F.ridge=x):F.t==='gable'?field('Top edge',selIn([['ridge','Ridge'],['wall','Against a wall']],()=>F.top||'ridge',x=>F.top=x,upd,lab+'top edge')):null);
+      const start=field('Panel 1 starts at (facing the eave)',seg('Face '+faceCode(i)+' panel 1 starts at',[['left','Left end'],['right','Right end']],()=>F.start==='right'?'right':'left',x=>F.start=x));
+      const see=el('button','pill','Materials for face '+faceCode(i)+' \u2192'); see.type='button'; see.onclick=()=>{st.faceSel=i;go('materials');};
+      box.append(h,shapes,fields,ff('Slope length, eave up to the ridge',()=>F.slope,x=>F.slope=x),start,prev,grid('row',stt),see);
+      list.append(box); upd();
+    });
+    const add=el('div','addrow');
+    for(const [t,name] of SHAPES){const b=el('button','pill','+ '+name);b.type='button';b.onclick=()=>{const l=st.faces[st.faces.length-1];st.faces.push({t,eave:l?l.eave:30,ridge:t==='hip'?(l&&+l.ridge>0?l.ridge:15):0,slope:l?l.slope:15,top:'ridge'});save();render();};add.append(b);}
+    host.append(list,add);
+  }
+  function faceSize(fc){const P=fc.outline||[];return Math.max(...P.map(p=>p[0]))-Math.min(...P.map(p=>p[0]));}
+
+  // ---------- thumbnails ----------
+  function thumbRoof(R){
+    const box=el('div','thumb'), s=sv('svg',{viewBox:'0 0 100 80','aria-hidden':'true'});
+    if(R&&R.secs.some(x=>x.ok)){
+      let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+      for(const q of R.secs) if(q.ok) for(const [x,y] of q.V){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
+      const k=Math.min(92/(x1-x0||1),72/(y1-y0||1)), ox=(100-(x1-x0)*k)/2, oy=(80-(y1-y0)*k)/2, P=([x,y])=>[(x-x0)*k+ox,(y-y0)*k+oy];
+      for(const fc of R.faces){const o=(fc.outline||[...fc.rows.map(r=>fc.toP(r.s,r.a)),...fc.rows.slice().reverse().map(r=>fc.toP(r.s,r.b))]).map(P);
+        sv('polygon',{points:pts(o),fill:'var(--pb)',stroke:'var(--accent)','stroke-width':1.2,'stroke-linejoin':'round'},s);}
+    } else sv('path',{d:'M12 46 50 16l38 30M22 40v26h56V40',fill:'none',stroke:'var(--accent)','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'},s);
+    box.append(s); return box;
+  }
+  function thumbWall(w){
+    const box=el('div','thumb'), s=sv('svg',{viewBox:'0 0 100 80','aria-hidden':'true'});
+    const W=+w.w||1, H=+w.h||1, P=+w.peak||0, T=H+P, k=Math.min(90/W,70/T), ox=(100-W*k)/2, oy=(80-T*k)/2, Y=y=>oy+(T-y)*k;
+    const shape=[[ox,Y(0)],[ox+W*k,Y(0)],[ox+W*k,Y(H)]].concat(P>0?[[ox+W*k/2,Y(T)]]:[]).concat([[ox,Y(H)]]);
+    sv('polygon',{points:pts(shape),fill:'var(--pb)',stroke:'var(--accent)','stroke-width':1.4,'stroke-linejoin':'round'},s);
+    for(let y=+st.exp/12;y<T;y+=+st.exp/12*2) sv('line',{x1:ox,x2:ox+W*k,y1:Y(y),y2:Y(y),stroke:'var(--seam)','stroke-width':.5},s);
+    for(const o of w.open||[]){const y0=o.t==='door'?0:+o.y||0;sv('rect',{x:ox+(+o.x||0)*k,y:Y(y0+(+o.h||0)),width:(+o.w||0)*k,height:(+o.h||0)*k,fill:'var(--hole)',stroke:'var(--fg)','stroke-width':.8},s);}
+    box.append(s); return box;
+  }
+  function hero(label,area,key,sub,thumb){
+    const c=el('section','card hero'), l=el('div');
+    const big=el('p','big'); big.append(document.createTextNode(f(shownArea[key])),el('small',null,'sq ft'));
+    l.append(el('p','eyebrow',label),big,el('p','sub2',sub)); c.append(l,thumb);
+    big.dataset.v=shownArea[key]; requestAnimationFrame(()=>countUp(big,Math.round(area))); shownArea[key]=Math.round(area);
+    return c;
+  }
+  function tiles(list){const g=el('div','tiles');for(const [k,v,s,tone] of list){const t=el('div','tile t-'+tone);t.append(el('span','k',k),el('span','v',v));if(s)t.append(el('span','s',s));g.append(t);}return g;}
+  function bars(rows,fmt,unit){
+    const u=el('ul','bars'), max=Math.max(...rows.map(r=>+r[0]));
+    for(const [len,c] of rows){const li=el('li'),tr=el('span','track'),fi=el('span','fill');fi.style.width=Math.max(4,len/max*100)+'%';tr.append(fi);
+      const q=el('span','c',String(c));q.append(el('small',null,unit));li.append(el('span','l',fmt(+len)),tr,q);u.append(li);}
+    return u;
+  }
+  function total(label,value){const d=el('div','total');d.append(el('span',null,label),el('b',null,value));return d;}
+
+  // ---------- roof tabs ----------
+  function facePicker(v){
+    if(st.method!=='faces'||st.faces.length<2) return;
+    const g=el('div','wallpick'); g.setAttribute('role','group'); g.setAttribute('aria-label','Show one face or all faces'); const cur=selFace();
+    for(const [x,t] of [['all','All faces'],...st.faces.map((F,i)=>[i,faceCode(i)+' \u00b7 '+shapeName(F.t)])]){
+      const b=el('button',null,t); b.type='button'; b.setAttribute('aria-pressed',String(cur===x)); b.onclick=()=>{st.faceSel=x;save();render();}; g.append(b);}
+    v.append(g);
+  }
+  const selLabel=()=>{const x=selFace();return x==='all'?'':'Face '+faceCode(x)+' \u00b7 '+shapeName(st.faces[x].t);};
+  function roofMaterials(v){
+    facePicker(v);
+    const r=roofCalc(); if(r.err){v.append(empty('Nothing to add up yet',r.err));return;}
+    v.append(hero(selLabel()||'Roof area',r.area,'roof',f(r.area/100,1)+' squares · '+f(r.sqW,1)+' with '+f(st.waste)+'% waste',thumbRoof(r.R)));
+    if(r.warn) v.append(callout(r.warn));
+    v.append(r.metal?tiles([['Panels',r.panels?f(r.panels):'—',r.panels?'cut to length':'trace for count','accent'],['Panel',f(r.lf),'linear ft','amber'],['Squares',f(r.sqW,1),'with waste','teal']])
+      :tiles([['Bundles',f(r.bundles),'3 per square','accent'],['Squares',f(r.area/100,1),'roof area','amber'],['With waste',f(r.sqW,1),f(st.waste)+'% waste','teal']]));
+    if(r.metal&&r.cut){ let n=0,ins=0; const u=el('ul','order');
+      for(const [inch,c] of r.cut.byLen){ n+=c; ins+=inch*c; const li=el('li'), q=el('span','oq'); q.append(el('b',null,String(c)),' pc'+(c>1?'s':'')); li.append(q,el('span','oat','at'),el('span','ol',ftIn(+inch))); u.append(li); }
+      v.append(card('Panels to order',f(n)+' pcs \u00b7 '+f(ins/12)+' ft',el('p','hint',PANELS.find(p=>p[0]===st.panel)[1]+', cut to length. Each length includes the '+f(st.over,2)+'" eave overhang.'),u)); }
+    else if(r.metal) v.append(card('Panels to order',null,callout('This report only gives total footage, not the roof\u2019s shape, so there\u2019s no list of lengths yet.'),
+      el('p','hint','Import the report\u2019s length diagram page, or trace the roof from it, and this becomes a list like \u201c4 pcs at 16\u20195\u201d\u201d.'),btn('Trace the roof',()=>{st.method='trace';autoWaste();go('measure');},'ghost')));
+    if(st.method==='faces'&&r.R&&r.R.per&&selFace()==='all') v.append(card('Each face',r.R.per.length+' face'+(r.R.per.length>1?'s':''),mlist(r.R.per.filter(q=>q.G).map(q=>[q.code+' \u00b7 '+q.name,f(q.G.area)+' ft\u00b2',ftIn(Math.round(q.G.E*12))+' eave'+(q.F.t==='hip'?', '+ftIn(Math.round(q.G.R*12))+' ridge':'')+', '+ftIn(Math.round(q.G.S*12))+' slope'+(r.metal?' \u00b7 '+q.R.panels+' panels':'')]))),
+      r.R.shared?el('p','hint','Faces share their hips and ridges, so each hip and ridge is counted once in the trim below. Lay out on the Layout tab, face by face.'):null);
+    v.append(card('Material list',r.rows.length+' items',mlist(r.rows)));
+    if(r.cost){const c=el('div','cost');c.append(el('span','hint','Estimated material'+(r.cost.ss?', clips not priced':'')),el('b',null,money(r.cost.total)));
+      v.append(card('Cost',null,mlist(r.cost.lines.map(([k,x])=>[k,money(x)])),c));}
+    v.append(btn('Copy list',()=>copy(roofText()),null,'copy'));
+  }
+  function traceCard(text){return card(null,null,el('p','hint',text),btn('Trace the roof',()=>{st.method='trace';autoWaste();go('measure');},'ghost'));}
+  function roofCuts(v){
+    facePicker(v);
+    const r=roofCalc(); if(r.err){v.append(empty('No cut list yet',r.err));return;}
+    if(!r.metal){v.append(card('Shingles',null,el('p','hint','Shingles are ordered by the bundle, so there’s no cut list. Switch the material to Metal on Measure for a panel cut list.')));return;}
+    if(!r.cut){v.append(traceCard('Report totals don’t give the roof’s shape, so there’s no piece-by-piece list. Trace the roof from the report’s length diagram to get every panel and its length.'));return;}
+    let n=0,ins=0; for(const [i,c] of r.cut.byLen){n+=c;ins+=i*c;}
+    v.append(card('Panels by length',f(n)+' panels',el('p','hint','Order these lengths. Measured to the long point, with the '+f(st.over,2)+'" eave overhang.'),bars(r.cut.byLen,ftIn,'pcs'),total('Total',f(n)+' panels · '+f(ins/12)+' ft')));
+    const ev=card('Every piece','by roof face',el('p','hint','Codes match the Layout drawing. Hip and valley panels are cut on an angle from the long point; the last panel on a face is ripped to the width shown.'));
+    r.cut.faces.forEach((fc,i)=>{
+      const d=el('details','fold'); if(i===0) d.open=true;
+      const s=el('summary'), h=el('span','fh'); h.append(el('span','code',fc.code),fc.dir?(fc.name?fc.name+', ':'')+'faces '+fc.dir:fc.name); s.append(h,el('span','hint',fc.pieces.length+' pcs')); d.append(s);
+      const ol=el('ol','cuts'); for(const p of fc.pieces){const li=el('li');li.append(el('b',null,p.code),el('span',null,ftIn(p.inch)));if(p.rip)li.append(el('small',null,'rip to '+p.rip+'"'));ol.append(li);}
+      const inn=el('div','inner'); inn.append(ol); d.append(inn); ev.append(d);
+    });
+    v.append(ev,btn('Copy list',()=>copy(roofText()),null,'copy'));
+  }
+  function roofLayout(v){
+    facePicker(v);
+    const r=roofCalc(); if(r.err){v.append(empty('No layout yet',r.err));return;}
+    if(!r.R){v.append(traceCard('Report totals don’t give the roof’s shape. Trace the roof to see the layout drawing.'));return;}
+    if(st.method==='faces'){ for(const q of r.R.per){ if(!q.R) continue;
+        const c=card(q.code+' \u00b7 '+q.name,r.metal?q.R.panels+' panels':f(q.G.area)+' sq ft'); drawRoof(c,q.R,r.metal,true);
+        const grp=new Map(); for(const e of q.G.edges){const k=e.lab.split(' ')[0]+'|'+Math.round(e.len*12);grp.set(k,(grp.get(k)||0)+1);}
+        const lines=[...grp].map(([k,n])=>{const [nm,inch]=k.split('|');return [nm+(n>1?' \u00d7'+n:''),ftIn(+inch)];});
+        const rows=[['Area',f(q.G.area)+' sq ft']].concat(lines);
+        if(r.metal){ const u=el('ul','order'); for(const [inch,c2] of byLength(q.R)){const li=el('li'),qq=el('span','oq');qq.append(el('b',null,String(c2)),' pc'+(c2>1?'s':''));li.append(qq,el('span','oat','at'),el('span','ol',ftIn(+inch)));u.append(li);}
+          c.append(el('h3','eyebrow','This face'),mlist(rows),el('h3','eyebrow','Panels for this face'),u); }
+        else c.append(el('h3','eyebrow','This face'),mlist(rows));
+        v.append(c); }
+      v.append(printBtn()); return; }
+    const c=card(r.metal?'Panel layout':'Roof plan',r.metal?f(r.panels)+' panels':null); drawRoof(c,r.R,r.metal); v.append(c,printBtn());
+  }
+
+  // ---------- siding tabs ----------
+  function sideMeasure(v){
+    v.append(card('Plank',null,pick('HardiePlank',PLANKS,()=>st.exp,x=>st.exp=+x,refresh),el('p','hint','12 ft planks.')));
+    st.walls.forEach((w,wi)=>{
+      const c=card(w.name||'Wall '+(wi+1),null), up=()=>later(refresh);
+      if(st.walls.length>1){const rm=el('button','x','Remove wall');rm.onclick=()=>{st.walls.splice(wi,1);st.wallSel=0;save();render();};c.querySelector('.card-h').append(rm);c.querySelector('.card-h span')?.remove();}
+      c.append(txt('Name',()=>w.name,x=>w.name=x),
+        grid('grid2',num('Width',()=>w.w,x=>w.w=x,'ft',up),num('Height',()=>w.h,x=>w.h=x,'ft',up)),
+        grid('grid2',num('Gable height',()=>w.peak,x=>w.peak=x,'ft',up)),
+        el('p','hint','Height is from the bottom of the siding to the soffit. Gable: the triangle above the wall, 0 if none.'));
+      (w.open||[]).forEach((o,oi)=>{
+        const ob=el('div','sub'), oh=el('div','sub-h');
+        oh.append(selIn([['window','Window'],['door','Door']],()=>o.t,x=>{o.t=x;render();},null,'Opening '+(oi+1)+' type'));
+        const rm=el('button','x','Remove');rm.onclick=()=>{w.open.splice(oi,1);save();render();};oh.append(rm);
+        ob.append(oh,grid('grid2',num('Width',()=>o.w,x=>o.w=x,'ft',up,'mini'),num('Height',()=>o.h,x=>o.h=x,'ft',up,'mini'),num('From left',()=>o.x,x=>o.x=x,'ft',up,'mini'),o.t==='door'?null:num('Up',()=>o.y,x=>o.y=x,'ft',up,'mini')));
+        c.append(ob);
+      });
+      const aw=el('button','pill','+ Window'), ad=el('button','pill','+ Door');
+      aw.onclick=()=>{(w.open=w.open||[]).push({t:'window',w:3,h:5,x:0,y:3});save();render();};
+      ad.onclick=()=>{(w.open=w.open||[]).push({t:'door',w:3,h:7,x:0});save();render();};
+      c.append(grid('row',aw,ad)); v.append(c);
+    });
+    const addW=btn('+ Add a wall',()=>{st.walls.push({name:'Wall '+(st.walls.length+1),w:0,h:+(st.walls[0]&&st.walls[0].h)||9,peak:0,open:[]});save();render();},'ghost');
+    v.append(addW,card('Corners',null,grid('grid2',num('Outside corners',()=>st.corners.out,x=>st.corners.out=x,null,()=>later(refresh)),num('Inside corners',()=>st.corners.inn,x=>st.corners.inn=x,null,()=>later(refresh)))),
+      btn('See materials',()=>go('materials'),null,'arrow'));
+  }
+  function sideMaterials(v){
+    const r=sideCalc(); if(r.err){v.append(empty('Nothing to add up yet',r.err));return;}
+    const S=r.S;
+    v.append(hero('Siding area',S.net,'siding','Walls '+f(S.gross)+' sq ft, less '+f(S.open)+' sq ft of openings',thumbWall(st.walls[0])));
+    if(r.warn) v.append(callout(r.warn));
+    v.append(tiles([['Planks',f(r.buy),'12 ft, to buy','accent'],['Pieces',f(S.pieces.length),'cut from '+f(S.planks),'amber'],['Squares',f(S.net/100,1),'net','teal']]));
+    const rows=r.rows.filter(x=>x[1]!=null);
+    v.append(card('Material list',rows.length+' items',mlist(rows)),btn('Copy list',()=>copy(sideText()),null,'copy'));
+  }
+  function sideCuts(v){
+    const r=sideCalc(); if(r.err){v.append(empty('No cut list yet',r.err));return;}
+    const S=r.S; let n=0; for(const [,c] of r.byLen) n+=c;
+    v.append(card('Pieces by length',f(n)+' pieces',el('p','hint','12’0" pieces are full planks. Shorter pieces are cut from the planks on the material list.'),bars(r.byLen,ftIn4,'pcs'),total('Total',f(n)+' pieces from '+f(S.planks)+' planks')));
+    const cc=card('Course by course','1 = bottom',el('p','hint','∠ angle cut for the gable. Notch: cut around that window or door.'));
+    S.walls.forEach((w,wi)=>{ if(!w.courses.length) return;
+      const d=el('details','fold'); if(wi===0) d.open=true;
+      const s=el('summary'); s.append(el('span',null,w.name),el('span','hint',w.courses.length+' courses')); d.append(s);
+      const ul=el('ul','courses');
+      for(const c of w.courses){const li=el('li');li.append(el('i',null,'#'+c.i),el('span',null,c.pieces.map(p=>ftIn4(p.len)+(p.ends?' ∠':'')+(p.notch.length?' notch '+p.notch.join(','):'')).join('  ·  ')+(c.rip?'  (rip to '+c.rip+'")':'')));ul.append(li);}
+      const inn=el('div','inner'); inn.append(ul); d.append(inn); cc.append(d);
+    });
+    v.append(cc,btn('Copy list',()=>copy(sideText()),null,'copy'));
+  }
+  function sideLayout(v){
+    const r=sideCalc(); if(r.err){v.append(empty('No layout yet',r.err));return;}
+    const walls=r.S.walls.filter(w=>w.courses.length); if(!walls.length){v.append(empty('No layout yet','Enter a wall width and height.'));return;}
+    if(st.wallSel>=walls.length) st.wallSel=0;
+    if(walls.length>1){const p=el('div','wallpick');p.setAttribute('role','group');p.setAttribute('aria-label','Wall');
+      walls.forEach((w,i)=>{const b=el('button',null,w.name);b.setAttribute('aria-pressed',String(i===st.wallSel));b.onclick=()=>{st.wallSel=i;save();render();};p.append(b);});v.append(p);}
+    const w=walls[st.wallSel], c=card(w.name,w.courses.length+' courses');
+    c.append(el('p','hint','Every course and plank, with each piece’s length. Course numbers on the left; 1 is the bottom.'));
+    drawWall(c,w,+st.exp); v.append(c,printBtn());
+  }
+
+  // ---------- print: the layout as a PDF (drawing pages, then the panel list and cut list) ----------
+  const PRINT_INK={pa:'#EEF3F8',pb:'#DCE6F1',seam:'#8DA3BF',ridgec:'#C4452F',fg:'#111111',good:'#1C7A4B',amber:'#9A5A06',accent:'#0E9F6E',sky:'#1F4F8A',hole:'#FFFFFF',muted:'#555555',faint:'#888888',line:'#CCCCCC',line2:'#AAAAAA',raised:'#F2F2F2',surface:'#FFFFFF',surface2:'#FFFFFF','accent-ink':'#FFFFFF',teal:'#0C7C6C',warn:'#B4321F'};
+  let dlP=null; const getDownloads=()=>dlP||(dlP=window.claude&&typeof window.claude.use==='function'?window.claude.use('downloads').catch(()=>null):Promise.resolve(null));
+  function printBtn(){const b=btn('Print layout',printLayout,'ghost','print');b.setAttribute('aria-label','Print layout: save it as a PDF');return b;}
+  function svgImage(svg,w,h){
+    const cl=svg.cloneNode(true); cl.removeAttribute('style'); cl.setAttribute('xmlns',SVGNS); cl.setAttribute('width',w); cl.setAttribute('height',h);
+    const css=document.createElementNS(SVGNS,'style'); css.textContent='text{fill:#111;font-family:Arial,Helvetica,sans-serif;font-weight:700}text.dim{fill:#1F4F8A}'; cl.insertBefore(css,cl.firstChild);
+    const src=new XMLSerializer().serializeToString(cl).replace(/var\(--([a-z0-9-]+)\)/g,(m,k)=>PRINT_INK[k]||'#555555');
+    return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(src);});
+  }
+  const sheet=(land)=>{const c=document.createElement('canvas');c.width=land?1650:1275;c.height=land?1275:1650;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);return c;};
+  function pageHead(c,title,sub){const x=c.getContext('2d');x.fillStyle='#111';x.font='700 40px Arial,Helvetica,sans-serif';x.fillText(title,80,100);
+    x.fillStyle='#555';x.font='26px Arial,Helvetica,sans-serif';x.fillText(sub,80,142);x.fillStyle='#bbb';x.fillRect(80,165,c.width-160,2);}
+  async function drawingPage(svg,title,sub){
+    const vb=svg.viewBox.baseVal, land=vb.width>=vb.height*.9, c=sheet(land), x=c.getContext('2d');
+    pageHead(c,title,sub);
+    const aw=c.width-160, ah=c.height-200-110, k=Math.min(aw/vb.width,ah/vb.height), w=Math.round(vb.width*k), h=Math.round(vb.height*k);
+    const im=await svgImage(svg,w,h); x.drawImage(im,80+(aw-w)/2,195,w,h); return c;
+  }
+  function textPages(lines,sub){
+    const out=[]; let c=null, x=null, y=0; const W=1275-180;
+    const page=()=>{c=sheet(false);x=c.getContext('2d');pageHead(c,(st.trade==='roof'?'Panel list and cut list':'Plank list and cut list'),sub);y=215;out.push(c);};
+    page();
+    const isQty=t=>/^\d+ (pcs? at|@) /.test(t||'');
+    for(let li=0;li<lines.length;li++){
+      const raw=lines[li];
+      if(isQty(raw)){                                                         // an order list: three columns, read down
+        const run=[]; while(li<lines.length&&isQty(lines[li])) run.push(lines[li++]); li--;
+        const rows=Math.ceil(run.length/3), cw=W/3;
+        for(let r0=0;r0<rows;r0++){ if(y>1650-110)page(); x.font='22px Arial,Helvetica,sans-serif'; x.fillStyle='#111';
+          for(let k=0;k<3;k++){const t=run[k*rows+r0]; if(t) x.fillText(t,90+k*cw,y);} y+=31; }
+        continue;
+      }
+      const hd=(raw||'').split('(')[0], head=!!raw&&hd.trim().length>2&&hd===hd.toUpperCase()&&/[A-Z]/.test(hd); x.font=(head?'700 24px ':'22px ')+'Arial,Helvetica,sans-serif';
+      const words=raw.split(' '); let line='';
+      const flush=t=>{if(y>1650-110)page();x.font=(head?'700 24px ':'22px ')+'Arial,Helvetica,sans-serif';x.fillStyle='#111';x.fillText(t,90,y);y+=31;};
+      if(!raw){y+=14;continue;}
+      for(const wd of words){const t=line?line+' '+wd:wd;if(x.measureText(t).width>W&&line){flush(line);line='    '+wd;}else line=t;}
+      flush(line);
+    }
+    return out;
+  }
+  async function makePdf(cs){
+    const enc=new TextEncoder(), parts=[], offs=[]; let len=0;
+    const push=b=>{if(typeof b==='string')b=enc.encode(b);parts.push(b);len+=b.length;};
+    const obj=(id,body)=>{offs[id]=len;push(id+' 0 obj\n'+body+'\nendobj\n');};
+    push(new Uint8Array([37,80,68,70,45,49,46,52,10,37,226,227,207,211,10]));        // %PDF-1.4 + binary marker
+    obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+    obj(2,'<< /Type /Pages /Kids ['+cs.map((_,i)=>(3+3*i)+' 0 R').join(' ')+'] /Count '+cs.length+' >>');
+    for(let i=0;i<cs.length;i++){
+      const c=cs[i], land=c.width>c.height, pw=land?792:612, ph=land?612:792, P=3+3*i;
+      const jpg=new Uint8Array(await (await new Promise(r=>c.toBlob(r,'image/jpeg',.9))).arrayBuffer());
+      obj(P,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pw+' '+ph+'] /Resources << /XObject << /Im0 '+(P+2)+' 0 R >> >> /Contents '+(P+1)+' 0 R >>');
+      const cmd='q '+pw+' 0 0 '+ph+' 0 0 cm /Im0 Do Q'; obj(P+1,'<< /Length '+cmd.length+' >>\nstream\n'+cmd+'\nendstream');
+      offs[P+2]=len; push((P+2)+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+c.width+' /Height '+c.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n'); push(jpg); push('\nendstream\nendobj\n');
+    }
+    const n=3+3*cs.length, xref=len; let t='xref\n0 '+n+'\n0000000000 65535 f \n'; for(let i=1;i<n;i++) t+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+    push(t+'trailer\n<< /Size '+n+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
+    return new Blob(parts,{type:'application/pdf'});
+  }
+  let printing=false;
+  async function printLayout(){
+    if(printing) return; printing=true; toast('Making the PDF\u2026');
+    try{
+      const roof=st.trade==='roof', day=new Date(), date=day.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+      const r=roof?roofCalc():sideCalc(); if(r.err){toast(r.err);return;}
+      const sub=(roof?f(r.area)+' sq ft'+(r.panels?' \u00b7 '+f(r.panels)+' panels \u00b7 '+f(r.lf)+' ft of panel':'')+(r.metal?' \u00b7 '+PANELS.find(p=>p[0]===st.panel)[1]:''):f(r.S.net)+' sq ft \u00b7 '+f(r.buy)+' planks')+' \u00b7 '+date;
+      const pages=[];
+      if(roof){ for(const c of document.querySelectorAll('#res .card')){ const svg=c.querySelector('.viewer svg'); if(!svg) continue;
+          const h=c.querySelector('.card-h h2'), a=c.querySelector('.card-h span');
+          pages.push(await drawingPage(svg,(selLabel()&&!/·/.test(h.textContent)?selLabel()+' \u2014 ':'')+h.textContent+(a?' \u00b7 '+a.textContent:''),sub)); } }
+      else { const tmp=el('div'); for(const w of r.S.walls.filter(w=>w.courses.length)){ const c=el('div'); drawWall(c,w,+st.exp); tmp.append(c);
+          pages.push(await drawingPage(c.querySelector('svg'),w.name+' \u00b7 '+w.courses.length+' courses',sub)); } }
+      if(!pages.length){toast('Nothing to print yet');return;}
+      pages.push(...textPages((roof?roofText():sideText()).split('\n'),sub));
+      pages.forEach((c,i)=>{const x=c.getContext('2d');x.fillStyle='#777';x.font='20px Arial,Helvetica,sans-serif';x.fillText('Job calculator '+APP_VERSION+'   \u00b7   Page '+(i+1)+' of '+pages.length,80,c.height-55);});
+      const blob=await makePdf(pages), name=(roof?'Roof':'Siding')+' layout '+day.toISOString().slice(0,10)+'.pdf';
+      const dl=await getDownloads();
+      if(dl){ try{ await dl.save({filename:name,data:blob}); toast('Saved. Open the PDF to print it.'); }
+        catch(e){ if(!e||e.code!=='declined') toast('Couldn\u2019t save the PDF here.'); } }
+      else { const u=URL.createObjectURL(blob), a=document.createElement('a'); a.href=u; a.download=name; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),60000); toast('PDF ready. Open it to print.'); }
+    }catch(e){ toast('Couldn\u2019t make the PDF.'); }
+    finally{ printing=false; }
+  }
+  const DIRS=[['N','↑ N'],['E','→ E'],['S','↓ S'],['W','← W']], TURN={E:'S',S:'W',W:'N',N:'E'};
+  function sections(host){
+    st.sections.forEach((sec,si)=>{
+      const box=el('div','sub'), h=el('div','sub-h');
+      h.append(el('b',null,sec.name||'Section '+(si+1)));
+      if(st.sections.length>1){const rm=el('button','x','Remove');rm.onclick=()=>{st.sections.splice(si,1);save();render();};h.append(rm);}
+      box.append(h,grid('grid2',txt('Name',()=>sec.name,x=>sec.name=x),pick('Pitch',PITCH_OPTS,()=>sec.pitch,x=>{sec.pitch=+x;later(secStatus);})));
+      if(si>0) box.append(grid('grid2',num('Starts, ft east of first corner',()=>sec.x,x=>sec.x=x,'ft',()=>later(secStatus)),num('ft south of first corner',()=>sec.y,x=>sec.y=x,'ft',()=>later(secStatus))));
+      const rows=el('div','erows');
+      sec.edges.forEach((e,ei)=>{
+        const r=el('div','erow'), n=ei+1, ch=()=>later(secStatus);
+        const x=el('button','x','×');x.setAttribute('aria-label','Remove edge '+n);x.onclick=()=>{sec.edges.splice(ei,1);save();render();};
+        r.append(selIn(DIRS,()=>e.d,v=>e.d=v,ch,'Edge '+n+' direction'),ftInIn(()=>e.len,v=>e.len=v,ch,'Edge '+n+' length'),
+          selIn([['eave','Eave'],['rake','Rake'],['wall','Wall']],()=>e.t||'eave',v=>e.t=v,ch,'Edge '+n+' type'),x);
+        const ep=selIn([['','Same'],...PITCH_OPTS],()=>e.pitch||'',v=>{if(v)e.pitch=+v;else delete e.pitch;},ch,'Edge '+n+' pitch, if different from the section'); ep.classList.add('ep'); r.append(ep);
+        rows.append(r);
+      });
+      const add=el('button','pill','+ Edge');
+      add.onclick=()=>{const l=sec.edges[sec.edges.length-1];sec.edges.push({d:l?TURN[l.d]:'E',len:0,t:'eave'});save();render();const ins=document.querySelectorAll('.sub')[si].querySelectorAll('.erow input');ins[ins.length-1].focus();};
+      const stt=el('span','status');stt.dataset.sec=si;
+      box.append(rows,grid('row',add,stt)); host.append(box);
+    });
+  }
+  function secStatus(){
+    const R=buildRoof(st.sections,1,0);
+    document.querySelectorAll('.status[data-sec]').forEach(s=>{const x=R.secs[+s.dataset.sec];if(!x)return;
+      s.className='status'+(x.ok?(x.note?'':' ok'):' err');s.textContent=x.ok?(x.note||'Outline closes ✓'):x.msg;});
+  }
+
+  function sideCalc(){
+    const S=buildSiding(st.walls,+st.exp,144);
+    if(!(S.gross>0)) return {err:'Enter at least one wall width and height.'};
+    const extra=+st.extra||0, buy=Math.ceil(S.planks*(1+extra/100)), maxH=Math.max(...st.walls.map(w=>+w.h||0));
+    const runs=Math.max(1,Math.ceil(maxH/12)), outB=Math.round(+st.corners.out||0)*2*runs, inB=Math.round(+st.corners.inn||0)*runs, trimB=Math.ceil(S.openTrim*1.1/144);
+    const nails=Math.ceil((buy*9+(outB+inB+trimB)*12)/100)*100;
+    const plank=PLANKS.find(p=>+p[0]===+st.exp)[1];
+    const rows=[['HardiePlank, 12 ft',buy+' pcs',plank+'. '+S.planks+' from the cut list plus '+f(extra)+'% for breakage.'],
+      ['Starter strip',Math.ceil(S.starter/144)+' pcs',f(S.starter/12)+' ft along the bottom, 12 ft pieces'],
+      ['Outside corner boards',outB?outB+' pcs':null,f(st.corners.out)+' corners, 2 boards each, 12 ft'],
+      ['Inside corner boards',inB?inB+' pcs':null,f(st.corners.inn)+' corners, 1 board each, 12 ft'],
+      ['Window and door trim',trimB?trimB+' pcs':null,f(S.openTrim/12)+' ft around openings, 12 ft boards'],
+      ['Siding nails','about '+f(nails),'blind nailed at every stud, plus trim'],
+      ['House wrap',(x=>x+' roll'+(x>1?'s':''))(Math.ceil(S.gross*1.15/1350)),'9 ft × 150 ft rolls']];
+    const m=new Map(); for(const p of S.pieces) m.set(p.len,(m.get(p.len)||0)+1);
+    return {S,buy,rows,byLen:[...m].sort((a,b)=>b[0]-a[0]),warn:S.walls.filter(w=>w.msg).map(w=>w.name+': '+w.msg).join(' ')};
+  }
+  // ---------- drawings ----------
+  const SVGNS='http://www.w3.org/2000/svg';
+  function sv(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.append(e);return e;}
+  const pts=P=>P.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' ');
+  function viewer(host,svg,startZoom,maxZoom){
+    let z=1; const zb=el('div','zoom'), vw=el('div','viewer');
+    const zo=el('button','pill','−'), zi=el('button','pill','+'), zf=el('button','pill','Fit'), zl=el('span');
+    zo.setAttribute('aria-label','Zoom out'); zi.setAttribute('aria-label','Zoom in'); zb.append(zo,zi,zf,zl); vw.append(svg); host.append(zb,vw);
+    const set=nz=>{const r=vw.getBoundingClientRect(),cx=(vw.scrollLeft+r.width/2)/z,cy=(vw.scrollTop+r.height/2)/z;z=Math.min(maxZoom,Math.max(1,nz));svg.style.setProperty('--z',z);vw.scrollLeft=cx*z-r.width/2;vw.scrollTop=cy*z-r.height/2;zl.textContent=z===1?'Zoom in to read the labels':Math.round(z*100)+'%';};
+    zi.onclick=()=>set(z*1.6); zo.onclick=()=>set(z/1.6); zf.onclick=()=>set(1);
+    requestAnimationFrame(()=>set(window.innerWidth<700?startZoom:1));
+  }
+  function drawRoof(host,R,metal,dims){
+    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+    for(const s of R.secs) if(s.ok) for(const [x,y] of s.V){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}
+    const fsD=Math.max(.7,Math.min(1.6,Math.max(x1-x0,y1-y0)*.045)), m=dims?fsD*2.4+.6:2, svg=sv('svg',{viewBox:(x0-m)+' '+(y0-m)+' '+(x1-x0+2*m)+' '+(y1-y0+2*m),role:'img','aria-label':metal?'Roof plan with every panel and its cut length':'Roof plan'});
+    const mk=sv('marker',{id:'arr',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},sv('defs',{},svg));
+    sv('path',{d:'M0 0L10 5L0 10z',fill:'var(--good)'},mk);
+    for(const fc of R.faces){
+      const outline=fc.outline||[...fc.rows.map(r=>fc.toP(r.s,r.a)),...fc.rows.slice().reverse().map(r=>fc.toP(r.s,r.b))];
+      if(metal) fc.panels.forEach((p,i)=>sv('polygon',{points:pts(p.poly),fill:i%2?'var(--pa)':'var(--pb)',stroke:'var(--seam)','stroke-width':.06},svg));
+      else sv('polygon',{points:pts(outline),fill:'var(--pa)'},svg);
+      sv('polygon',{points:pts(outline),fill:'none',stroke:'var(--ridgec)','stroke-width':.14,'stroke-linejoin':'round'},svg);
+    }
+    for(const s of R.secs) if(s.ok) for(const e of s.edges){
+      const c=e.t==='rake'?{stroke:'var(--good)','stroke-dasharray':'.7 .4'}:e.t==='wall'?{stroke:'var(--amber)'}:e.t==='hip'||e.t==='ridge'?{stroke:'var(--ridgec)'}:{stroke:'var(--fg)'};
+      sv('line',Object.assign({x1:e.a[0],y1:e.a[1],x2:e.b[0],y2:e.b[1],'stroke-width':.24,'stroke-linecap':'round'},c),svg);
+    }
+    for(const fc of R.faces){
+      if(metal){
+        for(const p of fc.panels){
+          const mid=(p.lo+p.hi)/2, row=fc.rows.reduce((a,r)=>Math.abs(r.s-mid)<Math.abs(a.s-mid)?r:a), span=row.b-row.a;
+          const label=p.code+' '+ftIn(p.inch), fs=Math.max(.2,Math.min(.95,(p.hi-p.lo)*.42,span/(label.length*.5)));
+          const [x,y]=fc.toP(mid,(row.a+row.b)/2), t=sv('text',{x:x.toFixed(2),y:y.toFixed(2),'font-size':fs.toFixed(2),'text-anchor':'middle','dominant-baseline':'central'},svg);
+          if(fc.g.ax===0) t.setAttribute('transform','rotate(-90 '+x.toFixed(2)+' '+y.toFixed(2)+')');
+          t.textContent=label;
+        }
+        if(fc.panels.length){const p=fc.panels[0],u=p.umin+.45,a=fc.toP(fc.rev?p.hi-.15:p.lo+.15,u),b=fc.toP(fc.rev?p.hi-1.9:p.lo+1.9,u);
+          sv('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'var(--good)','stroke-width':.2,'marker-end':'url(#arr)'},svg);}
+      } else {
+        const r=fc.rows.reduce((a,q)=>q.b-q.a>a.b-a.a?q:a),[x,y]=fc.toP(r.s,(r.a+r.b)/2);
+        sv('text',{x,y,'font-size':1.4,'text-anchor':'middle','dominant-baseline':'central'},svg).textContent=fc.code;
+      }
+    }
+    if(dims) for(const s of R.secs) if(s.ok) dimLabels(svg,s.edges,s.V,fsD,'dim');
+    const cx=x1+m*.55, cy=y1+m*.2; if(!dims) sv('line',{x1:cx,y1:cy,x2:cx,y2:cy-1.6,stroke:'var(--fg)','stroke-width':.14},svg);
+    if(!dims) sv('text',{x:cx,y:cy-2.2,'font-size':1,'text-anchor':'middle'},svg).textContent='N';
+    host.append(el('p','hint',metal?'Each strip is one panel with its code and cut length. Panel 1 on each face starts at the green arrow.':'Roof faces, north up.'));
+    viewer(host,svg,metal?(dims?1.5:2.2):1,5);
+    const key=el('div','key');
+    for(const [c,t] of [['var(--ridgec)','Ridge, hip, valley'],['var(--fg)','Eave'],['var(--good)','Rake'],['var(--amber)','Wall']]){const s=el('span'),i=el('i');i.style.background=c;s.append(i,t);key.append(s);}
+    host.append(key);
+  }
+  function drawWall(host,w,exp){
+    const {W,H,P}=w, T=H+P, padL=16, pad=6, Y=y=>T-y;
+    const svg=sv('svg',{viewBox:(-padL)+' '+(-pad)+' '+(W+padL+pad)+' '+(T+2*pad),role:'img','aria-label':w.name+' with every course and plank'});
+    const id='clip'+Math.random().toString(36).slice(2,8), shape=[[0,Y(0)],[W,Y(0)],[W,Y(H)]].concat(P>0?[[W/2,Y(T)]]:[]).concat([[0,Y(H)]]);
+    sv('polygon',{points:pts(shape)},sv('clipPath',{id},sv('defs',{},svg)));
+    const g=sv('g',{'clip-path':'url(#'+id+')'},svg), fs=Math.max(2.4,exp*.6);
+    for(const c of w.courses){
+      c.pieces.forEach((p,k)=>sv('rect',{x:p.x0,y:Y(c.y1),width:p.x1-p.x0,height:c.y1-c.y0,fill:(k+c.i)%2?'var(--pa)':'var(--pb)',stroke:'var(--seam)','stroke-width':.4},g));
+      sv('text',{x:-3,y:Y((c.y0+c.y1)/2),'font-size':fs*.9,'text-anchor':'end','dominant-baseline':'central'},svg).textContent=c.i;
+    }
+    for(const c of w.courses) for(const p of c.pieces){
+      const label=ftIn4(p.len); if(p.x1-p.x0<label.length*fs*.55) continue;
+      sv('text',{x:(p.x0+p.x1)/2,y:Y((c.y0+c.y1)/2),'font-size':fs,'text-anchor':'middle','dominant-baseline':'central'},svg).textContent=label;
+    }
+    for(const o of w.open){
+      sv('rect',{x:o.x0,y:Y(o.y1),width:o.x1-o.x0,height:o.y1-o.y0,fill:'var(--hole)',stroke:'var(--fg)','stroke-width':.8},svg);
+      sv('text',{x:(o.x0+o.x1)/2,y:Y((o.y0+o.y1)/2),'font-size':Math.min(10,(o.x1-o.x0)/4),'text-anchor':'middle','dominant-baseline':'central'},svg).textContent=o.code;
+    }
+    sv('polygon',{points:pts(shape),fill:'none',stroke:'var(--fg)','stroke-width':1.2,'stroke-linejoin':'round'},svg);
+    viewer(host,svg,Math.min(5,Math.max(1.6,W/150)),8);
+  }
+
+  async function copy(text){
+    try{await navigator.clipboard.writeText(text);toast('List copied');}
+    catch(e){let t=document.querySelector('.copyout');if(!t){t=el('textarea','inp copyout');t.readOnly=true;$('res').prepend(t);}t.value=text;t.focus();t.select();window.scrollTo(0,0);toast('Select and copy the list');}
+  }
+  const rowsText=rows=>rows.map(([k,v,n])=>k+': '+v+(n?' ('+n+')':''));
+  function roofText(){
+    const r=roofCalc(); if(r.err) return r.err;
+    const L=[(r.metal?'METAL':'SHINGLE')+' ROOF ORDER'+(selLabel()?' \u2014 '+selLabel().toUpperCase():''),'','SQUARE FEET: '+f(r.area)+' sq ft ('+f(r.area/100,1)+' squares, '+f(r.sqW,1)+' with '+f(st.waste)+'% waste)',''];
+    if(r.cut){L.push('PANELS TO ORDER ('+PANELS.find(p=>p[0]===st.panel)[1]+', cut to length)');for(const [inch,c] of r.cut.byLen)L.push(c+' pc'+(c>1?'s':'')+' at '+ftIn(+inch));L.push('');}
+    L.push('MATERIAL LIST',...rowsText(r.rows));
+    if(r.cost) L.push('Estimated material cost: '+money(r.cost.total));
+    if(r.cut){L.push('','EVERY PIECE, BY ROOF FACE');for(const fc of r.cut.faces)L.push(fc.code+' ('+(fc.dir?(fc.name?fc.name+', ':'')+'faces '+fc.dir:fc.name)+'): '+fc.pieces.map(p=>p.code+' '+ftIn(p.inch)+(p.rip?' rip '+p.rip+'"':'')).join(', '));}
+    return L.join('\n');
+  }
+  function sideText(){
+    const r=sideCalc(); if(r.err) return r.err; const S=r.S;
+    const L=['HARDIE SIDING ORDER','','SQUARE FEET: '+f(S.net)+' sq ft (walls '+f(S.gross)+', minus '+f(S.open)+' openings)','','MATERIAL LIST',...rowsText(r.rows.filter(x=>x[1]!=null)),'','CUT LIST'];
+    for(const [len,c] of r.byLen) L.push(c+' @ '+ftIn4(len));
+    for(const w of S.walls){ if(!w.courses.length) continue; L.push('',w.name.toUpperCase()+', COURSE BY COURSE (1 = bottom)');
+      for(const c of w.courses) L.push('#'+c.i+': '+c.pieces.map(p=>ftIn4(p.len)+(p.ends?' angle':'')+(p.notch.length?' notch '+p.notch.join(','):'')).join(', ')+(c.rip?' (rip to '+c.rip+'")':'')); }
+    return L.join('\n');
+  }
+
+  function slopeWarn(p,ss){
     if(st.mat==='shingle'){
-      setMain('rOut',Math.ceil(sqW*3),'bundles'); $('rLbl').textContent='Shingles, 3 bundles per square';
-      const nails=Math.ceil(sqW*67)*n('rN');
-      rows($('rList'),[
-        ['Roof area',f(g.area)+' ft²','('+f(g.area/100,1)+' sq)'],
-        ['Squares with waste',f(sqW,1)],
-        ['Starter strip',Math.ceil((g.eave+g.rake)/Math.max(1,n('cStart')))+' bundles',f(g.eave+g.rake)+' ft'],
-        ['Ridge cap',Math.ceil((g.ridge+g.hips)/Math.max(1,n('cRidge')))+' bundles',f(g.ridge+g.hips)+' ft'],
-        under, ice,
-        ['Drip edge',Math.ceil((g.eave+g.rake)*1.05/10)+' pcs','10 ft'],
-        ['Coil nails',Math.max(1,Math.ceil(nails/Math.max(1,n('cNails'))))+' box'+(nails>n('cNails')?'es':''),'~'+f(nails)]
-      ]);
-      return;
+      if(p<2) return 'Shingles aren\u2019t rated below 2/12. Use metal or a low-slope membrane roof.';
+      if(p<4) return 'Between 2/12 and 4/12 shingles need two layers of underlayment (or ice and water shield over the whole deck). Underlayment below is doubled.';
+      return '';
     }
-
-    // metal
-    const [covIn,kind]=$('mPanel').value.split('|'); const cov=+covIn, covFt=cov/12, ss=kind==='ss';
-    const trimLen=Math.max(1,n('cTrim')); let trimPcs=0;
-    const pcs=lf=>{if(!(lf>0))return null;const k=Math.ceil(lf*1.05/trimLen);trimPcs+=k;return k+' pcs';};
-    let totalLF, panels, clips, screwBags=0;
-    if(g.gable){
-      const perSide=Math.ceil(g.gable.L/covFt);
-      const lenIn=Math.ceil(g.gable.slope*12+n('mOver'));
-      const lenFt=lenIn/12;
-      const extraLF=n('rX')>0?n('rX')*w/covFt:0;
-      panels=perSide*2+Math.ceil(n('rW')>0&&n('rX')>0?extraLF/lenFt:0);
-      totalLF=perSide*2*lenFt+extraLF;
-      setMain('rOut',panels,'panels');
-      $('rLbl').textContent=(ss?'Standing seam, ':'')+cov+'" coverage, cut to length';
-      const c=el('div','cut',perSide+' per side × 2 @ '+ftin(lenFt));
-      c.append(el('span',null,'Cut list: '+(perSide*2)+' panels at '+ftin(lenFt)+' ('+lenIn+'")'+(extraLF?'. Porch/dormer area adds about '+f(extraLF)+' ft of panel.':'.')));
-      cut.append(c);
-      clips=ss?perSide*2*(Math.ceil(lenFt/2)+1):0;
-    } else {
-      totalLF=g.area*w/covFt;
-      panels=Math.ceil(g.eave/covFt);
-      setMain('rOut',f(Math.ceil(totalLF/10)*10),'ft of panel');
-      $('rLbl').textContent=(ss?'Standing seam, ':'')+cov+'" coverage, waste included';
-      $('rNote').textContent='Hip and cut-up roofs have a different panel length on every facet. Use this for pricing, and send the report to your supplier for the cut list.';
-      clips=ss?Math.ceil(totalLF/2)+panels:0;
-    }
-    const list=[
-      ['Roof area',f(g.area)+' ft²','('+f(g.area/100,1)+' sq)'],
-      ['Squares with waste',f(sqW,1)],
-      g.gable?['Total panel',f(totalLF)+' ft']:['Panels along eaves','~'+panels,'lengths vary'],
-      ['Eave trim',pcs(g.eave),f(g.eave)+' ft'],
-      ['Rake / gable trim',pcs(g.rake),g.rake?f(g.rake)+' ft':''],
-      ['Ridge cap',pcs(g.ridge),g.ridge?f(g.ridge)+' ft':''],
-      ['Hip cap',pcs(g.hips),g.hips?f(g.hips)+' ft':''],
-      ['Valley flashing',pcs(g.valleys),g.valleys?f(g.valleys)+' ft':'']
-    ];
-    if(ss){
-      const z=2*g.ridge+2*g.hips;
-      list.push(['Z-closure',pcs(z),z?f(z)+' ft':'']);
-      list.push(['Panel clips','~'+f(clips),'24" o.c.']);
-      list.push(['Pancake screws','~'+f(clips),'1 per clip']);
-    } else {
-      list.push(['Inside closures (eave)',Math.ceil(g.eave/covFt)+' pcs']);
-      list.push(['Outside closures (ridge and hips)',(g.ridge+g.hips)?Math.ceil(2*(g.ridge+g.hips)/covFt)+' pcs':null]);
-      const screws=Math.ceil(sqW*n('cScrew')); screwBags=Math.ceil(screws/250);
-      list.push(['Panel screws',screwBags+' bags','~'+f(screws)+', 250/bag']);
-    }
-    list.push(under, ice);
-    rows($('rList'),list);
-    const money=x=>'$'+x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-    const cP=totalLF*n('prPanel'), cT=trimPcs*trimLen*n('prTrim'), cS=screwBags*n('prScrew'), tot=cP+cT+cS;
-    if(tot>0){
-      const cl=el('dl'); cl.style.marginTop='12px';
-      rows(cl,[['Panels',money(cP),f(totalLF)+' ft'],['Trim',cT?money(cT):null,trimPcs+' pcs × '+f(trimLen)+' ft'],['Screws',cS?money(cS):null,screwBags+' bags']]);
-      const box=el('div','cost'); box.append(el('span',null,'Est. material'+(ss?' (clips not priced)':'')),el('b',null,money(tot)));
-      $('rCost').append(cl,box);
-    }
+    if(p<3) return ss
+      ? 'Below 3/12 many snap-lock standing seam panels aren\u2019t rated. Check the panel\u2019s minimum slope; low slopes usually need a mechanically seamed panel.'
+      : 'Exposed-fastener panels generally need at least 3/12. Check the panel\u2019s minimum slope, or use standing seam.';
+    return '';
   }
 
-  function siding(){
-    let area,oc,ic,ot;
-    if(st.ssrc==='report'){ area=n('tA'); oc=n('tOC'); ic=n('tIC'); ot=n('tOT'); }
-    else {
-      const wall=n('sL')*n('sH'), gable=Math.max(0,Math.round(n('gN')))*n('gW')*n('gH')/2;
-      const nw=Math.max(0,Math.round(n('oW'))), nd=Math.max(0,Math.round(n('oD'))), ng=Math.max(0,Math.round(n('oG')));
-      const gd=$('oGs').value==='9x7'?{a:63,t:23}:{a:112,t:30};
-      area=Math.max(0,wall+gable-(nw*n('oWs')+nd*20+ng*gd.a));
-      oc=Math.max(0,Math.round(n('sC')))*n('sH'); ic=0;
-      ot=nw*4*Math.sqrt(Math.max(1,n('oWs')))+nd*17+ng*gd.t;
-    }
-    const exp=parseFloat($('pX').value), withW=area*(1+n('sWaste')/100);
-    const planks=Math.ceil(withW/exp);
-    setMain('sOut',planks,'planks');
-    const ocB=Math.ceil(oc*2/12), icB=Math.ceil(ic/12), otB=Math.ceil(ot*1.1/12);
-    rows($('sList'),[
-      ['Area to side',f(area)+' ft²','after openings'],
-      ['Squares with waste',f(withW/100,1)],
-      ['Outside corner trim',oc?ocB+' boards':null,oc?f(oc)+' ft':''],
-      ['Inside corner trim',ic?icB+' boards':null,ic?f(ic)+' ft':''],
-      ['Opening trim',ot?otB+' boards':null,ot?f(ot)+' ft':''],
-      ['Siding nails, about',f(Math.ceil((planks*9+(ocB+icB+otB)*12)/100)*100)]
-    ]);
-  }
-
-  // ---------- state + UI ----------
-  function calc(){roof();siding();save();}
-  function save(){const vals={};document.querySelectorAll('input.inp,select.inp').forEach(i=>{if(i.id)vals[i.id]=i.value;});try{localStorage.setItem(LS,JSON.stringify({st,vals}));}catch(e){}}
-  function load(){try{const s=JSON.parse(localStorage.getItem(LS)||'null');if(!s)return;Object.assign(st,s.st||{});for(const [k,v] of Object.entries(s.vals||{})){const i=$(k);if(i)i.value=v;}}catch(e){}}
-  function wasteKey(){return st.src==='report'?'report':st.style;}
-  function isDefaultWaste(){const v=n('rWaste');return Object.values(WASTE).some(m=>Object.values(m).includes(v));}
-  function syncWaste(){ if(isDefaultWaste()) $('rWaste').value=WASTE[st.mat][wasteKey()]; }
-  function show(){
-    const pr=(sel,key)=>document.querySelectorAll('['+sel+']').forEach(b=>b.setAttribute('aria-pressed',String(b.getAttribute(sel)===st[key])));
-    pr('data-tab','tab');pr('data-mat','mat');pr('data-src','src');pr('data-style','style');pr('data-ssrc','ssrc');
-    $('p-roof').hidden=st.tab!=='roof'; $('p-siding').hidden=st.tab!=='siding';
-    $('metalIn').hidden=st.mat!=='metal'; $('nailWrap').classList.toggle('hide',st.mat!=='shingle');
-    document.querySelectorAll('.sh').forEach(e=>e.classList.toggle('hide',st.mat!=='shingle'));
-    document.querySelectorAll('.mt').forEach(e=>e.classList.toggle('hide',st.mat!=='metal'));
-    $('fpIn').hidden=st.src!=='footprint'; $('repIn').hidden=st.src!=='report';
-    $('sWallsIn').hidden=st.ssrc!=='walls'; $('sRepIn').hidden=st.ssrc!=='report';
-    calc();
-  }
-  const bind=(sel,key,after)=>document.querySelectorAll('['+sel+']').forEach(b=>b.onclick=()=>{st[key]=b.getAttribute(sel);if(after)after();show();});
-  bind('data-tab','tab'); bind('data-mat','mat',syncWaste); bind('data-src','src',syncWaste); bind('data-style','style',syncWaste); bind('data-ssrc','ssrc');
-  document.querySelectorAll('input.inp,select.inp').forEach(i=>i.addEventListener('input',calc));
-  document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('focus',()=>i.select()));
-
-  // ---------- copy order list ----------
-  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
-    const pane=$(b.dataset.copy), out=pane.querySelector('.out'), lines=[];
-    const head=(pane.id==='p-roof'?(st.mat==='metal'?'METAL ROOF':'SHINGLE ROOF'):'HARDIE SIDING')+' ORDER';
-    lines.push(head);
-    const main=out.querySelector('.main'), lbl=out.querySelector('.lbl'), cut=out.querySelector('.cut');
-    lines.push(main.textContent.replace(/(\d)([a-z])/i,'$1 $2')+(lbl&&lbl.textContent?' ('+lbl.textContent+')':''));
-    if(cut) lines.push(cut.firstChild.textContent);
-    out.querySelectorAll('dl').forEach(dl=>{const k=[...dl.children];for(let i=0;i+1<k.length;i+=2){const dd=k[i+1];const sub=dd.querySelector('small');const v=sub?dd.firstChild.textContent+' ('+sub.textContent.replace(/^\(|\)$/g,'')+')':dd.textContent;lines.push(k[i].textContent+': '+v);}});
-    const c=out.querySelector('.cost'); if(c) lines.push(c.firstChild.textContent+': '+c.lastChild.textContent);
-    const text=lines.join('\n');
-    try{await navigator.clipboard.writeText(text);toast('Order list copied');}
-    catch(e){const t=document.createElement('textarea');t.value=text;t.className='inp';t.rows=8;t.readOnly=true;b.after(t);t.focus();t.select();toast('Select and copy the list');}
-  });
 
   // ---------- import from HOVER / EagleView ----------
   const PDF_LIB='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
@@ -484,37 +1444,26 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-close]');i
     window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDF_WORKER;
     return window.pdfjsLib;
   }
-  async function readPdf(file,maxImgs){
-    const lib=await pdfjs();
-    const doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,disableFontFace:true}).promise;
-    let text='';
-    const pages=Math.min(doc.numPages,40);
-    for(let i=1;i<=pages;i++){
-      const pg=await doc.getPage(i); const tc=await pg.getTextContent();
-      text+='\n--- Page '+i+' ---\n'+tc.items.map(t=>t.str+(t.hasEOL?'\n':' ')).join('');
-      if(text.length>120000) break;
-    }
-    if(text.replace(/\s|---|Page \d+/g,'').length>400) return {text,images:[]};
-    // scanned PDF: render the first pages as pictures instead
-    const imgs=[];
-    for(let i=1;i<=Math.min(doc.numPages,maxImgs);i++){
-      const pg=await doc.getPage(i); const v1=pg.getViewport({scale:1}); const vp=pg.getViewport({scale:1400/v1.width});
-      const c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height;
-      await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
-      imgs.push(await new Promise(r=>c.toBlob(r,'image/jpeg',0.85)));
-    }
-    return {text:'',images:imgs};
-  }
   const PROMPT=`You are reading a roofing and/or siding measurement report from HOVER or EagleView (a contractor's takeoff report). The report text and/or images are provided.
 Extract the measurements and reply with ONLY one JSON object in exactly this shape (numbers only, no units, null when the report does not give it):
-{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"suggested_waste_pct":n},"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
+{"source":"HOVER"|"EagleView"|"other","roof":{"total_area_sqft":n,"pitch":n,"eaves_ft":n,"rakes_ft":n,"ridges_ft":n,"hips_ft":n,"valleys_ft":n,"flashing_ft":n,"suggested_waste_pct":n},"outline":[{"name":"Main roof","pitch":n,"x":0,"y":0,"edges":[{"d":"N"|"E"|"S"|"W","len":n,"t":"eave"|"rake"|"wall","pitch":n}]}]|null,"siding":{"siding_area_sqft":n,"outside_corners_ft":n,"inside_corners_ft":n,"opening_trim_ft":n},"notes":"one short sentence about anything unusual"}
 Rules:
 - Convert feet-and-inches like 45' 6" to decimal feet (45.5). Convert squares to square feet if needed (1 square = 100 sq ft).
 - roof.total_area_sqft is the total roof area WITHOUT waste. pitch is the predominant pitch as the rise over 12 (6 for 6/12).
 - rakes are also called gables or rake edges. eaves are also called starter or drip edge at eaves.
 - If a waste table is shown, suggested_waste_pct is the report's suggested waste percent.
+- flashing_ft is the report's Flashing total (headwall/apron flashing), not step flashing.
 - siding.siding_area_sqft is the total wall area to be sided (facades plus gables) with openings removed; if only a gross area and an openings area are given, subtract them. opening_trim_ft is the total perimeter of windows and doors if given.
-- Set the whole "roof" or "siding" object's fields to null if that part is not in the report. Do not guess numbers that are not in the report.`;
+- Set the whole "roof" or "siding" object's fields to null if that part is not in the report. Do not guess numbers that are not in the report.
+Outline (the roof's shape, from the LENGTH DIAGRAM picture; north is up):
+- Walk the OUTER edge of each roof section clockwise, starting at its north-west corner. Each edge is one entry: d is the direction you travel along it (N, E, S or W), len is the length printed on that edge in feet (ignore any + sign before a number), t is "eave" for a level edge at the bottom of a slope, "rake" for a sloped gable edge (use the rake length printed on it), or "wall" for a lower roof's high side against a wall.
+- Use the printed numbers, not the drawing's proportions: the diagram is not to scale and short segments are often drawn shorter than their label.
+- When a side is split into several segments (two rakes either side of a gable ridge, an eave interrupted by a wing or a connector), list each segment as its own edge, in order. If a short segment has no label, work it out from the other segments on that side (for example a 31 ft side with 14 and 11 ft known leaves 6 ft) and say so in notes.
+- Only the perimeter: never include ridges, hips or valleys (the red and blue lines inside).
+- A connected roof is ONE section even if parts of it have different pitches or it has wings and connectors. Set the section pitch to the main pitch, and give "pitch" on each edge whose face has a different pitch (read it from the PITCH DIAGRAM if provided; a face's pitch applies to the edges at the bottom of that face).
+- Only a lower roof that is its own separate plane (a porch or shed roof against a wall) is a separate section. Its x and y are how far east and south its first corner is from the main section's first corner, in feet.
+- Check before answering: the east-going lengths must add up to the west-going lengths, and the south-going to the north-going (within about a foot). If they don't, re-read the labels.
+- Every edge must run N, E, S or W. Complex roofs with many corners are normal; trace them. Set "outline" to null only when there is no length diagram, or the roof has angled (non-90-degree) walls. Never invent lengths.`;
 
   function setSt(msg,cls){const s=$('impSt');s.className='st'+(cls?' '+cls:'');s.textContent=msg;}
   function errMsg(code){
@@ -532,71 +1481,173 @@ Rules:
     }
   }
   function errFull(e){const code=(e&&e.code)||'unknown';const m=e&&e.message?' '+String(e.message).slice(0,120):'';return errMsg(code)+' (Error: '+code+(code==='unknown'||code==='upstream_error'?m:'')+')';}
-  function put(id,v){ if(v==null||!isFinite(+v)||+v<=0) return false; $(id).value=Math.round(+v*10)/10; return true; }
+  let importReady=false, importPending=true, importErr=null; const hasClaude=!!(window.claude&&typeof window.claude.use==='function');
+  function put(o,k,v){ if(v==null||!isFinite(+v)||+v<=0){o[k]='';return false;} o[k]=Math.round(+v*10)/10; return true; }
+  const blankSection=p=>({name:'Main roof',pitch:+p||6,edges:[{d:'E',len:0,t:'eave'},{d:'S',len:0,t:'eave'},{d:'W',len:0,t:'eave'},{d:'N',len:0,t:'eave'}]});
+  function cleanOutline(o,pitch){
+    if(!Array.isArray(o)||!o.length) return null;
+    const secs=o.map((x,i)=>({name:String(x&&x.name||(i?'Section '+(i+1):'Main roof')).slice(0,40),pitch:nearPitch(+(x&&x.pitch)||pitch),x:+(x&&x.x)||0,y:+(x&&x.y)||0,
+      edges:(x&&Array.isArray(x.edges)?x.edges:[]).filter(e=>e&&/^[NESW]$/.test(e.d)&&+e.len>0).map(e=>{const o={d:e.d,len:Math.round(+e.len*100)/100,t:['eave','rake','wall'].includes(e.t)?e.t:'eave'};
+        if(+e.pitch>0){const q=nearPitch(+e.pitch);if(q!==nearPitch(+(x&&x.pitch)||pitch))o.pitch=q;} return o;})}))
+      .filter(x=>x.edges.length>=4);
+    return secs.length?secs:null;
+  }
   function apply(d){
-    const done=[]; const r=d&&d.roof||{}, s=d&&d.siding||{};
-    let roofHit=false, sideHit=false;
+    const done=[], r=d&&d.roof||{}, q=st.rep;
     const anyRoof=['total_area_sqft','eaves_ft','rakes_ft','ridges_ft','hips_ft','valleys_ft'].some(k=>+r[k]>0);
-    if(anyRoof){ roofHit=true; if(put('qA',r.total_area_sqft)) done.push('Roof area '+f(r.total_area_sqft)+' ft²'); else done.push('No total roof area on that page. Type it in from the report summary.'); }
-    if(r.pitch>0){ const p=Math.min(18,Math.max(1,Math.round(r.pitch))); $('qP').value=p; if(roofHit)done.push('pitch '+p+'/12'); }
-    const lens=[['qE','eaves_ft','eaves'],['qR','rakes_ft','rakes'],['qRi','ridges_ft','ridges'],['qH','hips_ft','hips'],['qV','valleys_ft','valleys']];
-    const got=[]; for(const [id,k,label] of lens){ if(roofHit){ if(!put(id,r[k])) $(id).value=''; else got.push(label+' '+f(r[k])); } }
+    if(!anyRoof) throw {code:'invalid_json'};
+    if(put(q,'area',r.total_area_sqft)) done.push('Roof area '+f(r.total_area_sqft)+' ft²'); else done.push('No total roof area on that page. Type it in from the report summary.');
+    if(r.pitch>0){ q.pitch=nearPitch(+r.pitch); done.push('pitch '+q.pitch+'/12'); }
+    const got=[]; for(const [k,rk,label] of [['eave','eaves_ft','eaves'],['rake','rakes_ft','rakes'],['ridge','ridges_ft','ridges'],['hip','hips_ft','hips'],['valley','valleys_ft','valleys'],['flash','flashing_ft','flashing']]) if(put(q,k,r[rk])) got.push(label+' '+f(r[rk]));
     if(got.length) done.push(got.join(', ')+' ft');
-    if(roofHit){ st.src='report'; if(r.suggested_waste_pct>0&&r.suggested_waste_pct<40){$('rWaste').value=r.suggested_waste_pct;done.push('waste '+r.suggested_waste_pct+'% (from report)');} else syncWaste(); }
-    if(put('tA',s.siding_area_sqft)){sideHit=true;done.push('Siding area '+f(s.siding_area_sqft)+' ft²');
-      for(const [id,k] of [['tOC','outside_corners_ft'],['tIC','inside_corners_ft'],['tOT','opening_trim_ft']]){ if(!put(id,s[k])) $(id).value=''; }
-      st.ssrc='report'; }
-    if(!roofHit&&!sideHit) throw {code:'invalid_json'};
-    if(roofHit&&!sideHit) st.tab='roof'; else if(sideHit&&!roofHit) st.tab='siding';
-    show();
-    const s2=$('impSt'); s2.className='st ok'; s2.textContent='Filled in from '+(d.source&&d.source!=='other'?d.source:'the report')+'. Double-check against the report:';
+    if(st.mat==='shingle'&&r.suggested_waste_pct>0&&r.suggested_waste_pct<40){st.waste=+r.suggested_waste_pct;st.wasteEdited=true;done.push('waste '+st.waste+'% (from the report)');} else autoWaste();
+    st.model=null; const secs=cleanOutline(d.outline,q.pitch||6);
+    if(secs){ const R=buildRoof(secs,1,0), bad=R.secs.filter(x=>!x.ok);
+      if(!bad.length&&R.faces.length){ st.sections=secs; st.method='trace'; autoWaste();
+        done.unshift('Traced the roof outline from the diagram ('+secs.reduce((a,x)=>a+x.edges.length,0)+' edges'+(secs.length>1?', '+secs.length+' sections':'')+'). Your panel list is on Materials.');
+        R.secs.forEach(x=>{if(x.note)done.push(x.name+': '+x.note);}); }
+      else { st.method='report'; st.sections=[blankSection(q.pitch)]; done.unshift('Read the diagram, but the outline didn\u2019t close ('+bad.map(x=>x.name+': '+x.msg).join(' ')+'). Totals are filled in; trace the roof by hand for the panel list.'); } }
+    else { st.method='report'; st.sections=[blankSection(q.pitch)]; done.unshift('No length diagram I could trace in that file, so this gives totals only. For the panel list, import the length diagram page, or trace the roof by hand.'); }
+    st.trade='roof'; st.tab='measure'; render();
+    const s2=$('impSt'); s2.className='st ok'; s2.textContent='Filled in from '+(d.source&&d.source!=='other'?d.source:'the report')+'. Check these against the report:';
     const ul=el('ul'); for(const x of done) ul.append(el('li',null,x)); if(d.notes) ul.append(el('li',null,String(d.notes).slice(0,200))); s2.append(ul);
   }
   async function runImport(files){
-    if(!files.length) return;
-    if(!sample){ setSt(errMsg('no_sample'),'err'); return; }
-    setSt('Got '+files.map(x=>x.name||'file').join(', ')+'. Working on it…');
-    ctl=new AbortController(); $('impStop').classList.remove('hide'); $('impBtn').classList.add('off');
-    try{
-      const maxImgs=caps&&caps.images?caps.images.maxCount:0;
-      let text='', images=[];
-      for(const file of files){
-        if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
-          setSt('Opening '+file.name+'…');
-          let r; try{ r=await readPdf(file,Math.max(0,maxImgs-images.length)); }catch(e){ throw {code:'pdf'}; }
-          text+=r.text; images=images.concat(r.images);
-        } else if(/^image\//.test(file.type)) images.push(file);
-      }
-      if(!text&&!images.length){ setSt('Pick a PDF report or a screenshot (PNG or JPEG).','err'); return; }
-      if(images.length&&!maxImgs) throw {code:'images_unavailable'};
-      images=images.slice(0,maxImgs);
-      setSt('Reading the measurements… this can take up to a minute.');
-      const input=PROMPT+(text?'\n\nREPORT TEXT:\n'+text.slice(0,120000):'\n\nThe report is in the attached image'+(images.length>1?'s':'')+'.');
-      const opts={signal:ctl.signal}; if(images.length) opts.images=images;
-      const data=await sample.json(input,opts);
-      apply(data);
-    }catch(e){
-      if(e&&e.code==='cancelled'){ setSt('Stopped.'); }
-      else setSt(errFull(e),'err');
-    }finally{
-      $('impStop').classList.add('hide'); $('impBtn').classList.remove('off'); $('impFile').value='';
-    }
+    const images=files.filter(f=>/^image\//.test(f.type));
+    if(!images.length){ setSt('Pick a PDF report or a screenshot (PNG or JPEG).','err'); return; }
+    if(!sample){ setSt(importPending?'The import is still starting up. Try again in a few seconds.':(importErr||errMsg('no_sample')),'err'); return; }
+    const maxImgs=caps&&caps.images?caps.images.maxCount:0;
+    if(!maxImgs){ setSt(errMsg('images_unavailable'),'err'); return; }
+    await send(async()=>{ setSt('Reading the measurements\u2026 this can take up to a minute.'); return {text:'',images:images.slice(0,maxImgs)}; });
   }
-  $('impFile').onchange=()=>runImport([...$('impFile').files]);
   $('impStop').onclick=()=>{ if(ctl) ctl.abort(); };
+  // ---------- PDF preview: see every page, pick the ones to read ----------
+  let pdf=null;   // {doc,name,n,text:[],sel:Set}
+  let impUsed=false;   // once a report is opened, the import box stays on Measure to show what it read
+  const PAGE_PICKS=[/length diagram|roof lines|lengths diagram|line lengths/i,/pitch diagram|roof pitches|pitch per facet/i,/report summary|measurement summary|roof measurements|areas per pitch/i];
+  // a page counts when the phrase is its title, near the top, and it isn't the table of contents
+  const isPick=(t,re)=>!/table of contents/i.test(t)&&re.test(t.slice(0,600));
+  async function renderPage(i,width){const pg=await pdf.doc.getPage(i), v1=pg.getViewport({scale:1}), vp=pg.getViewport({scale:width/v1.width});
+    const c=document.createElement('canvas'); c.width=vp.width; c.height=vp.height; await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise; return c;}
+  const maxPages=()=>caps&&caps.images?Math.max(1,caps.images.maxCount):6;
+  async function openPdf(file){
+    setSt('Opening '+file.name+'\u2026');
+    let doc; try{ const lib=await pdfjs(); doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,disableFontFace:true}).promise; }
+    catch(e){ setSt(errMsg('pdf'),'err'); return; }
+    pdf={doc,name:file.name,n:Math.min(doc.numPages,40),text:[],sel:new Set()};
+    for(let i=1;i<=pdf.n;i++){ const tc=await (await doc.getPage(i)).getTextContent(); pdf.text[i]=tc.items.map(t=>t.str+(t.hasEOL?'\n':' ')).join(''); }
+    for(const re of PAGE_PICKS){ if(pdf.sel.size>=maxPages()) break; for(let i=1;i<=pdf.n;i++) if(isPick(pdf.text[i],re)){ pdf.sel.add(i); break; } }
+    if(!pdf.sel.size) for(let i=1;i<=Math.min(2,pdf.n);i++) pdf.sel.add(i);
+    setSt(''); drawPdfBox();
+    for(let i=1;i<=pdf.n;i++){ const slot=document.querySelector('.pgimg[data-p="'+i+'"]'); if(!pdf||!slot) return; slot.prepend(await renderPage(i,240)); }
+  }
+  function toggle(i){ if(pdf.sel.has(i)) pdf.sel.delete(i); else { if(pdf.sel.size>=maxPages()){ toast('Up to '+maxPages()+' pages at a time'); return false; } pdf.sel.add(i); } syncPdfBox(); return true; }
+  function syncPdfBox(){
+    document.querySelectorAll('.pg').forEach(g=>{const i=+g.dataset.p,on=pdf.sel.has(i);g.classList.toggle('on',on);const u=g.querySelector('.use');u.textContent=on?'\u2713 Reading':'Read';u.setAttribute('aria-pressed',String(on));});
+    const go=$('pdfGo'), k=pdf.sel.size; go.disabled=!k; go.firstChild.textContent=k?'Read '+k+' selected page'+(k>1?'s':''):'Pick at least one page';
+  }
+  function drawPdfBox(){
+    const box=$('pdfBox'); box.innerHTML=''; box.hidden=!pdf; if(!pdf) return;
+    const h=el('div','pdfhead'), x=el('button','link','Close report'); x.onclick=()=>{pdf=null;drawPdfBox();};
+    const t=el('div'); t.append(el('b',null,pdf.name),el('div','hint',pdf.n+' page'+(pdf.n>1?'s':''))); h.append(t,x);
+    const grid=el('div','pages');
+    for(let i=1;i<=pdf.n;i++){
+      const g=el('div','pg'); g.dataset.p=i;
+      const im=el('button','pgimg'); im.type='button'; im.dataset.p=i; im.setAttribute('aria-label','View page '+i+' full size'); im.append(el('span','pn',String(i))); im.onclick=()=>viewPage(i);
+      const u=el('button','use'); u.type='button'; u.setAttribute('aria-label','Read page '+i); u.onclick=()=>toggle(i);
+      g.append(im,u); grid.append(g);
+    }
+    const go=btn('Read selected pages',readSelected);
+    go.id='pdfGo';
+    box.append(h,el('p','hint','Tap a page to see it full size. Pick the pages to read: the length diagram, the pitch diagram and the summary with the totals. Pages that look like those are picked for you.'),grid,go);
+    syncPdfBox();
+  }
+  async function viewPage(i){
+    let z=1; const ov=el('div','pgview'); ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true'); ov.setAttribute('aria-label','Report page');
+    const hd=el('div','pgview-h'), title=el('b'), close=el('button','pill','Done'); close.onclick=()=>ov.remove(); hd.append(title,close);
+    const sc=el('div','pgscroll'), ft=el('div','pgview-f');
+    const prev=el('button','pill','\u2039 Prev'), next=el('button','pill','Next \u203a'), use=el('button','use'), zi=el('button','pill','+'), zo=el('button','pill','\u2212');
+    zi.setAttribute('aria-label','Zoom in'); zo.setAttribute('aria-label','Zoom out');
+    const zoom=nz=>{z=Math.min(4,Math.max(1,nz));const c=sc.querySelector('canvas');if(c)c.style.setProperty('--z',z);};
+    zi.onclick=()=>zoom(z*1.5); zo.onclick=()=>zoom(z/1.5);
+    const show=async p=>{ i=p; title.textContent='Page '+i+' of '+pdf.n; prev.disabled=i<=1; next.disabled=i>=pdf.n;
+      const on=pdf.sel.has(i); use.textContent=on?'\u2713 Reading this page':'Read this page'; use.classList.toggle('on',on);
+      sc.innerHTML=''; const c=await renderPage(i,Math.min(2000,Math.round(window.innerWidth*2.2))); sc.append(c); zoom(z); };
+    prev.onclick=()=>show(i-1); next.onclick=()=>show(i+1); use.onclick=()=>{toggle(i);show(i);};
+    const zg=el('div','row'); zg.append(zo,zi);
+    ft.append(prev,use,next); hd.insertBefore(zg,close);
+    ov.append(hd,sc,ft); document.body.append(ov); close.focus();
+    const esc=e=>{if(e.key==='Escape'&&ov.isConnected){ov.remove();document.removeEventListener('keydown',esc);}}; document.addEventListener('keydown',esc);
+    await show(i);
+  }
+  // EagleView: rebuild the roof from the pitch diagram's drawn faces, no Claude needed
+  async function readVector(){
+    try{
+      const T=evTotals(pdf.text.join('\n')); if(!(T.area>0)) return null;
+      const re=PAGE_PICKS[1], cand=[...[...pdf.sel].sort((a,b)=>a-b).filter(i=>isPick(pdf.text[i],re))];
+      for(let i=1;i<=pdf.n;i++) if(!cand.includes(i)&&isPick(pdf.text[i],re)) cand.push(i);
+      const lib=await pdfjs();
+      for(const i of cand){ const M=evModel(await evShapes(lib,await pdf.doc.getPage(i)),T); if(M&&M.err<=Math.max(15,T.area*.03)) return {T,M,page:i}; }
+    }catch(e){}
+    return null;
+  }
+  function applyVector({T,M,page}){
+    const q=st.rep, done=[];
+    put(q,'area',T.area); if(T.pitch>0) q.pitch=nearPitch(T.pitch);
+    for(const [k,tk] of [['eave','eave'],['rake','rake'],['ridge','ridge'],['hip','hip'],['valley','valley'],['flash','flash']]) put(q,k,T[tk]);
+    st.model={faces:M.faces.map(f=>({pts:f.pts.map(p=>p.map(v=>Math.round(v*1000)/1000)),pitch:f.pitch,eave:f.eave}))};
+    st.method='report'; st.sections=[blankSection(q.pitch)]; if(!st.wasteEdited||st.mat!=='shingle') autoWaste();
+    const by={}; for(const f of M.faces) by[f.pitch]=(by[f.pitch]||0)+1;
+    done.push('Rebuilt the roof from the pitch diagram on page '+page+': '+M.faces.length+' faces ('+Object.keys(by).sort((a,b)=>a-b).map(p=>by[p]+' at '+p+'/12').join(', ')+'). Your panel list is on Materials.');
+    if(T.byPitch.length>1) done.push('Area at each pitch matches the report within '+f(M.err)+' sq ft.');
+    done.push('Roof area '+f(T.area)+' ft²'+(T.pitch?', predominant pitch '+q.pitch+'/12':''));
+    const got=[['eaves',T.eave],['rakes',T.rake],['ridges',T.ridge],['hips',T.hip],['valleys',T.valley],['flashing',T.flash]].filter(x=>x[1]>0).map(x=>x[0]+' '+f(x[1]));
+    if(got.length) done.push(got.join(', ')+' ft');
+    st.trade='roof'; st.tab='measure'; save(); render();
+    const s2=$('impSt'); s2.className='st ok'; s2.textContent='Read straight from the EagleView PDF. Check these against the report:';
+    const ul=el('ul'); for(const x of done) ul.append(el('li',null,x)); s2.append(ul);
+  }
+  async function readSelected(){
+    if(!pdf||!pdf.sel.size) return;
+    setSt('Reading the roof from the report\u2026');
+    const vec=await readVector(); if(vec){ applyVector(vec); return; }
+    if(!sample){ if(!hasClaude){ setSt('Couldn\u2019t find an EagleView pitch diagram with the roof\u2019s faces in this PDF. Type the totals below, or trace the roof.','err'); return; } setSt(importPending?'The import is still starting up. Try again in a few seconds.':(importErr||errMsg('no_sample')),'err'); return; }
+    const pages=[...pdf.sel].sort((a,b)=>a-b), canImg=!!(caps&&caps.images);
+    await send(async()=>{
+      setSt('Reading page'+(pages.length>1?'s ':' ')+pages.join(', ')+'\u2026 this can take up to a minute.');
+      const text=pages.map(i=>'\n--- Page '+i+' of '+pdf.n+' ---\n'+pdf.text[i]).join('');
+      const images=[]; if(canImg) for(const i of pages) images.push(await new Promise(async r=>(await renderPage(i,1600)).toBlob(r,'image/jpeg',0.85)));
+      return {text:text.replace(/\s|---|Page \d+ of \d+/g,'').length>40?text:'',images};
+    });
+  }
+  async function send(prepare){
+    ctl=new AbortController(); $('impStop').classList.remove('hide'); $('impBtn').classList.add('off'); const go=$('pdfGo'); if(go) go.disabled=true;
+    try{
+      const {text,images}=await prepare();
+      if(!text&&!images.length){ setSt('Nothing readable on those pages. Pick other pages, or use screenshots.','err'); return; }
+      const input=PROMPT+(text?'\n\nREPORT TEXT:\n'+text.slice(0,120000):'')+(images.length?'\n\nThe selected report page'+(images.length>1?'s are':' is')+' attached as image'+(images.length>1?'s':'')+'.':'');
+      const opts={signal:ctl.signal}; if(images.length) opts.images=images;
+      apply(await sample.json(input,opts));
+    }catch(e){ if(e&&e.code==='cancelled') setSt('Stopped.'); else setSt(errFull(e),'err'); }
+    finally{ $('impStop').classList.add('hide'); $('impBtn').classList.remove('off'); $('impFile').value=''; if(pdf&&$('pdfGo')) syncPdfBox(); }
+  }
+  $('impFile').onchange=()=>{impUsed=true;const files=[...$('impFile').files], p=files.find(x=>x.type==='application/pdf'||/\.pdf$/i.test(x.name));
+    if(p){ openPdf(p); $('impFile').value=''; } else runImport(files);};
   async function initImport(){
     try{
-      if(!window.claude||typeof window.claude.use!=='function'){ $('imp').hidden=true; return; }
+      if(!hasClaude){ $('impFile').accept='application/pdf,.pdf'; $('impBtn').textContent='Choose the PDF report'; setSt('EagleView PDFs are read right here on your phone.'); return; }
       sample=await window.claude.use('sample');
-      if(!sample){ setSt(errMsg('no_sample'),'err'); return; }
+      if(!sample){ importErr=errMsg('no_sample'); setSt(importErr,'err'); return; }
+      importReady=true;
       caps=await sample.limits().catch(()=>null);
       if(caps&&caps.images){ $('impFile').accept='application/pdf,.pdf,'+caps.images.mediaTypes.join(','); setSt(''); }
       else { $('impFile').accept='application/pdf,.pdf'; $('impBtn').textContent='Choose the PDF report'; setSt('Screenshots aren\u2019t supported here, but the PDF works.'); }
-    }catch(e){ setSt(errFull(e),'err'); }
+    }catch(e){ importErr=errFull(e); setSt(importErr,'err'); }
+    finally{ importPending=false; }
   }
-  load(); show(); initImport();
+  window.addEventListener('pagehide',save);
+  load(); render(); initImport(); getDownloads();
 })();
-
 </script>
 </body>
 </html>
