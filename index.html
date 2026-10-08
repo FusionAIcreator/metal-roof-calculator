@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#070C18">
-<title>Job calculator V8</title>
+<title>Job calculator V9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -661,14 +661,14 @@ function facetRoof(model,T,cov,over){
 (function(){
   const $=id=>document.getElementById(id);
   const f=(x,d=0)=>(+(+x).toFixed(d)).toLocaleString('en-US');
-  const LS='jobcalc-v4', APP_VERSION='V8';
+  const LS='jobcalc-v4', APP_VERSION='V9';
   const PITCHES=[0.5,1,1.5,2,2.5,3,3.5]; for(let p=4;p<=18;p++) PITCHES.push(p);
   const nearPitch=x=>PITCHES.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a);
   const PITCH_OPTS=PITCHES.map(p=>[p,p+'/12']);
   const PANELS=[['35.25|ex','Exposed fastener 35¼"'],['36|ex','R-panel / PBR 36"'],['24|ex','5V crimp 24"'],['16|ss','Standing seam 16"'],['12|ss','Standing seam 12"'],['18|ss','Standing seam 18"']];
   const PLANKS=[[4,'5¼" plank, 4" exposure'],[5,'6¼" plank, 5" exposure'],[6,'7¼" plank, 6" exposure'],[7,'8¼" plank, 7" exposure'],[8,'9¼" plank, 8" exposure'],[10.75,'12" plank, 10¾" exposure']];
   const E=s=>s.split(' ').map(x=>{const m=x.match(/^([NESW])([\d.]+)([rw]?)$/);return {d:m[1],len:+m[2],t:m[3]==='r'?'rake':m[3]==='w'?'wall':'eave'};});
-  const DEF=()=>({trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'faces',faces:[{t:'hip',eave:'',ridge:'',slope:'',top:'ridge'}],faceSel:'all',style:'gable',L:40,W:30,pitch:6,
+  const DEF=()=>({roofs:[{style:'gable',L:40,W:30,pitch:6}],trade:'roof',tab:'measure',wallSel:0,mat:'metal',panel:'35.25|ex',method:'faces',faces:[{t:'hip',eave:'',ridge:'',slope:'',top:'ridge'}],faceSel:'all',style:'gable',L:40,W:30,pitch:6,
     rep:{area:'',pitch:6,eave:'',rake:'',ridge:'',hip:'',valley:'',flash:''},model:null,
     sections:[{name:'Main roof',pitch:6,edges:E('E40 S30 W40 N30')}],
     over:2,waste:5,wasteEdited:false,nails:4,
@@ -676,7 +676,6 @@ function facetRoof(model,T,cov,over){
     cov:{start:110,ridge:25,trim:10,screws:80,under:10,ice:66,iceRows:1,nailsBox:7200},
     exp:7,corners:{out:4,inn:0},extra:5,
     walls:[{name:'Front',w:40,h:9,peak:0,open:[{t:'window',w:3,h:5,x:6,y:3},{t:'door',w:3,h:7,x:18.5},{t:'window',w:3,h:5,x:31,y:3}]}]});
-  const EXAMPLE=()=>[{name:'Main roof',pitch:5,edges:E('E30 S10 E15 S23 W15 S10 W30 N12 W8 N10r N9r E8 N13')},{name:'Front porch',pitch:5,x:13.8,y:43,edges:E('E14w S6r W14 N6r')}];
   let st=DEF();
   function save(){try{localStorage.setItem(LS,JSON.stringify(st));}catch(e){}}
   function load(){
@@ -684,6 +683,10 @@ function facetRoof(model,T,cov,over){
       const s=JSON.parse(localStorage.getItem(LS)||'null');
       if(s&&typeof s==='object'){
         st=Object.assign(DEF(),s); for(const k of ['rep','price','cov','corners'])st[k]=Object.assign(DEF()[k],s[k]||{});
+        if(!Array.isArray(s.roofs)||!s.roofs.length) st.roofs=[{style:st.style==='hip'?'hip':'gable',L:st.L,W:st.W,pitch:+st.pitch||6}];   // one roof from earlier versions
+        // the old built-in example (Fernwood Rd) is gone: clear it from saved jobs
+        const sig=x=>Array.isArray(x)?x.map(q=>(q.edges||[]).map(e=>e.d+e.len).join(' ')).join('|'):'';
+        if(sig(st.sections)==='E30 S10 E15 S23 W15 S10 W30 N12 W8 N10 N9 E8 N13|E14 S6 W14 N6') st.sections=DEF().sections;
         if(s.view&&!s.trade){st.trade=/^side/.test(s.view)?'siding':'roof';st.tab=/Res$/.test(s.view)?'materials':'measure';}   // from the previous version
         st.tab='measure';
         return;
@@ -803,7 +806,7 @@ function facetRoof(model,T,cov,over){
   }
 
   // ---------- roof: measure ----------
-  function defWaste(){return st.mat==='metal'?(st.method==='report'&&!st.model?10:5):(st.method==='simple'?(st.style==='hip'?15:10):12);}
+  function defWaste(){return st.mat==='metal'?(st.method==='report'&&!st.model?10:5):(st.method==='simple'?(st.roofs.some(r=>r.style==='hip')?15:10):12);}
   function autoWaste(){if(!st.wasteEdited)st.waste=defWaste();}
   function roofMeasure(v){
     const mat=card('Material',null,seg('Material',[['metal','Metal'],['shingle','Shingles']],()=>st.mat,x=>{st.mat=x;autoWaste();}));
@@ -814,18 +817,26 @@ function facetRoof(model,T,cov,over){
         pick('Pitch',PITCH_OPTS,()=>st.pitch,x=>st.pitch=+x,refresh));
       faceEditors(m);
     } else if(st.method==='simple'){
-      m.append(el('p','hint','A plain gable or hip roof on a rectangle. Measure to the drip edge.'),
-        seg('Roof style',[['gable','Gable'],['hip','Hip']],()=>st.style,x=>{st.style=x;autoWaste();}),
-        grid('grid2',num('Length along ridge',()=>st.L,x=>st.L=x,'ft',()=>later(refresh)),num('Width',()=>st.W,x=>st.W=x,'ft',()=>later(refresh))),
-        pick('Pitch',PITCH_OPTS,()=>st.pitch,x=>st.pitch=+x,refresh));
+      m.append(el('p','hint','Plain gable or hip roofs on rectangles, measured to the drip edge. Add as many as the job has, a hip roof and a gable roof together; the totals add them up.'));
+      st.roofs.forEach((r,i)=>{
+        const box=el('div','sub'), h=el('div','face-h'), pre=i?'Roof '+(i+1)+' ':'';
+        h.append(el('span','code',String(i+1)),el('b',null,(r.style==='hip'?'Hip':'Gable')+' roof'));
+        if(st.roofs.length>1){const rm=el('button','x','Remove');rm.setAttribute('aria-label','Remove roof '+(i+1));rm.onclick=()=>{st.roofs.splice(i,1);autoWaste();save();render();};h.append(rm);}
+        const lab=(t)=>{const d=num(t,()=>r[t==='Width'?'W':'L'],x=>r[t==='Width'?'W':'L']=x,'ft',()=>later(refresh));if(pre){const a=pre+t.toLowerCase();d.setAttribute('aria-label',a);d.querySelectorAll('input').forEach((x,k)=>x.setAttribute('aria-label',a+', '+(k?'inches':'feet')));}return d;};
+        box.append(h,seg((pre||'')+'Roof style',[['gable','Gable'],['hip','Hip']],()=>r.style,x=>{r.style=x;autoWaste();}),
+          grid('grid2',lab('Length along ridge'),lab('Width')),
+          field('Pitch',selIn(PITCH_OPTS,()=>r.pitch,x=>r.pitch=+x,refresh,pre?pre+'pitch':null)));
+        m.append(box);
+      });
+      const addR=el('div','addrow'); addR.style.gridTemplateColumns='1fr 1fr';
+      for(const [t,name] of [['gable','+ Gable roof'],['hip','+ Hip roof']]){const b=el('button','pill',name);b.type='button';b.onclick=()=>{const l=st.roofs[st.roofs.length-1];st.roofs.push({style:t,L:'',W:'',pitch:l?l.pitch:6});autoWaste();save();render();};addR.append(b);}
+      m.append(addR);
     } else if(st.method==='trace'){
       m.append(el('p','hint','Any roof with square corners. Start at a corner and go around the edge, using the report’s length diagram. Rake: a gable edge, entered as the rake length on the report. Wall: a lower roof’s high side against the house. If part of the roof has a different pitch, set it on the edges of that part.'));
       sections(m);
       const add=el('button','pill','+ Porch or lower roof');
       add.onclick=()=>{st.sections.push({name:'Section '+(st.sections.length+1),pitch:+st.sections[0]?.pitch||6,x:0,y:0,edges:[{d:'E',len:0,t:'eave'}]});save();render();};
-      const ex=el('button','pill','Load example');
-      twoTap(ex,'Load example','Tap again to replace the outline',()=>{st.sections=EXAMPLE();save();render();});
-      m.append(grid('row',add,ex));
+      m.append(grid('row',add));
     } else {
       const q=st.rep, up=()=>later(refresh);
       m.append(grid('grid2',
@@ -845,11 +856,16 @@ function facetRoof(model,T,cov,over){
   }
 
   // ---------- roof: results ----------
+  // each simple roof is its own section, set side by side so they don't touch
   function simpleSecs(){
-    const p=+st.pitch||0, pf=Math.sqrt(1+(p/12)**2), L=+st.L||0, W=+st.W||0;
-    return [{name:'Roof',pitch:p,edges:st.style==='gable'
-      ?[{d:'E',len:L,t:'eave'},{d:'S',len:W*pf,t:'rake'},{d:'W',len:L,t:'eave'},{d:'N',len:W*pf,t:'rake'}]
-      :[{d:'E',len:L,t:'eave'},{d:'S',len:W,t:'eave'},{d:'W',len:L,t:'eave'},{d:'N',len:W,t:'eave'}]}];
+    let x=0; const out=[];
+    st.roofs.forEach((r,i)=>{
+      const p=+r.pitch||0, pf=Math.sqrt(1+(p/12)**2), L=+r.L||0, W=+r.W||0; if(!(L>0&&W>0)) return;
+      out.push({name:'Roof '+(i+1)+' ('+(r.style==='hip'?'hip':'gable')+')',pitch:p,x,y:0,edges:r.style==='gable'
+        ?[{d:'E',len:L,t:'eave'},{d:'S',len:W*pf,t:'rake'},{d:'W',len:L,t:'eave'},{d:'N',len:W*pf,t:'rake'}]
+        :[{d:'E',len:L,t:'eave'},{d:'S',len:W,t:'eave'},{d:'W',len:L,t:'eave'},{d:'N',len:W,t:'eave'}]});
+      x+=L+8; });
+    return out;
   }
   let roofKey='', roofR=null;
   function roofCalc(){
@@ -870,7 +886,8 @@ function facetRoof(model,T,cov,over){
       if(skipped.length) skipNote='Not counted yet: '+skipped.map(x=>'face '+x.code+' ('+x.err.replace(/\.$/,'').toLowerCase()+')').join('; ')+'.';
       g={area:R.area,pitch:+st.pitch||0,eave:R.eave,rake:R.rake,ridge:R.ridge,hips:R.hips,valleys:0,wall:R.wall};
     } else {
-      if(st.method==='simple'&&!(st.L>0&&st.W>0)) return {err:'Enter the roof length and width.'};
+      if(st.method==='simple'){ if(!simpleSecs().length) return {err:'Enter the roof length and width.'};
+        const left=st.roofs.map((r,i)=>(+r.L>0&&+r.W>0)?null:'roof '+(i+1)).filter(Boolean); if(left.length) skipNote='Not counted yet: '+left.join(', ')+' (enter its length and width).'; }
       const secs=st.method==='simple'?simpleSecs():st.sections, key=JSON.stringify([secs,covFt,over]);
       if(key!==roofKey){roofKey=key;roofR=buildRoof(secs,covFt,over);} R=roofR;
       const bad=R.secs.find(x=>!x.ok);

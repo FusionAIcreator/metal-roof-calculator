@@ -1,6 +1,6 @@
 # Job calculator
 
-Current version: **V8**. Each published update raises the version (V8, V9, …); it shows in the page title and next to the app name.
+Current version: **V9**. Each published update raises the version (V9, V10, …); it shows in the page title and next to the app name.
 
 Phone-friendly takeoff calculator for metal or shingle roofs and HardiePlank siding. Switch between **Roof** and **Siding** at the top; the bottom tab bar has four tabs that work for both:
 
@@ -16,8 +16,8 @@ Live totals sit under the switch on every tab. **Print layout** on the Layout ta
 - Metal (exposed fastener, R-panel, 5V, standing seam) or shingles.
 - Four ways to measure:
   - **Faces** (the default): measure each roof face on the roof, one at a time. Pick its shape (hip side, hip end or gable side) and enter the eave, the ridge and the slope length from the eave up to the ridge. Pick which end panel 1 starts at (left or right, facing the eave). Each face gets its own drawing with every measurement and its own panel list on the Layout tab; the job totals add the faces up, counting each shared hip and ridge once. A face that isn't finished is skipped and named, not counted. To work one face at a time, pick it at the top of Materials, Cut list or Layout (All faces, A, B…), or tap "Materials for face A" on its card: you get that face's square feet, panels to order, trim and cut list on their own.
-  - **Simple:** a plain gable or hip roof from length, width and pitch.
-  - **Trace:** any roof with square corners. Go around the edge from the report's length diagram, entering each edge as eave, rake or wall. If part of the roof has a different pitch, set it on that part's edges. Add a section for a porch or lower roof. The calculator works out every face, hip, valley and ridge, including hips between different pitches.
+  - **Simple:** plain gable and hip roofs from length, width and pitch. Add as many as the job has (for example a hip house and a gable garage); each keeps its own style and pitch, and the totals add them up.
+  - **Trace:** any roof with square corners. Go around the edge from the report's length diagram, entering each edge as eave, rake or wall. If part of the roof has a different pitch, set it on that part's edges. Add a section for a porch or lower roof. (There is no built-in example roof.) The calculator works out every face, hip, valley and ridge, including hips between different pitches.
   - **Report:** type in report totals, or import a HOVER / EagleView PDF or screenshot. An EagleView PDF's pitch diagram is read straight from the file: every roof face, its pitch and its downhill direction, so you get the exact panel list, cut list and layout for that roof. Other reports go to Claude, which traces the length diagram's outline. If neither works, you get totals and a prompt to trace by hand.
 - Material list: panels, trim and caps in pieces, closures, screws or clips, underlayment, ice and water shield, flashing; for shingles, bundles, starter, ridge cap, drip edge and nails.
 - Panels to order: every panel length and how many, written the way you order ("4 pcs at 16'5\""), at the top of Materials and in the copied list.
